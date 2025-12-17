@@ -17,6 +17,51 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
+# OpenSpec Instructions for zdpos_dev
+
+You are an expert developer working on the `zdpos_dev` legacy system.
+Your goal is to modernize functionality while strictly adhering to legacy constraints.
+
+## ⚠️ 語言與溝通 (Language Requirement)
+- **回應語言**：所有對話、解釋、計畫與建議，**必須強制使用正體中文 (Traditional Chinese)**。
+- **程式註解**：程式碼中的註解 (Comments) 請使用正體中文。
+- **專有名詞**：保留英文 (如 Controller, Model, View, Action)。
+
+## 🧠 規劃模式 (Planning Protocol)
+當需求涉及多個檔案修改、架構變更或複雜邏輯時，**嚴禁直接生成程式碼**。請遵循以下步驟：
+1.  **Plan Phase**:
+    - 分析需求並閱讀 `@AGENTS.md` 與 `@CLAUDE.md`。
+    - 輸出一份 **[實作計畫]**，列出：
+        - 涉及的檔案清單 (File List)。
+        - 每個檔案的修改摘要 (Summary of Changes)。
+        - 潛在風險或相容性問題 (PHP 5.6/Yii 1.1)。
+2.  **Confirmation**:
+    - 詢問用戶：「此計畫是否可行？」
+3.  **Execution Phase**:
+    - 只有在用戶回答「是」或「Go」之後，才開始輸出程式碼。
+
+## 📋 The Proposal Workflow (Spec-Driven Development)
+
+When the user asks for a feature or complex change:
+
+1.  **Check for existing proposals** in `openspec/proposals/`.
+2.  **Create a new proposal** if none exists (e.g., `openspec/proposals/001-feature-name.md`).
+3.  **Define the Plan**:
+    -   Identify necessary changes in DB Schema.
+    -   List new/modified PHP files (Controller, Model, Service).
+    -   Define Frontend changes (JS, Views).
+    -   **Compatibility Check**: Explicitly state "PHP 5.6 compliant".
+4.  **Wait for Approval**: Do not write code until the user confirms the proposal.
+5.  **Update Status**: Mark items as `[x]` as you complete them.
+
+## 💾 Context Management
+-   Since the user frequently uses `/clear`, **the Proposal file is your memory**.
+-   Always read the active proposal at the start of a session to know what to do next.
+
+## 🔍 Code Quality Standards
+-   **Security**: Validate all inputs using Yii validation rules. SQL Injection protection via AR or bound parameters.
+-   **Logic**: Keep Controllers thin. Move logic to Services or Models.
+
 # AGENTS.md
 
 本檔提供「程式代理人」在本儲存庫工作的精簡指引。為落實單一真相來源，完整且權威的規範、專案背景與所有細節請一律參考 `CLAUDE.md`。本檔僅保留執行重點與索引，避免與 `CLAUDE.md` 重複。

@@ -21,19 +21,33 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 > **Note**: These project-specific rules override general guidelines where conflicts occur.
 
-## 🛠 Tech Stack & Environment
--   **Core**: PHP 5.6.40 (Yii 1.1), MySQL 5.7, Apache 2.4.
--   **Frontend**: ES6 JavaScript, `zpos.js` (Global `POS` object).
--   **Paths**:
-    -   Root (ReadOnly): `D:\projects\zdpos_dev\`
-    -   Web Root: `D:\laragon\www\www.zdpos\dev3\`
-    -   Local URL: `https://www.zdpos.test/dev3`
--   **Config**: `protected/config/dev3.php`, Timezone `Asia/Taipei`.
+## Communication Guidelines
+- **Primary Language**: Always respond in **Traditional Chinese (正體中文)** unless specifically requested otherwise.
+- **Code Comments**: Use Traditional Chinese.
+
+## 🚨 CRITICAL MUST-READ RULES
+1.  **Strict PHP 5.6 Environment**:
+    -   ❌ NO Null Coalescing (`??`). Use `isset()` or `!empty()`.
+    -   ❌ NO Scalar Type Hints (`function(int $id)`). Use PHPDoc instead.
+    -   ❌ NO Return Types (`: void`).
+    -   ✅ Short Array Syntax `[]` is ALLOWED (supported since 5.4).
+    -   ✅ Models MUST have: `public static function model($className=__CLASS__) { return parent::model($className); }`
+2.  **File System Constraints**:
+    -   🔴 **ROOT (`E:\projects\zdpos_dev\`) is READ-ONLY**.
+    -   🟢 **WEB ROOT (`"E:\projects\www.posdev\dev3"`) is WRITEABLE**.
+    -   Ensure relative paths consider the Web Root structure.
+3.  **Frontend Constraints**:
+    -   ❌ DO NOT use `$.ajax`, `fetch`, or `axios` directly.
+    -   ✅ **MUST USE**: `POS.list.ajaxPromise()` for all async requests.
+    -   Global Object: `POS` is the source of truth for frontend state.
 
 ## 📂 Architecture & File Placement
 **Root is Read-Only.** Create/Modify files only in allowed subdirectories.
 **Outputs:** All dynamic artifacts (reports/images) go to `output/`.
+**Docker** Using docker to develop, should execute command in php container. container name is pos_php, workdir is under `/var/www/www.posdev/zdpos_dev`
+**TDD** tdd command should use `cd /var/www/www.posdev/zdpos_dev` then `phpunit ./protected/tests/unit/*.php`
 
+## 📂 Architecture & File Map
 | Directory | Purpose | Namespace / Rules |
 | :--- | :--- | :--- |
 | `protected/models/` | Yii ActiveRecords | `class Post extends CActiveRecord` |
@@ -43,23 +57,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 | `infrastructure/Repositories/` | Data Access | Namespace `Infrastructure\Repositories` |
 | `js/` | Frontend Scripts | Use `zpos.js` as entry point |
 
-## 📐 Coding Conventions
+## 🛠 Development Workflow (The "Clear" Strategy)
+We use a stateless workflow to save tokens.
+1.  **Planning**: Read/Update `openspec/proposals/*.md`. This is our "Memory".
+2.  **Coding**: Implement small chunks based on the proposal.
+3.  **Checking**: Expect the user to run `git commit` after verification is OK.
+4.  **Clearing**: Expect the user to run `/clear` often. Rely on `CLAUDE.md` and Proposal files for context, NOT chat history.
 
-### PHP 5.6 & Yii 1.1 Constraints
--   **Syntax**: No scalar/return types. No `??` operator. Use Short Array `[]`.
--   **Typing**: MUST use PHPDoc for all methods/props (`@param string $var`).
--   **Yii AR**: Models must define `public static function model($className=__CLASS__)`.
--   **Controllers**: Actions must look like `public function actionIndex()`.
--   **No New Libs**: Use existing `phpqrcode`, `CommonHelper`, etc.
-
-### Frontend (ES6)
--   **Async**: Use `async/await` and `Promise`.
--   **AJAX**: STRICTLY use `POS.list.ajaxPromise()` wrapper. Do NOT use raw `$.ajax` if avoidable.
--   **Global**: `POS` object is the SSOT for frontend state.
-
-### Naming & Style
--   **PHP Class**: `PascalCase`
--   **Method/Prop**: `camelCase`
--   **Const**: `UPPER_SNAKE_CASE`
--   **Database**: `snake_case` (`receipt_credit`, `tax_number`)
--   **Format**: 4 spaces indent. Single quotes `''` preferred for strings.
+## 🧪 Testing & Verification
+-   **Unit Tests**: `npm test` (if configured) or specific PHPUnit command.
+-   **Manual**: Since this is a legacy web app, suggest URLs to check (e.g., `https://www.posdev.test/dev3/controller/action`).
+-   **Logs**: Check `protected/runtime/application.log` for Yii errors.
