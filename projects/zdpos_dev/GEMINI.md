@@ -1,78 +1,82 @@
-# Gemini AI 開發規則：
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
 
-## 專案
-- **專案名稱:** zdpos_dev
-- **專案描述:** 這是一個基於 Yii 1.1 框架的 POS 系統，包含前端與後端功能，並採用 DDD-Like 分層架構。
+These instructions are for AI assistants working in this project.
 
-## 建置與執行
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
 
-**本地開發環境:**
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
 
-*   **開發工具:** Laragon 8.0
-*   **Web 伺服器:** Apache 2.4.62
-*   **PHP:** 5.6.40
-*   **資料庫:** MySQL 5.7.33
-*   **作業系統:** Windows 10
-*   **專案路徑:** `D:\projects\zdpos_dev`
-*   **版本控制:** Git (本地儲存庫位於 `D:\projects\zdpos_dev\.git`)
-*   **應用程式路徑:** `D:\laragon\www\www.zdpos\dev3` (與 `zdpos_dev` 同層級)
-*   **資料庫:** `zdpos_dev_2` (MySQL)
-*   **資料庫連線設定:** 位於 `zdpos_dev/protected/config/dev3.php` (組態中 `db` 元件)
-*   **網站連結:**  `https://www.zdpos.test/dev3`
-*   **設定檔路徑:** `D:\projects\zdpos_dev\protected\config\dev3.php` (因為 `dev3` 目錄透過軟連結與 `zdpos_dev` 同層級)
-*   **專案結構:** `D:\projects\zdpos_dev\gemini\zdpos_dev_tree.txt`
+Keep this managed block so 'openspec update' can refresh the instructions.
 
-## 專案速查表 (Project Cheatsheet)
+<!-- OPENSPEC:END -->
 
-- **專案核心:** `zdpos_dev` (Yii 1.1 函式庫)
-- **應用程式入口:** `dev3/index.php` (與 `zdpos_dev` 同層級)
-- **本地網址:** `https://www.zdpos.test/dev3`
-- **主要設定檔:** `protected/config/dev3.php`
-- **主要資料庫:** `zdpos_dev_2` (MySQL 5.7)
-- **版本控制:** Git
-- **專案結構:** `D:\projects\zdpos_dev\gemini\zdpos_dev_tree.txt`
+# Gemini AI Development Rules: zdpos_dev
 
-### 關鍵目錄結構
-- **Controllers:** `protected/controllers/`
-- **Models:** `protected/models/`
-- **Views:** `protected/views/`
-- **Migrations:** `protected/migrations/` (資料庫結構變更來源)
-- **核心函式庫:** `protected/components/zdnbase/`
-- **POS 前端核心 JS:** `assets/zpos/zpos.js`
-- **業務邏輯 (Domain):** `protected/domain/`
-- **基礎設施 (Infrastructure):** `protected/infrastructure/`
+## Project Overview
+- **Project Name:** zdpos_dev
+- **Description:** A POS system based on the Yii 1.1 framework, featuring front-end and back-end functionality with a DDD-Like layered architecture.
+- **Primary Database:** `zdpos_dev_2` (MySQL 5.7.33)
+- **Local URL:** `https://www.zdpos.test/dev3`
 
-## 架構與模式藍圖 (Architecture & Patterns)
+## Environment & Infrastructure
+- **OS:** Windows 10 (Laragon 8.0 / Apache 2.4.62)
+- **PHP Version:** **5.6.40 (Legacy)**
+- **Project Paths:**
+    - Source Code: `D:\projects\zdpos_dev` (Git Repository)
+    - Web Entry: `D:\laragon\www\www.zdpos\dev3` (Linked to source)
+- **Docker Context:**
+    - Container Name: `pos_php`
+    - Workdir: `/var/www/www.posdev/zdpos_dev`
+    - **TDD Command:** `docker exec -it pos_php /bin/sh -c "cd /var/www/www.posdev/zdpos_dev && phpunit ./protected/tests/unit/*.php"`
 
-### 1. 後端架構 (Backend)
-- **核心框架:** Yii 1.1 MVC。
-- **基礎控制器:** `protected/components/Controller.php` (所有 Controller 的父類別，整合了權限檢查與 `zdnbase`)。
-- **核心工具庫 (`zdnbase`):**
-    - **用途:** 提供全域共用函式，如日誌、路徑管理、DB存取。
-    - **呼叫方式:** 透過基底控制器 `Controller.php` 繼承的方法或直接使用。
-- **權限系統:**
-    - **機制:** 基於權限碼 (Permission Code)。
-    - **權限定義:** `zdn_menu` 資料表。
-    - **使用者權限:** `data_employee.employee_permission` 欄位。
-    - **檢查邏輯:** `Controller::filterCheckPermission` (自動在 Action 執行前觸發)。
-- **分層架構 (DDD-Like):**
-    - **`domain`:** 純業務邏輯，**禁止**包含任何 Yii 框架依賴。定義 `Entities`, `Services`, `Repository Interfaces`。
-    - **`infrastructure`:** 實現 `domain` 的介面，負責與外部（DB, API）溝通。**可以**使用 Yii 的 `CActiveRecord` 等框架功能。
+## 🚨 CRITICAL DEVELOPMENT RULES
 
-### 2. 前端架構 (Frontend - zpos.js)
-- **核心物件:** 全域物件 `POS`。
-- **狀態管理:** `POS.thread.step` 屬性控制當前操作流程 (例如：`1`=銷售, `6`=結帳)。
-- **伺服器通訊:**
-    - **方法:** `POS.post(action, data, callback)`。
-    - **目標:** `PosController.php` 的 `action<Name>` 方法。
-    - **格式:** 前端發送 AJAX POST，後端返回 JSON。
+### 1. PHP 5.6 Compatibility (Mandatory)
+- ❌ **NO** Null Coalescing Operator (`??`). Use `isset()` or `!empty()`.
+- ❌ **NO** Scalar Type Hints (e.g., `function(int $id)`). Use PHPDoc instead.
+- ❌ **NO** Return Type Declarations (e.g., `: void`).
+- ✅ **ALLOWED:** Short Array Syntax `[]` (Supported since PHP 5.4).
+- ✅ **ActiveRecord Requirement:** Models MUST include:
+  `public static function model($className=__CLASS__) { return parent::model($className); }`
 
-### 3. 完整交易流程 (範例)
-1.  **前端:** `zpos.js` 收集訂單資料。
-2.  **前端 -> 後端:** 呼叫 `POS.post('saveReceipt', orderData, ...)`。
-3.  **後端 (Controller):** `PosController::actionSaveReceipt()` 接收請求。
-4.  **後端 (分層):** `actionSaveReceipt` 呼叫 `Domain\Services\OrderService`。
-5.  **後端 (Domain):** `OrderService` 執行業務邏輯，並呼叫 `Domain\Interfaces\OrderRepository->save()`。
-6.  **後端 (Infrastructure):** `Infrastructure\YiiOrderRepository->save()` 使用 `CActiveRecord` 將資料寫入資料庫。
-7.  **後端 -> 前端:** `PosController` 回傳 JSON 結果，例如 `{"success": true}`。
-8.  **前端:** `POS.post()` 的回呼函式處理 JSON 結果，更新 UI (例如，呼叫 `saleThread.init()` 清空畫面)。
+### 2. File System Constraints
+- 🔴 **ROOT (`E:\projects\zdpos_dev\`)**: Treat as **READ-ONLY**.
+- 🟢 **WEB ROOT (`E:\laragon\www\www.zdpos\dev3`)**: Treat as **WRITEABLE**.
+- All dynamic artifacts (reports/images) must be stored in the `output/` directory.
+
+### 3. Frontend Constraints (zpos.js)
+- ❌ **DO NOT** use `$.ajax`, `fetch`, or `axios` directly.
+- ✅ **MUST USE:** `POS.list.ajaxPromise()` for all asynchronous requests.
+- **State Management:** The global `POS` object is the single source of truth for frontend state.
+
+## 📂 Architecture & File Map
+
+| Directory | Purpose | Rules / Implementation |
+| :--- | :--- | :--- |
+| `protected/models/` | Yii ActiveRecords | Inherit from `CActiveRecord` |
+| `protected/controllers/` | MVC Controllers | Inherit from `Controller` (Permission checks integrated) |
+| `protected/domain/` | Business Logic | **Pure PHP.** No dependencies on Yii framework. |
+| `protected/infrastructure/` | Data Access | Implements Domain interfaces using Yii's AR or DAO. |
+| `protected/components/zdnbase/` | Core Library | Global helpers (Logs, Paths, DB Access). |
+| `protected/config/dev3.php` | Config | Main DB and system configuration. |
+| `assets/zpos/zpos.js` | POS Frontend Core | Handles POS flow and `POS.thread.step`. |
+
+## 🛠 Development Workflow (The "Clear" Strategy)
+1. **Planning:** Read/Update `openspec/proposals/*.md`. This serves as the project "Memory".
+2. **Coding:** Implement in small increments. Adhere strictly to PHP 5.6 syntax.
+3. **Verification:**
+   - **Unit Tests:** Use the Docker PHPUnit command.
+   - **Manual:** Check `https://www.posdev.test/dev3/{controller}/{action}`.
+   - **Logs:** Monitor `protected/runtime/application.log` for Yii errors.
+4. **Context Management:** Expect the user to use `/clear` frequently. Rely on this document and Proposal files for context rather than chat history.
+
+## 💬 Communication Guidelines
+- **Response Language:** Always respond in **Traditional Chinese (正體中文)**.
+- **Code Comments:** Use **Traditional Chinese** for all logic explanations within the code.
