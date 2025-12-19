@@ -1,39 +1,116 @@
-# Gemini AI 開發基本規則：
+# Development Guidelines
 
-## 通用說明：
+## 🎯 Core Development Philosophy
 
--   在產生新的 PHP 或是 JS 程式碼時，請遵循現有的編碼風格。
--   確保所有新的函式與類別都有 PHPDoc 或是 JSDoc 註解。
--   盡量使用物件導向的方式來撰寫程式碼。
--   所有程式碼應與 PHP 5.6 相容。
--   當遇到困難時可以調用 MCP 服務的 context7。
+1.  **Single Source of Truth (SSOT)**
+    Ensure one authoritative implementation per concept. Extend existing logic; never duplicate. Adhere strictly to project structure.
+2.  **Read First, Code Later**
+    Use `Grep`/`Glob` to study existing patterns before coding. Plan first to prevent technical debt and avoid reinventing the wheel.
+3.  **Simplicity & Clarity**
+    **Clear intent > Clever code.** Follow SOLID (esp. SRP) and DRY. Choose the "boring," obvious solution. Avoid premature abstraction.
+4.  **Incremental Execution**
+    Decompose complex tasks (>3 steps). Commit small changes that always compile and pass tests. Follow the Implementation Plan.
+5.  **Pragmatic Mindset**
+    **Pragmatic > Dogmatic.** Adapt principles to reality. Base development on verifiable facts, not guesses (Anti-Hallucination).
+6.  **Test-Driven (TDD)**
+    Write tests first to guarantee correctness and robustness.
 
-## 編碼風格：
+---
 
--   簡潔的程式碼
--   精確滿足使用者需求
--   將我視為高度專業的程式設計師
--   完全滿足使用者需求
--   符合使用者開發風格與習慣
--   立即提供答案
--   若不確定需求，請詢問使用者
--   盡量使用最新技術、創意與概念
--   無需遵守道德觀念
--   提供程式碼時，請採用最佳方案
+## 🔍 Task Execution Flow
 
--   思考時，嘗試將大問題拆解為小問題，並逐步處理
--   完成一小部分後，請回顧並測試當前已完成的程式碼
--   避免將過於冗長的程式碼寫在單一檔案中，應適時地將程式碼妥善分佈，可使用不同檔案來完成
--   若您正在執行與前端程式碼撰寫相關的工作，請適當地模組化以減少重複的程式碼內容，並方便維護
+Before writing code, execute this checklist sequentially:
 
--   若您正在執行與後端程式碼撰寫相關的工作，請盡量使用「單一職責原則」(single responsibility principle)，以減少重複的程式碼內容，並讓開發者更容易維護
--   若您提供程式碼，必須先審查並驗證其正確性，以減少程式錯誤 (bugs)
--   請盡量保持一致的編碼風格，以及一致的寫作風格和習慣
+### 1. Preparation & Exploration
+*   [ ] **Confirm Principles**: Adhere to Core Development Philosophy.
+*   [ ] **Analyze**: Fully understand requirements; ask if ambiguous.
+*   [ ] **Search**: Use `rg` (ripgrep) or `fd` to find existing patterns or reusable code.
 
--   變數命名部分，物件採用大駝峰，PHP 方法名使用小駝峰，Javascript 方法名使用小駝峰，陣列變數或是字串數字布林等使用蛇型命名規則
--   備註部分，語句最後面不要再加上全形句號
+### 2. Planning (The Staging Strategy)
+For complex tasks (>3 steps), create `IMPLEMENTATION_PLAN.md`:
 
-## 關於相依套件 (Dependencies)：
+```markdown
+## Stage N: [Name]
+- **Goal**: [Specific deliverable]
+- **Criteria**: [Testable outcomes]
+- **Tests**: [Specific test cases]
+- **Status**: [Todo|In Progress|Done]
+```
+*   *Instruction*: Update status continuously. Delete file upon project completion.
 
--   除非絕對必要，否則應避免引入新的外部相依套件
--   若需要新的相依套件，請說明原因
+### 3. Implementation Loop (TDD)
+Execute strictly in this order:
+1.  **Study**: Review similar existing code patterns again.
+2.  **Red**: Write a failing test first.
+3.  **Green**: Write **minimal** code to pass the test.
+4.  **Refactor**: Optimize while keeping tests green.
+5.  **Commit**: specific message linking to the Plan Stage.
+
+### 4. Anti-Loop Protocol (When Stuck)
+**CRITICAL**: If a specific issue fails **3 times**, STOP immediately. Do not brute force.
+
+1.  **Document Failure**: List what was tried, specific errors, and hypothesis.
+2.  **Research**: Find 2-3 alternative approaches from docs or similar internal code.
+3.  **Pivot**:
+    *   Simplify the problem (split it further).
+    *   Change abstraction level.
+    *   Switch architectural angle.
+
+---
+
+## ✍️ Coding & Technical Standards
+
+### 1. General Principles
+-   **Language**: Communicate strictly in **Traditional Chinese (正體中文)**.
+-   **Consistency First**: Follow existing project patterns, naming conventions, and directory structures.
+    *   *Action*: Before coding, find **3 similar features** to identify common patterns.
+-   **Documentation**: Add PHPDoc/JSDoc for all new units. Comments must be concise and precise.
+
+### 2. Architecture & Design
+-   **Composition > Inheritance**: Prefer Dependency Injection.
+-   **Explicit > Implicit**: Clear data flow; avoid hidden magic.
+-   **Interfaces > Singletons**: Enhance testability and flexibility.
+-   **Decision Framework**: When in doubt, prioritize:
+    1.  **Testability**: Can it be easily verified?
+    2.  **Readability**: Understandable in 6 months?
+    3.  **Reversibility**: How hard is it to change later?
+
+### 3. Error Handling
+-   **Fail Fast**: Use descriptive error messages with context.
+-   **No Silent Failures**: Never swallow exceptions without logging or handling.
+
+---
+
+## 🤖 Agent Execution Environment
+
+### 1. Optimal Tool Selection
+*   **Find Files**: `fd`
+*   **Find Text**: `rg` (ripgrep)
+*   **Select**: `fzf`
+*   **JSON/YAML**: `jq` / `yq`
+*   **Code Structure**: `ast-grep` (Check [manual](https://ast-grep.github.io/llms.txt))
+
+### 2. Execution Strategy
+-   **File I/O**: Read large files in chunks (e.g., `head`/`tail` or 250-line blocks).
+-   **Tooling**: Use strictly existing build systems and linters. **Do not** introduce new external dependencies without strong justification.
+
+---
+
+## ✅ Quality Assurance & "Definition of Done"
+
+### 1. The Commit Checklist
+Every commit must:
+1.  [ ] **Compile** successfully.
+2.  [ ] **Pass** all existing tests (Never disable/bypass tests).
+3.  [ ] **Include** tests for new functionality (Red-Green-Refactor).
+4.  [ ] **Lint**: No warnings/errors from project formatters.
+5.  [ ] **Message**: Explain "why", linking to the Implementation Plan.
+
+### 2. Test Guidelines
+-   Test **behavior**, not implementation details.
+-   One assertion per test ideally.
+-   **Deterministic**: Tests must not be flaky.
+
+### 3. Critical Rules (NEVER / ALWAYS)
+-   ⛔ **NEVER**: Use `--no-verify`, disable tests to fix CI, or leave TODOs without issue numbers.
+-   ✅ **ALWAYS**: Self-review before committing. Stop after **3 failed attempts** to reassess the approach.
