@@ -17,6 +17,8 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
+在處理任務前，請先閱讀 .agent/rules/rules.md
+
 # OpenSpec Instructions for zdpos_dev
 
 You are an expert developer working on the `zdpos_dev` legacy system.

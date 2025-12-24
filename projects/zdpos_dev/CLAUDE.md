@@ -43,9 +43,13 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## 📂 Architecture & File Placement
 **Root is Read-Only.** Create/Modify files only in allowed subdirectories.
-**Outputs:** All dynamic artifacts (reports/images) go to `output/`.
-**Docker** Using docker to develop, should execute command in php container. container name is pos_php, workdir is under `/var/www/www.posdev/zdpos_dev`
-**TDD** tdd command should use `cd /var/www/www.posdev/zdpos_dev` then `phpunit ./protected/tests/unit/*.php`
+
+### 🐳 Docker Testing Pattern
+To run tests, execute in the `pos_php` container. You MUST use double slashes for path conversion:
+```bash
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
+```
+- **Example**: `docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/unit/ExampleTest.php`
 
 ## 📂 Architecture & File Map
 | Directory | Purpose | Namespace / Rules |
