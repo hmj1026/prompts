@@ -1,15 +1,25 @@
-﻿# GEMINI.md
+# GEMINI.md
 
 本檔提供 Gemini AI 在 `zdpos_dev` 專案的工作指引。
 若與 `CLAUDE.md` 衝突，以 `CLAUDE.md` 為準。
 
 <!-- OPENSPEC:START -->
-## OpenSpec Instructions
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
 
 Always open `@/openspec/AGENTS.md` when the request:
 - Mentions planning or proposals (words like proposal, spec, change, plan)
 - Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
 - Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
 <!-- OPENSPEC:END -->
 
 ---
@@ -97,7 +107,7 @@ Always open `@/openspec/AGENTS.md` when the request:
 | 資料庫 | `zdpos_dev_2` (MySQL 5.7.33) |
 | 本地網址 | `https://www.zdpos.test/dev3` |
 | PHP 版本 | **5.6.40 (Legacy)** |
-| 環境 | Windows 10 / Laragon 8.0 / Apache 2.4.62 |
+| 環境 | Docker (pos_php) |
 
 ---
 
@@ -133,12 +143,30 @@ public static function model($className=__CLASS__) {
 ---
 
 ## 前端規範 (zpos.js)
-| 禁止 | 使用 |
-|------|------|
-| `$.ajax`、`fetch`、`axios` | `POS.list.ajaxPromise()` |
+- **建置方式**: 無 (Raw ES6)，直接由瀏覽器執行
+- **語法限制**: 需相容主流瀏覽器 (Chrome/Edge)
+- **禁用**: `$.ajax`、`fetch`、`axios` (請用 `POS.list.ajaxPromise()`)
+- **狀態管理**: 全域 `POS` 物件為單一真相來源
 
-- 狀態管理：全域 `POS` 物件為單一真相來源
-- 語法：ES6
+---
+
+## 常用指令 (Docker/開發環境)
+
+### Database Migrations
+```bash
+# 建立 Migration (需指定名稱)
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php php protected/yiic.php migrate create [Name]
+
+# 執行 Migration (Up)
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php php protected/yiic.php migrate up
+```
+
+### 測試與驗證
+```bash
+# 執行單元測試
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
+# 範例: docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/unit/YourTest.php
+```
 
 ---
 
@@ -182,17 +210,6 @@ class StockService {
 
 ---
 
-## Docker 測試指令
-```bash
-# Windows Git Bash 相容格式
-docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
-
-# 範例
-docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/unit/YosvipRedeemPointRequestTest.php
-```
-
----
-
 ## 規劃模式 (Planning Protocol)
 當需求涉及多檔案修改、架構變更或複雜邏輯時：
 1. Plan Phase：分析需求，輸出實作計畫
@@ -213,7 +230,7 @@ docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/un
 - [ ] 程式可編譯
 - [ ] 所有既有測試通過
 - [ ] 新功能有對應測試
-- [ ] 無 lint 錯誤
+- [ ] **Style**: 保持與周圍程式碼一致的縮排與命名風格 (Mimic existing style)
 - [ ] Commit 訊息說明「為什麼」
 
 禁止：`--no-verify` / 停用測試來修 CI / 留下無 Issue 編號的 TODO
