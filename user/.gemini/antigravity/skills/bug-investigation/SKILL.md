@@ -1,6 +1,6 @@
 ---
 name: bug-investigation
-description: "Systematic approach for investigating bugs and feature issues. Guides you through problem discovery, evidence gathering, root cause analysis, and solution proposal using a structured methodology."
+description: "Systematic approach for investigating bugs and feature issues. Guides you through problem discovery, evidence gathering, root cause analysis, knowledge documentation, and solution proposal using a structured methodology. Use when: (1) A bug report describes unexpected behavior, (2) There's data inconsistency or discrepancy between expected and actual behavior, (3) You need to trace issues through multiple system layers (frontend/backend/database), (4) Investigation requires database evidence gathering and SQL queries, (5) Creating knowledge documentation for team reference, (6) The problem involves data synchronization or state management issues."
 ---
 
 # Bug Investigation Skill
@@ -11,8 +11,11 @@ A systematic methodology for investigating bugs or feature issues in complex cod
 1. **Problem Discovery** - Understanding the reported issue
 2. **Evidence Gathering** - Collecting data from database and logs
 3. **Root Cause Analysis** - Tracing data flow to identify the source
-4. **Solution Proposal** - Designing and implementing the fix
-5. **Knowledge Documentation** - Recording findings for future reference
+4. **Knowledge Documentation** - Recording findings for future reference
+5. **Solution Proposal** - Designing and presenting fix options
+
+> [!IMPORTANT]
+> **Skill Integration Flow**: This skill integrates with `openspec-proposal` for specification creation and `test-driven-development` for implementation.
 
 ## Knowledge Base
 
@@ -107,12 +110,19 @@ cd scripts
 
 ### 1.2 建立調查文件
 
-在對話的 artifacts 目錄中建立 `brainstorming.md`：
+在**專案內部**的知識庫目錄中建立 `brainstorming.md`：
+
+```bash
+# 建立功能專屬的知識庫目錄
+mkdir -p docs/knowledge/[feature-name]
+```
 
 **路徑說明**：
-- AI 助手會自動在對話的 artifacts 目錄中建立檔案
-- 具體路徑依 AI 工具而定（通常在使用者目錄下的隱藏資料夾）
-- 使用者無需手動建立目錄
+- 所有調查文件存放於 `docs/knowledge/[feature-name]/`
+- 與專案程式碼一同版本控制，團隊可共享
+- 避免使用 AI 工具的 artifacts 目錄（對話結束後無法存取）
+
+建立 `docs/knowledge/[feature-name]/brainstorming.md`：
 
 ```markdown
 # [Issue Title] Investigation
@@ -126,8 +136,8 @@ cd scripts
 - [ ] Phase 1: Problem Discovery
 - [ ] Phase 2: Evidence Gathering
 - [ ] Phase 3: Root Cause Analysis
-- [ ] Phase 4: Solution Proposal
-- [ ] Phase 5: Knowledge Documentation
+- [ ] Phase 4: Knowledge Documentation
+- [ ] Phase 5: Solution Proposal
 ```
 
 ---
@@ -151,7 +161,7 @@ SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
 
 ### 2.2 記錄發現
 
-在 `brainstorming.md` 中記錄資料庫證據：
+在 `docs/knowledge/[feature-name]/brainstorming.md` 中記錄資料庫證據：
 
 ```markdown
 ## Database Evidence
@@ -214,7 +224,7 @@ SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
 
 ### 3.3 記錄根本原因
 
-更新 `brainstorming.md`：
+更新 `docs/knowledge/[feature-name]/brainstorming.md`：
 
 ```markdown
 ## Root Cause Analysis
@@ -233,44 +243,13 @@ SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
 
 ---
 
-## Phase 4: Solution Proposal
+## Phase 4: Knowledge Documentation
 
-### 4.1 設計解決方案選項
+> [!NOTE]
+> **順序調整說明**：Knowledge Documentation 應在 Solution Proposal 之前完成，
+> 因為使用者需要參考完整的調查文件才能對解決方案做出判斷。
 
-提出 2-3 個解決方案：
-
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A | [Frontend fix] | [...] | [...] |
-| B | [Backend fix] | [...] | [...] |
-| C | [Combined fix] | [...] | [...] |
-
-### 4.2 推薦解決方案
-
-向使用者呈現建議：
-- 推薦哪個選項？為什麼？
-- 有什麼風險？
-- 需要什麼測試？
-
-### 4.3 建立 OpenSpec Proposal（如適用）
-
-如果修復需要正式文件化：
-
-```bash
-# Create OpenSpec proposal
-mkdir -p openspec/changes/[YYYY-MM-DD]-[fix-description]
-```
-
-Include:
-- `proposal.md` - Problem analysis and solution
-- `tasks.md` - Implementation checklist
-- `specs/[capability]/spec.md` - Specification changes
-
----
-
-## Phase 5: Knowledge Documentation
-
-### 5.1 檢查現有知識庫
+### 4.1 檢查現有知識庫
 
 在深入研究程式碼之前，檢查是否已有相關文件：
 
@@ -279,7 +258,7 @@ Include:
 ls docs/knowledge/
 ```
 
-### 5.2 建立功能知識文件
+### 4.2 建立功能知識文件
 
 調查完成後，記錄功能邏輯供未來參考：
 
@@ -337,18 +316,132 @@ User Action → [Frontend Function] → [Backend API] → [Database Tables]
 | `[table]` | `[pk]` | [description] |
 ```
 
-### 5.3 更新檢查清單
+### 4.3 更新調查文件
 
-將 Phase 5 加入調查檢查清單：
+將 Phase 4 完成狀態更新至 `brainstorming.md`：
 
 ```markdown
-### Phase 5: Knowledge Documentation
-- [ ] Checked existing knowledge base
-- [ ] Created/updated feature knowledge documents
-- [ ] Documented data flow
-- [ ] Listed key functions with file locations
-- [ ] Recorded related database tables
+### Phase 4: Knowledge Documentation
+- [x] Checked existing knowledge base
+- [x] Created/updated feature knowledge documents
+- [x] Documented data flow
+- [x] Listed key functions with file locations
+- [x] Recorded related database tables
 ```
+
+---
+
+## Phase 5: Solution Proposal
+
+> [!IMPORTANT]
+> **Notify User Checkpoint**: 此階段完成方案設計後，必須通知使用者選擇方案。
+> 使用者可參考 Phase 4 產生的知識文件做出判斷。
+
+### 5.1 設計解決方案選項
+
+提出 2-3 個解決方案：
+
+| Option | Description | Pros | Cons |
+|--------|-------------|------|------|
+| A | [Frontend fix] | [...] | [...] |
+| B | [Backend fix] | [...] | [...] |
+| C | [Combined fix] | [...] | [...] |
+
+### 5.2 推薦解決方案
+
+向使用者呈現建議：
+- 推薦哪個選項？為什麼？
+- 有什麼風險？
+- 需要什麼測試？
+
+### 5.3 🔔 Notify User - 方案選擇
+
+**此時必須執行 `notify_user` 通知使用者**，內容包含：
+- 調查摘要（連結至 `docs/knowledge/[feature-name]/brainstorming.md`）
+- 解決方案選項表格
+- 推薦方案及理由
+- 請求使用者選擇方案
+
+```markdown
+## 調查完成 - 請選擇解決方案
+
+### 調查文件
+- [brainstorming.md](docs/knowledge/[feature-name]/brainstorming.md)
+- [data-flow.md](docs/knowledge/[feature-name]/data-flow.md)
+
+### 解決方案選項
+| Option | Description | Recommendation |
+|--------|-------------|----------------|
+| A | ... | |
+| B | ... | ⭐ 推薦 |
+
+請選擇您希望採用的方案（A/B/C）。
+```
+
+### 5.4 建立 OpenSpec Proposal
+
+**使用者選擇方案後**，使用 `openspec-proposal` 技能建立規格文件：
+
+```bash
+# 觸發 openspec-proposal 技能
+# 依據選定的方案建立 proposal
+mkdir -p openspec/changes/[YYYY-MM-DD]-[fix-description]
+```
+
+Include:
+- `proposal.md` - Problem analysis and solution
+- `tasks.md` - Implementation checklist
+- `specs/[capability]/spec.md` - Specification changes
+
+### 5.5 🔔 Notify User - 規格審核
+
+**OpenSpec Proposal 建立完成後**，再次執行 `notify_user`：
+
+```markdown
+## OpenSpec Proposal 已建立 - 請審核
+
+### 規格文件
+- [proposal.md](openspec/changes/[YYYY-MM-DD]-[fix-description]/proposal.md)
+- [tasks.md](openspec/changes/[YYYY-MM-DD]-[fix-description]/tasks.md)
+
+請審核以上規格文件，審核通過後將進入 TDD 開發階段。
+```
+
+### 5.6 執行 TDD 開發
+
+**規格審核通過後**，使用 `test-driven-development` 技能進行開發：
+
+1. 依據 `tasks.md` 建立測試案例
+2. 執行 Red-Green-Refactor 循環
+3. 驗證修復不會引入新問題
+
+---
+
+## Skill Integration Workflow
+
+> [!TIP]
+> 此技能與其他技能的串接流程圖：
+
+```mermaid
+flowchart TD
+    A[Phase 1-3: 調查分析] --> B[Phase 4: Knowledge Documentation]
+    B --> C[Phase 5: Solution Proposal]
+    C --> D{🔔 Notify User<br/>方案選擇}
+    D -->|用戶選擇方案| E[openspec-proposal 技能<br/>建立規格文件]
+    E --> F{🔔 Notify User<br/>規格審核}
+    F -->|審核通過| G[test-driven-development 技能<br/>TDD 開發實作]
+    F -->|需修改| E
+    G --> H[完成]
+```
+
+### 關鍵檢查點
+
+| 階段 | 動作 | 產出 |
+|------|------|------|
+| Phase 4 完成後 | 自動進入 Phase 5 | `docs/knowledge/[feature-name]/` 文件 |
+| Phase 5.2 完成後 | 🔔 `notify_user` | 方案選項，等待用戶選擇 |
+| Phase 5.4 完成後 | 🔔 `notify_user` | OpenSpec Proposal，等待審核 |
+| 審核通過後 | 切換至 TDD 技能 | 依規格進行開發 |
 
 ---
 
@@ -374,36 +467,7 @@ User Action → [Frontend Function] → [Backend API] → [Database Tables]
 
 ## 檢查清單總結
 
-```markdown
-## Investigation Checklist
+完整的調查檢查清單請參考：**[references/checklist.md](references/checklist.md)**
 
-### Phase 1: Problem Discovery
-- [ ] 理解預期與實際行為
-- [ ] 獲取樣本資料 (ID、時間戳記)
-- [ ] 建立調查文件
+該文件包含所有五個階段的詳細檢查項目，適合在調查過程中作為參考。
 
-### Phase 2: Evidence Gathering
-- [ ] 執行資料庫驗證查詢
-- [ ] 記錄資料表/欄位的差異
-- [ ] 識別資料矛盾
-
-### Phase 3: Root Cause Analysis
-- [ ] 描繪完整資料流向
-- [ ] 搜尋關鍵變數 (使用 ripgrep/scripts)
-- [ ] 識別分歧點/問題程式碼
-- [ ] 記錄根本原因
-
-### Phase 4: Solution Proposal
-- [ ] 提出 2-3 個解決方案選項
-- [ ] 向使用者呈現建議
-- [ ] 實作同意的解決方案
-- [ ] 建立 OpenSpec proposal (如適用)
-- [ ] 透過測試驗證修復
-
-### Phase 5: Knowledge Documentation
-- [ ] 檢查現有知識庫
-- [ ] 建立/更新功能知識文件
-- [ ] 記錄資料流向 (data-flow.md)
-- [ ] 列出關鍵 function 及檔案位置 (key-functions.md)
-- [ ] 記錄相關資料表 (related-tables.md)
-```
