@@ -41,6 +41,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 漸進執行：複雜任務拆解 (>3 步驟先寫計畫)，小步提交確保可編譯、可測試。
 - 測試驅動 (TDD)：Red → Green → Refactor。
 
+## 架構概觀
+- 架構：Yii 1.1 + DDD-like 分層。
+- PHP 版本：5.6.40（Legacy）。
+- 前端：Legacy POS（Raw ES6，無 build step）。
+- 資料庫：`zdpos_dev_2`（MySQL 5.7.33）。
+- 本機網址：`https://www.zdpos.test/dev3`。
+- 安全：資料庫操作必須使用 PDO prepared statements。
+
 ## 嚴格環境限制 (PHP 5.6)
 | 禁止 | 替代方案 / 要求 |
 |------|------------------|
@@ -65,20 +73,104 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 語法：ES6。
 
 ## 架構與檔案地圖
+> 前端入口以 `js/zpos.js` 為主；`js/` 內含歷史與外掛資產，變更前請確認用途。
+
 | 目錄 | 用途 | 規範 |
 | :--- | :--- | :--- |
 | `protected/models/` | Yii ActiveRecords | `class Post extends CActiveRecord` |
 | `protected/controllers/` | MVC Controllers | `class SiteController extends Controller` |
 | `protected/helpers/` | Helpers | `class CommonHelper` |
-| `domain/Services/` | Business Logic | Namespace `Domain\Services` (DDD preferred) |
+| `domain/` | Business Logic | Domain Service/Use Case（DDD-like，避免耦合 Yii） |
 | `infrastructure/Repositories/` | Data Access | Namespace `Infrastructure\Repositories` |
-| `js/` | Frontend Scripts | Use `zpos.js` as entry point |
+| `js/zpos.js` | Frontend Entry | POS 入口（主要入口檔） |
+
+## 典型範例
+> 範例僅供風格與結構參考，實作需依實際模組與既有模式調整。
+
+### Controller Action (Yii 1.1)
+```php
+public function actionGetData() {
+    // 1. 取得參數（使用 Yii request wrapper）
+    $id = Yii::app()->request->getParam('id');
+
+    // 2. 呼叫 Service（避免直接操作 Model）
+    try {
+        $service = new StockService(new StockRepository());
+        $data = $service->getData($id);
+
+        // 3. 回傳 JSON
+        $result = ['success' => true, 'data' => $data];
+    } catch (Exception $e) {
+        $result = ['success' => false, 'msg' => $e->getMessage()];
+    }
+
+    echo CJSON::encode($result);
+    Yii::app()->end();
+}
+```
+
+### Domain Service (Dependency Injection)
+```php
+// protected/domain/Stock/StockService.php
+class StockService {
+    /** @var StockRepositoryInterface */
+    private $repo;
+
+    /**
+     * 建構式注入 Repository
+     * @param StockRepositoryInterface $repo
+     */
+    public function __construct(StockRepositoryInterface $repo) {
+        $this->repo = $repo;
+    }
+
+    /**
+     * 取得可用庫存
+     * @param int $productId
+     * @return int
+     */
+    public function getAvailableStock($productId) {
+        if ($productId <= 0) {
+            throw new InvalidArgumentException('Invalid Product ID');
+        }
+        return $this->repo->findByProductId($productId)->quantity;
+    }
+}
+```
+
+## 整體專案架構（補充）
+
+### 入口與啟動
+- Web 入口：`index.php` → 讀取 `protected/config/main.php` → 建立 Yii WebApplication。
+- 環境設定：`protected/config/*.php`（例如 `dev3.php`）提供連線與環境差異設定。
+- Console 入口：`protected/yiic.php` 與 `protected/commands/`。
+
+### 後端分層
+- MVC：`protected/controllers/`、`protected/models/`、`protected/views/`。
+- Modules：`protected/modules/*`（例如：`api`、`retail`、`webOrder`、`lugun`、`uorder`、`workflow`…）。
+- 共用元件：`protected/components/`、`protected/helpers/`、`protected/extensions/`、`protected/vendors/`。
+- 既有底層基礎：`protected/zdnbase/`（control/filter/session/tool 等）。
+
+### DDD/領域層
+- Domain：`domain/`（Documents/Entities/Services/Traits/ValueObjects/Validators…）。
+- Infrastructure：`infrastructure/`（Repositories/Http/Context/Exceptions/Utility…）。
+
+### 前端與靜態資產
+- 主要 JS：`js/`（入口為 `js/zpos.js`，並有 `modules/`、`components/`、`utils/`）。
+- 樣式與主題：`css/`、`themes/zdn/`。
+- 其他資產：`images/`、`media/`、`ckeditor/`、`ckfinder/`。
+- 上傳/下載：`upload/`、`download/`、`offline/`。
+
+### 測試與輸出
+- PHPUnit 測試：`protected/tests/`（含 unit/functional/Domain/infrastructure）。
+- 手動測試：`tests/manual/`。
+- 執行輸出與日誌：`protected/runtime/`、`protected/output/`、`output/`。
 
 ## 規劃模式 (Planning Protocol)
 當需求涉及多檔案修改、架構變更或複雜邏輯時：
 1. Plan Phase：分析需求，輸出實作計畫
 2. Confirmation：等待用戶確認「Go」
-3. Execution Phase：用戶確認後才開始寫程式
+3. Execution Phase：用戶確認後才開始以 TDD 寫程式
 
 ## 開發流程 (Clear Strategy)
 1. Planning：讀取/更新 `openspec/proposals/*.md`
