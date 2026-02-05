@@ -27,8 +27,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 規範：請以 `CLAUDE.md` 為唯一權威來源。
 - 架構與背景：請參考 `GEMINI.md`（僅供背景說明，不作為規範）。
 - 若需提案或規劃，先開啟 `@/openspec/AGENTS.md`。
+- 角色定位：本代理以 **Codex** 角色執行；命令、編碼與工具規範請依「平台支援與命令慣例」及「文本分析與編碼（UTF-8）」段落。
 
-## 優先序與衝突處理（通用）
+## 提示詞最佳實務（Best Practices）
+- 精簡清楚：只提供必要上下文，明確指定目標、輸出格式與步驟順序。
+- 逐步與失敗回復：先做最小可行查找；遇到工具/權限/編碼錯誤時停止重試並回報具體錯誤與替代路徑。
+
+## 優先序與衝突處理
+
 若指令/規範彼此衝突，依序採用（由高到低）：
 1. 系統與平台限制（Sandbox/權限/網路/OS 限制）
 2. 使用者當次明確要求（本回合）
@@ -44,86 +50,58 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## 平台支援與命令慣例（Windows / macOS）
 本專案可在 Windows 與 macOS 同時開發；以下規範以「跨平台可重現」為原則，並把平台特有事項分段標示。
 
-### 1. Shell 與命令格式（跨平台）
-* **首選 Shell**: POSIX Shell（`bash` 或 `zsh`）。文件中的範例命令以 POSIX 形式書寫。
-* **建議包裝**: 若要在非互動環境中保持一致，使用 `bash -lc "..."`（login shell，環境更一致）。
-* **例外（通用原則）**: 若環境無法使用 POSIX Shell，允許暫時使用「目前外層 Shell」執行 **單一可攜工具**（如 `rg`/`fd`/`jq`/`yq`/`php`/`python3`/`mysql`）做「讀取/定位」；避免 shell 專用管道與複雜語法。
-* **嚴禁使用（可攜性）**: 以平台/殼層專用管道取代既定檢索流程（例如用 `Select-String`/`Get-ChildItem`/`findstr` 來取代 `rg`/`fd`）。
+### 1. Shell 與命令格式
+* **首選 Shell**: 一律以 POSIX Shell（`bash`）為主。
+  - Windows: 優先使用 Git Bash 或 WSL。
+  - macOS/Linux: 直接使用預設終端機。
+* **建議包裝**: 非互動環境建議使用 `bash -lc "..."` 以確保環境變數載入。
+* **PowerShell 處理**: 
+  - 僅在無法啟動 `bash` 時作為 fallback。
+  - 執行前請務必設定編碼：`$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()`。
 
-<!-- CODEX-ONLY:START -->
-> **Codex 專用說明**：Codex CLI 的執行環境可能會限制 Bash 啟動（例如回傳 `E_ACCESSDENIED`），此時才套用上方「例外」做最小化讀取/定位；不要在此模式下做大規模改檔或重構。
-<!-- CODEX-ONLY:END -->
+### 1.1 Docker / Runtime 環境
+若專案使用 Docker，請勿假設本機具有 runtime (php, python, node 等)。
 
-### 2. 工具選用指南（跨平台優先序）
-| 類別 | 推薦工具（依優先序） | 嚴禁使用 |
+* **檢查容器**: 使用 `docker ps` 確認運行中的容器名稱 (如 `php_app`, `node_service`)。
+* **執行命令**:
+  - `docker exec -it <container_name> <command>`
+  - 範例：`docker exec -it pos_php php -v` 或 `docker exec -it node_app npm test`
+
+### 2. 工具選用指南
+| 類別 | 推薦工具（依優先序） | 說明 |
 | :--- | :--- | :--- |
-| **內容搜尋** | `rg`（首選，取代 `grep`） | `findstr`, `Select-String` |
-| **檔名搜尋** | `fd`（首選，取代 `find` 進行檔名/副檔名查找） | `dir`, `Get-ChildItem`（用於檢索） |
-| **結構化搜尋** | `ast-grep` / `sg`（JS/TS/部分語言的 AST 搜尋，選用） | 以正則硬做 AST refactor |
-| **文本處理** | `sed`, `awk`（在 Bash 中） | `PowerShell` 管道做大量文字處理 |
-| **JSON/YAML** | `jq`, `yq` | 手寫解析、臨時字串切割 |
-| **互動式過濾** | `fzf`（選用） |  |
-| **檔案操作** | `ls`, `cat`, `cp`, `rm`, `mkdir -p`（在 Bash 中） | `del`, `copy` |
-| **複雜邏輯** | `python3`（必要時可搭配 `uv` 隔離環境） | 複雜多行 Shell、`.ps1` |
-| **Git 操作** | `git status`, `git log`, `git commit` | 任何 GUI 工具或 PS-Git 模組 |
+| **內容搜尋** | `rg` (ripgrep) | 取代 `grep`/`findstr`，支援 .gitignore |
+| **檔名搜尋** | `fd` (fd-find) | 取代 `find`，更直覺快速 (Ubuntu 上可能為 `fdfind`) |
+| **結構化搜尋** | `ast-grep` / `sg` | 用於程式碼結構搜尋 (選用) |
+| **JSON/YAML** | `jq`, `yq` | 解析設定檔與 API 回應 |
+| **文本處理** | `sed`, `awk`, `python3` | 避免使用平台專屬的複雜管道處理 |
 
-<!-- ENV-NOTE:START -->
-### 3. 工具可用性（環境相關）
-> 不同機器工具可能不同；請以實際 PATH 為準。
-* 檢查工具是否存在（跨平台）：`command -v rg fd jq yq fzf python3 php mysql git`
-* 常用工具（範例）：`rg`, `fd`, `jq`, `yq`, `fzf`, `ast-grep`/`sg`, `curl`, `wget`, `php`, `mysql`, `python3`, `uv`
-<!-- ENV-NOTE:END -->
+### 2.1 文本分析與編碼
+* **優先工具**: 使用 `rg`, `fd`, `jq`, `python3` 等跨平台工具。
+* **編碼**: 嚴格要求 **UTF-8**。
+  - Windows 下若遇到編碼問題，優先嘗試在 `bash` 環境操作，或在 Python 腳本中指定 `encoding='utf-8'`.
+  - PowerShell 讀取檔案時，必須明確指定 UTF-8，例如：`Get-Content -Encoding UTF8 -Path <file>`。
 
 ---
 
-## 📂 路徑格式規範（跨平台）
-* **預設**: 文件與指令範例優先使用相對路徑（例如 `./protected/...`、`./js/...`），減少平台差異。
-* **POSIX Shell 中**: 一律用 `/` 作為分隔符；避免在 POSIX 指令中出現 `\`。
-* **家目錄**: 優先使用 `~`（例如 `~/projects/...`）。
-* **Python 路徑**: Python 多能同時接受 `\` 與 `/`；但同一段流程請保持一致，避免混用。
+## 📂 路徑格式規範
 
-<!-- WINDOWS-ONLY:START -->
-### Windows（Git Bash / Scoop）
-* **POSIX 路徑（Git Bash）**: 使用 `/c/Users/<USER>/...`、`/e/projects/...` 或 `~`。
-* **Windows → POSIX 轉換（選用）**: `cygpath -u 'E:\projects\zdpos_dev'`。
-* **工具安裝/來源（範例）**: Scoop；工具 shims 位置常見於 `~/scoop/shims`。
-* **cmd 例外**: 僅在需要執行 `.bat` / `.cmd` 或 `setx` 時才使用 `cmd /c`。
-<!-- WINDOWS-ONLY:END -->
-
-<!-- MACOS-ONLY:START -->
-### macOS（zsh/bash / Homebrew）
-* **POSIX 路徑**: `/Users/<user>/...` 或 `~`。
-* **工具安裝/來源（範例）**: Homebrew（`brew install ripgrep fd jq yq fzf` 等）。
-<!-- MACOS-ONLY:END -->
+* **相對路徑**: 文件與指令優先使用相對路徑 (如 `./src/...`)。
+* **分隔符**: 統一使用 `/` (Forward Slash)，Windows 系統亦多數支援。
+* **跨平台注意事項**:
+  - **Windows (Git Bash)**: 絕對路徑使用 `/c/Users/...` 格式。
+  - **macOS/Linux**: 使用標準 `/Users/...` 或 `/home/...`。
+* **Git 操作**: 建議開啟 `core.fsmonitor` 與 `core.untrackedCache` 以優化大型專案效能。
 
 ---
 
-## 🛠️ 指令執行範本 (Best Practices)
+## ⚠️ 強制前置檢查 (MUST DO)
 
-### 檔案檢索與內容分析
-> **任務**: 尋找專案中所有包含 "Yii" 字串的檔案並列出權限。
->
-> **正確執行**: 
-> `bash -lc "rg -l 'Yii' . | xargs -I{} ls -l {}"`
+執行任何複雜任務前，請先確認環境能力：
 
-### 複雜邏輯處理 (Python 優先策略)
-> **任務**: 批次分析日誌檔案並生成 Markdown 摘要。
->
-> **正確執行**: 
-> 1. 撰寫 `temp_analyzer.py` 利用 Python 的強大文本處理能力。
-> 2. 執行 `python temp_analyzer.py`。
-> 3. 獲取結果後刪除該臨時腳本。
-
-### Git 效能維護 (解決 git status 慢)
-> **任務**: 確保 Git 在 Windows 環境下保持高效。
->
-> **正確執行**: 
-> `bash -lc "git config --global core.fsmonitor true && git config --global core.untrackedCache true"`
-
----
-
-## ⚠️ 啟動前環境自檢 (Self-Diagnostic)
-Agent 在每個對話階段開始前，應進行以下檢查：
-1. **優先工具可用性**: 確認 `rg --version`、`fd --version`、`jq --version` 能正常執行。
-2. **語言版本確認**: `php -v`、`python3 --version`（避免誤用不相容版本）。
-3. **I/O 優化**: 檢查 Git 配置（`core.fsmonitor` / `core.untrackedCache`）是否已開啟。
+1. **檢查工具**: `command -v rg fd jq git` (Bash) 或 `Get-Command rg, fd, jq, git` (PowerShell)。
+2. **檢查 Runtime**: `php -v`, `node -v`, `python3 --version` (或確認對應 Docker 容器)。
+3. **回報缺漏**: 若缺少必要工具，請明確提示使用者安裝。
+   - Windows (Scoop): `scoop install ripgrep fd jq git`
+   - macOS (Brew): `brew install ripgrep fd jq git`
+   - Debian/Ubuntu: `apt install ripgrep fd-find jq git`
