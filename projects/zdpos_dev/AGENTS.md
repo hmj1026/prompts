@@ -41,17 +41,20 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - `<!-- CODEX-ONLY:START -->...<!-- CODEX-ONLY:END -->` 僅 Codex CLI 參考；其他 CLI/Agent 可忽略，不視為通用規範。
 - `<!-- ENV-NOTE:START -->...<!-- ENV-NOTE:END -->` 為環境差異說明，不保證跨機器一致；請以實際環境為準。
 
-### 1. Shell 執行權力鎖定
-* **主要 Shell（優先）**: **Git Bash**。所有指令以 `bash -lc "..."` 形式執行（比 `-c` 更一致，會載入 login 環境）。
-* **例外（通用原則）**: 若環境無法使用 Bash，允許暫時使用「目前外層 Shell」執行 **單一可攜工具**（如 `rg`/`fd`/`jq`/`yq`/`php`/`python3`/`mysql`）做「讀取/定位」；避免 shell 專用管道與複雜語法。
-* **嚴禁使用**: 以 `PowerShell` 管道（例如 `Select-String`/`Get-ChildItem` 串接）取代 `rg`/`fd` 的檢索流程。
-* **輔助 Shell**: 僅在需要執行 `.bat` / `.cmd` 檔案或修改系統 `setx` 環境變數時，才允許呼叫 `cmd /c`。
+## 平台支援與命令慣例（Windows / macOS）
+本專案可在 Windows 與 macOS 同時開發；以下規範以「跨平台可重現」為原則，並把平台特有事項分段標示。
+
+### 1. Shell 與命令格式（跨平台）
+* **首選 Shell**: POSIX Shell（`bash` 或 `zsh`）。文件中的範例命令以 POSIX 形式書寫。
+* **建議包裝**: 若要在非互動環境中保持一致，使用 `bash -lc "..."`（login shell，環境更一致）。
+* **例外（通用原則）**: 若環境無法使用 POSIX Shell，允許暫時使用「目前外層 Shell」執行 **單一可攜工具**（如 `rg`/`fd`/`jq`/`yq`/`php`/`python3`/`mysql`）做「讀取/定位」；避免 shell 專用管道與複雜語法。
+* **嚴禁使用（可攜性）**: 以平台/殼層專用管道取代既定檢索流程（例如用 `Select-String`/`Get-ChildItem`/`findstr` 來取代 `rg`/`fd`）。
 
 <!-- CODEX-ONLY:START -->
 > **Codex 專用說明**：Codex CLI 的執行環境可能會限制 Bash 啟動（例如回傳 `E_ACCESSDENIED`），此時才套用上方「例外」做最小化讀取/定位；不要在此模式下做大規模改檔或重構。
 <!-- CODEX-ONLY:END -->
 
-### 2. 工具選用指南 (POSIX-Standard)
+### 2. 工具選用指南（跨平台優先序）
 | 類別 | 推薦工具（依優先序） | 嚴禁使用 |
 | :--- | :--- | :--- |
 | **內容搜尋** | `rg`（首選，取代 `grep`） | `findstr`, `Select-String` |
@@ -66,21 +69,32 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- ENV-NOTE:START -->
 ### 3. 工具可用性（環境相關）
-> 不同機器工具可能不同；請以實際 PATH 為準。本段僅列出「本機已安裝且常用」的例子。
-* 檢視清單（Windows + Scoop 範例）：
-  * Bash：`ls -1 ~/scoop/shims`
-  * PowerShell：`ls $HOME\\scoop\\shims`
-* 常用（範例）：`rg`, `fd`, `jq`, `yq`, `fzf`, `ast-grep`/`sg`, `curl`, `wget`, `php`, `mysql`, `python3`, `uv`
+> 不同機器工具可能不同；請以實際 PATH 為準。
+* 檢查工具是否存在（跨平台）：`command -v rg fd jq yq fzf python3 php mysql git`
+* 常用工具（範例）：`rg`, `fd`, `jq`, `yq`, `fzf`, `ast-grep`/`sg`, `curl`, `wget`, `php`, `mysql`, `python3`, `uv`
 <!-- ENV-NOTE:END -->
 
 ---
 
-## 📂 路徑格式規範
-為了確保在 Windows 上運行 Bash 的穩定性，路徑處理必須遵循：
-* **POSIX 風格（Bash）**: 優先使用 `/c/Users/<USER>/...`、`/e/projects/...` 這類路徑，或直接用 `~` 表示家目錄。
-* **反斜線禁令（Bash）**: Bash 指令中避免使用 `\` 作為路徑分隔符；請改用 `/`，以免轉義錯誤。
-* **Windows 路徑轉換（選用）**: 若只有 `E:\projects\...`，可用 `cygpath -u 'E:\projects\zdpos_dev'` 轉成 Bash 可用路徑。
-* **Python 路徑**: Python 在 Windows 多能同時接受 `\` 與 `/`；但同一段流程請保持一致，避免混用。
+## 📂 路徑格式規範（跨平台）
+* **預設**: 文件與指令範例優先使用相對路徑（例如 `./protected/...`、`./js/...`），減少平台差異。
+* **POSIX Shell 中**: 一律用 `/` 作為分隔符；避免在 POSIX 指令中出現 `\`。
+* **家目錄**: 優先使用 `~`（例如 `~/projects/...`）。
+* **Python 路徑**: Python 多能同時接受 `\` 與 `/`；但同一段流程請保持一致，避免混用。
+
+<!-- WINDOWS-ONLY:START -->
+### Windows（Git Bash / Scoop）
+* **POSIX 路徑（Git Bash）**: 使用 `/c/Users/<USER>/...`、`/e/projects/...` 或 `~`。
+* **Windows → POSIX 轉換（選用）**: `cygpath -u 'E:\projects\zdpos_dev'`。
+* **工具安裝/來源（範例）**: Scoop；工具 shims 位置常見於 `~/scoop/shims`。
+* **cmd 例外**: 僅在需要執行 `.bat` / `.cmd` 或 `setx` 時才使用 `cmd /c`。
+<!-- WINDOWS-ONLY:END -->
+
+<!-- MACOS-ONLY:START -->
+### macOS（zsh/bash / Homebrew）
+* **POSIX 路徑**: `/Users/<user>/...` 或 `~`。
+* **工具安裝/來源（範例）**: Homebrew（`brew install ripgrep fd jq yq fzf` 等）。
+<!-- MACOS-ONLY:END -->
 
 ---
 
