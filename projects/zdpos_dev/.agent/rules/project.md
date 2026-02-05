@@ -2,47 +2,8 @@
 trigger: always_on
 ---
 
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-
 # Project Context: zdpos_dev
-
-## 🎯 Core Philosophy: Artifact-First & Spec-Driven
-You are running inside Google Antigravity. **DO NOT just write code.**
-For every task, you MUST follow the **Spec-Pre-Action (S.P.A.)** protocol:
-
-1.  **Planning (The "Clear" Strategy)**:
-    - Consult `openspec/proposals/*.md`. This is our "Memory".
-    - Create/Update `artifacts/plan_[task_id].md` (or `task.md`) before touching source files.
-2.  **OpenSpec Protocol**:
-    - Consult `@/openspec/AGENTS.md` for planning or architecture shifts.
-    - If ambiguous, **Wait** for user confirmation.
-3.  **Anti-Loop Protocol**:
-    - If a step fails **3 times**, STOP.
-    - Document -> Research (find 2-3 alternatives) -> Pivot.
-
-## 👤 AI Persona & Communication
-- **Role**: Senior Solutions Architect & Google Antigravity Expert.
-- **Language**: **Traditional Chinese (正體中文)** (Response & Comments).
-- **Deep Think**: Use `<thought>` to reason through PHP 5.6 & Security constraints.
-
----
+> ℹ️ **Project Knowledge**: For architecture details, code patterns, and directory structure explanations, please refer to [CLAUDE.md](file:///e:/projects/zdpos_dev/CLAUDE.md) in the project root.
 
 ## 🚨 CRITICAL CONSTRAINTS (PHP 5.6 Legacy)
 
@@ -65,10 +26,15 @@ For every task, you MUST follow the **Spec-Pre-Action (S.P.A.)** protocol:
 -   **Architecture Map**:
     -   `protected/models/` (ActiveRecord)
     -   `protected/controllers/` (MVC)
-    -   `protected/domain/` (Business Logic/Services)
-    -   `infrastructure/Repositories/` (Data Access)
+    -   `domain/` (Business Logic/Services)
+    -   `infrastructure/` (Data Access/Interfaces)
     -   `protected/components/zdnbase/` (Core Utils)
     -   `js/` (entry: `zpos.js`)
+
+### 4. 🌍 Environment & Database
+-   **Database**: `zdpos_dev_2` (MySQL 5.7.33)
+-   **Local URL**: `https://www.zdpos.test/dev3`
+-   **PHP Version**: 5.6.40 (Legacy)
 
 ---
 
@@ -83,41 +49,24 @@ For every task, you MUST follow the **Spec-Pre-Action (S.P.A.)** protocol:
 
 ---
 
-## 🛠 Terminal & Docker Testing
+## 🛠 Terminal & Docker Commands
 
-**Testing Command (Windows Git Bash Safe)**:
-You **MUST** use double slashes `//` for paths.
+**Core Principle**: You **MUST** use double slashes `//` for paths in Git Bash.
 
+### 1. Testing (PHPUnit)
 ```bash
 docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
+# Example: docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/unit/ExampleTest.php
 ```
 
-**Example**:
-`docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit protected/tests/unit/ExampleTest.php`
+### 2. Database Migrations
+```bash
+# Create Migration (Must specify name)
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php php protected/yiic.php migrate create [Name]
+
+# Run Migrations (Up)
+docker exec -w //var/www/www.posdev/zdpos_dev pos_php php protected/yiic.php migrate up
+```
 
 ---
 
-## 💡 Few-Shot Examples
-
-**1. Good Controller Action (Yii 1.1)**
-```php
-public function actionGetData() {
-    // Return JSON properly
-    $result = ['success' => true, 'data' => []];
-    echo CJSON::encode($result);
-    Yii::app()->end(); // Important!
-}
-```
-
-**2. Domain Service (Dependency Injection)**
-```php
-class StockService {
-    /** @var StockRepositoryInterface */
-    private $repo;
-
-    /** @param StockRepositoryInterface $repo */
-    public function __construct(StockRepositoryInterface $repo) {
-        $this->repo = $repo;
-    }
-}
-```
