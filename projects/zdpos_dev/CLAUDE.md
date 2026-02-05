@@ -1,4 +1,4 @@
-﻿<!-- OPENSPEC:START -->
+<!-- OPENSPEC:START -->
 # OpenSpec Instructions
 
 These instructions are for AI assistants working in this project.
@@ -27,6 +27,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. `AGENTS.md`
 4. 使用者需求
 5. 其他專案文件
+
+## 索引（AGENTS）
+- `protected/AGENTS.md`：後端 MVC 與基礎結構總覽。
+- `protected/tests/AGENTS.md`：測試規範與 PHPUnit 慣例。
+
+## 提示詞最佳實務（Best Practices）
+- 精簡清楚：只提供必要上下文，明確指定目標、輸出格式與步驟順序。
+- 逐步與失敗回復：先做最小可行查找；遇到工具/權限/編碼錯誤時停止重試並回報具體錯誤與替代路徑。
 
 ## 溝通規則
 - 回應語言：正體中文

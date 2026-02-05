@@ -27,6 +27,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 規範：請以 `CLAUDE.md` 為唯一權威來源。
 - 架構與背景：請參考 `GEMINI.md`（僅供背景說明，不作為規範）。
 - 若需提案或規劃，先開啟 `@/openspec/AGENTS.md`。
+- 依 `CLAUDE.md` 的索引閱讀各子目錄 `AGENTS.md`
 - 角色定位：本代理以 **Codex** 角色執行；命令、編碼與工具規範請依「平台支援與命令慣例」及「文本分析與編碼（UTF-8）」段落。
 
 ## 提示詞最佳實務（Best Practices）
