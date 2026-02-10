@@ -1,32 +1,38 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
 
 # Project Context: zdpos_dev
 
 > **Note**: These project-specific rules override general guidelines where conflicts occur.
 
-## 指令優先序
-1. 系統/平台指令
-2. 本檔
-3. `AGENTS.md`
-4. 使用者需求
-5. 其他專案文件
+## Rule Priority
+1. System/Platform constraints
+2. User request in current turn
+3. This document (`CLAUDE.md`)
+4. `AGENTS.md`
+5. Other docs (e.g. `GEMINI.md`)
+
+## Execution Policy
+- 預設直接執行使用者目標，不先過度規劃
+- 任務模式：
+  - Small change: inspect -> patch -> targeted verification
+  - Medium change: inspect -> brief plan -> patch -> tests
+  - Large/ambiguous: proposal/spec first (OpenSpec)
+
+## Skill Conflict Resolution
+當多個 skill 同時命中時，依下列順序決定：
+1. OpenSpec 類（new/continue/apply/verify/sync/archive）
+2. bug-investigation（僅調查問題、定位 root cause 時）
+3. test-driven-development（功能或 bugfix 且需新增/調整測試時）
+4. software-architecture（跨模組或重大設計變更時）
+5. 其他技能（依任務必要性選最小集合）
+
+原則：
+- 不因「可用」而使用 skill，僅因「必要」而使用
+- 若使用者要求直接實作且屬小型變更，避免先套完整流程型 skill
+- 同名 skill 若有多來源，以專案內版本為唯一生效版本
+
+## Brainstorming/TDD Guardrails
+- brainstorming：僅在需求不清、方案分歧、涉及產品設計取捨時啟用
+- test-driven-development：優先用於可明確驗證行為變更的任務；不強制於 typo、註解、純文案修改
 
 ## 索引（AGENTS）
 - `protected/AGENTS.md`：後端 MVC 與基礎結構總覽。
