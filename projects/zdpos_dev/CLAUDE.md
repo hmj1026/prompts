@@ -60,7 +60,7 @@
 - PHP 版本：5.6.40（Legacy）。
 - 前端：Legacy POS（Raw ES6，無 build step）。
 - 資料庫：`zdpos_dev_2`（MySQL 5.7.33）。
-- 本機網址：`https://www.zdpos.test/dev3`。
+- 本機網址：`https://www.posdev.test/dev3`。
 - 安全：資料庫操作必須使用 PDO prepared statements。
 
 ## 嚴格環境限制 (PHP 5.6)
