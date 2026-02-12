@@ -187,10 +187,10 @@ class StockService {
 3. Execution Phase：用戶確認後才開始以 TDD 寫程式
 
 ## 開發流程 (Clear Strategy)
-1. Planning：讀取/更新 `openspec/proposals/*.md`
-2. Coding：依提案小步實作
+1. Planning：在 `openspec/changes/<change-id>/` 讀取/更新 artifacts（`proposal.md`、`specs/*/spec.md`、`design.md`、`tasks.md`），並用 `openspec status --change "<change-id>" --json` / `openspec instructions <artifact-id> --change "<change-id>" --json` 判斷下一步
+2. Coding：依 change artifacts 小步實作
 3. Checking：使用者完成驗證後再提交 `git commit`
-4. Clearing：建議使用者常用 `/clear`；上下文以 `CLAUDE.md` 與提案檔為準
+4. Clearing：建議使用者常用 `/clear`；上下文以 `CLAUDE.md` 與 change artifacts 為準
 
 ## Anti-Loop Protocol (防卡死機制)
 同一問題連續失敗 3 次，立即停止：
