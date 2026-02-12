@@ -4,27 +4,19 @@
 
 ---
 
-## Priority
-衝突時優先序（高 -> 低）：
-1. 系統與平台限制（sandbox/權限/網路/OS）
-2. 使用者本回合明確要求
-3. `CLAUDE.md`
-4. 本檔 `AGENTS.md`
-5. 其他文件（例如 `GEMINI.md`，僅背景）
-
 ## Authority & Scope
-- 規範、流程、測試、輸出格式：一律看 `CLAUDE.md`
-- 本檔僅提供索引與觸發邊界，不定義實作細節
-- 架構背景可參考 `GEMINI.md`，但不具規範效力
+- 規範、流程、測試、輸出格式：一律以 `CLAUDE.md` 為準。
+- 本檔僅提供索引與觸發邊界，不重複定義 `CLAUDE.md` 的規則。
+- 架構背景與範例參考：`docs/prompt-reference.md`。
 
 ## Skill Source Policy
 1. 優先使用專案內 skills（`./.codex/skills`、`./.agents/skills`）
-2. 專案內不存在時，才 fallback 到 user-level skills
-3. 同名 skill 只允許一個生效來源（以專案內為準）
+2. 專案內不存在時才 fallback 到 user-level skills
+3. 同名 skill 僅允許一個生效來源（以專案內為準）
 
 ## Skill Trigger Policy (Index Only)
 - 使用者明確點名 skill：必用
-- 未點名時：僅在「高信心匹配任務」時使用
+- 未點名時：僅在高信心匹配任務時使用
 - 多個 skill 命中：採最小集合，不強制全套流程
 - 詳細觸發、例外與衝突處理請見 `CLAUDE.md`
 
