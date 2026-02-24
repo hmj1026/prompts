@@ -12,13 +12,13 @@
 ## Execution Policy
 - 預設直接執行使用者目標，不先過度規劃。
 - 任務模式：
-  - Small change: inspect -> patch -> targeted verification
-  - Medium change: inspect -> brief plan -> patch -> tests
-  - Large/ambiguous: proposal/spec first (OpenSpec)
+  - Small change: inspect -> patch -> code-reviewer -> targeted verification
+  - Medium change: inspect (bug-investigation if bug) -> brief plan -> tdd-guide -> patch -> code-reviewer
+  - Large/ambiguous: OpenSpec (proposal → specs → design → tasks) -> tdd-guide -> patch -> code-reviewer
 
 ## Planning Protocol (Conditional)
 僅在下列情況，先提出計畫並等待使用者回覆 `Go`：
-1. 新功能或新能力
+1. 新功能或新能力（含：新增事件監聽、新 API 端點、新物件/方法、新頁面行為）
 2. Breaking change
 3. 跨 2 個以上模組且含介面/契約調整
 4. 高風險資料遷移、安全/權限核心邏輯變更
@@ -33,7 +33,7 @@
 ## Skill Policy
 當多個 skill 同時命中時，依序選擇：
 1. OpenSpec 類（new/continue/apply/verify/sync/archive）
-2. bug-investigation（僅調查/定位 root cause）
+2. bug-investigation — 觸發詞：「調查」「trace」「為什麼」「排查」「找原因」「root cause」
 3. test-driven-development（功能或 bugfix 且需調整測試）
 4. software-architecture（跨模組或重大設計）
 5. 其他技能（最小必要集合）
@@ -43,6 +43,9 @@
 - 使用者要求直接實作且屬小型變更時，避免套完整流程型 skill。
 - 同名 skill 若有多來源，以專案內版本為唯一生效版本。
 - brainstorming 僅在需求不清或方案分歧時啟用。
+- **code-reviewer 與 tdd-guide 為強制後置步驟，不受「避免過用」原則限制：**
+  - 任何 Edit/Write 後 → 必須啟動 code-reviewer agent
+  - Bug fix 或新功能實作後 → 必須啟動 tdd-guide agent
 
 ## Communication Rules
 - 回應語言：正體中文
@@ -90,7 +93,7 @@
 1. Planning：在 `openspec/changes/<change-id>/` 維護 `proposal.md`、`specs/*/spec.md`、`design.md`、`tasks.md`
 2. Use CLI：`openspec status --change "<change-id>" --json`
 3. Use CLI：`openspec instructions <artifact-id> --change "<change-id>" --json`
-4. Coding：依 artifacts 小步實作
+4. Coding：依 artifacts 小步實作（**tasks.md 必須先建立才能開始實作；禁止先寫程式再補文件**）
 5. Checking：由使用者驗證後再提交 `git commit`
 
 ## Anti-Loop Protocol
