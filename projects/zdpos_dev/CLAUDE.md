@@ -9,12 +9,30 @@
 4. `AGENTS.md`
 5. Other docs (e.g. `GEMINI.md`)
 
+## Available Agents
+
+for project specific using Located in `~/.claude/agents/`:
+
+| Agent | Purpose |
+|-------|---------|
+| architect-zdpos_dev | System design and architecture |
+| database-reviewer-mysql | Mysql development |
+| refactor-cleaner-zdpos_dev | Dead code cleanup |
+| security-reviewer-zdpos_dev | Security vulnerability analysis |
+| tdd-guide-zdpos_dev | Test-driven development |
+| bug-investigator | root cause analysis and data flow tracing |
+
+---
+
 ## Execution Policy
 - 預設直接執行使用者目標，不先過度規劃。
 - 任務模式：
   - Small change: inspect -> patch -> code-reviewer -> targeted verification
-  - Medium change: inspect (bug-investigation if bug) -> brief plan -> tdd-guide -> patch -> code-reviewer
+  - Medium change: inspect -> brief plan -> tdd-guide -> patch -> code-reviewer
+  - Bug fix（觸發 bug-investigation）: bug-investigation -> **OpenSpec** -> tdd-guide -> patch -> code-reviewer
   - Large/ambiguous: OpenSpec (proposal → specs → design → tasks) -> tdd-guide -> patch -> code-reviewer
+
+> **鐵律：** 凡觸發 bug-investigation skill，調查完成後必須接 OpenSpec（`/opsx:new`），不得直接跳到實作。
 
 ## Planning Protocol (Conditional)
 僅在下列情況，先提出計畫並等待使用者回覆 `Go`：
@@ -83,6 +101,41 @@
 - 禁用 `$.ajax`、`fetch`、`axios`
 - 必須使用 `POS.list.ajaxPromise()` 做非同步請求
 - 全域 `POS` 物件為單一真相來源
+
+### Yii 1.1 Framework Reference
+**Framework 位置:** `/mnt/e/projects/yii_framework/`
+
+**重要行為文檔：**
+
+| 方法 | 位置 | 返回值 | 用途 |
+|------|------|--------|------|
+| `CDbCommand::queryRow()` | `/db/CDbCommand.php:412` | `false` (非 `null`) 當無結果 | 查詢單一列 |
+| `CDbCommand::queryAll()` | `/db/CDbCommand.php:397` | `[]` (空陣列) 當無結果 | 查詢多列 |
+| `CDbCommand::queryScalar()` | `/db/CDbCommand.php:430` | `false` 當無結果 | 查詢單一值 |
+
+**關鍵注意：**
+- `queryRow()` 返回 `false` (不是 `null`)，檢查應用 `if (!$result)` 或 `if ($result === false)`
+- `is_null($queryRow())` **永遠不會** 為 true
+- 所有查詢方法使用參數綁定（`:param` 風格），防止 SQL Injection
+
+**查詢使用範例：**
+```php
+// ✅ 正確
+$result = Yii::app()->db->createCommand()
+    ->select('store_no')
+    ->from('data_store')
+    ->where('store_type=:type', [':type' => '0'])
+    ->queryRow();
+
+if (!$result) {  // 檢查 false，不用 is_null()
+    // 處理無結果情況
+}
+
+// ❌ 錯誤
+if (is_null($result)) {  // 永遠為 false，無法捕捉無結果情況
+    // 此分支永遠不會執行
+}
+```
 
 ## Filesystem / Runtime Policy
 - 寫入權限以「當前 runtime 實測結果」為準，不以固定磁碟路徑假設。
