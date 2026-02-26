@@ -1,0 +1,116 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/pre-git-operations-check.sh \"$command\"",
+            "timeout": 5,
+            "statusMessage": "檢查 git 操作...",
+            "async": false
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/check-docker-container.sh \"$command\"",
+            "timeout": 5,
+            "statusMessage": "檢查 Docker 狀態...",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/validate-php-syntax.sh \"$filePath\"",
+            "statusMessage": "Validating PHP syntax...",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/validate-php-syntax-edit.sh \"$filePath\"",
+            "timeout": 10,
+            "statusMessage": "Validating PHP syntax..."
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/check-php56-compatibility.sh \"$filePath\"",
+            "statusMessage": "Checking PHP 5.6 compatibility...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/scan-hardcoded-secrets.sh \"$filePath\"",
+            "statusMessage": "Scanning for hardcoded secrets...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/check-security-vulnerabilities.sh \"$filePath\"",
+            "statusMessage": "Checking for security vulnerabilities...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/validate-yii-controller.sh \"$filePath\"",
+            "statusMessage": "Validating Yii Controller structure...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/validate-yii-model.sh \"$filePath\"",
+            "statusMessage": "Validating Yii Model structure...",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/git-status-summary.sh",
+            "timeout": 10,
+            "statusMessage": "Checking git status...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "if [ -f ~/.claude/scripts/hooks/pre-commit-validation.sh ]; then bash ~/.claude/scripts/hooks/pre-commit-validation.sh; fi",
+            "statusMessage": "Running pre-commit validation...",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/hooks/docker-environment-status.sh",
+            "timeout": 5,
+            "statusMessage": "Checking Docker environment...",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "php-lsp@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true
+  }
+}

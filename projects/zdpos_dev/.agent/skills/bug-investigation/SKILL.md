@@ -1,32 +1,56 @@
 ---
 name: bug-investigation
-description: "Systematic approach for investigating bugs and feature issues. Guides you through problem discovery, evidence gathering, root cause analysis, knowledge documentation, and solution proposal using a structured methodology. Use when: (1) A bug report describes unexpected behavior, (2) There's data inconsistency or discrepancy between expected and actual behavior, (3) You need to trace issues through multiple system layers (frontend/backend/database), (4) Investigation requires database evidence gathering and SQL queries, (5) Creating knowledge documentation for team reference, (6) The problem involves data synchronization or state management issues."
+description: "Systematic 5-phase bug investigation workflow for unexpected behavior, test failures, performance regressions, data inconsistencies, and root cause tracing. Use when users ask to investigate/trace bugs or data flow (e.g., bug investigation, 測試失敗, 效能異常, 調查 Bug, 追蹤資料流, root cause analysis)."
 ---
 
 # Bug Investigation Skill
 
-## Overview
+## 概述
 
-A systematic methodology for investigating bugs or feature issues in complex codebases. This skill guides you through:
-1. **Problem Discovery** - Understanding the reported issue
-2. **Evidence Gathering** - Collecting data from database and logs
-3. **Root Cause Analysis** - Tracing data flow to identify the source
-4. **Knowledge Documentation** - Recording findings for future reference
-5. **Solution Proposal** - Designing and presenting fix options
+一套系統化方法，用於調查複雜程式碼中的錯誤與異常行為。此技能包含五個階段：
+1. **問題釐清** - 理解回報的問題與影響範圍
+2. **證據蒐集** - 從資料庫與日誌收集可驗證的證據
+3. **根因分析** - 追蹤資料流找出來源與分歧點
+4. **修正方案設計** - 提出與評估解決方案並形成決策依據
+5. **知識文件化** - 留存可重用的知識與調查結果
 
-> [!IMPORTANT]
-> **Skill Integration Flow**: This skill integrates with `openspec-proposal` for specification creation and `test-driven-development` for implementation.
+## 核心鐵律
 
-## Knowledge Base
+```
+未完成 Phase 1-3（尤其 Phase 3），不得提出修正方案或修改程式碼。
+```
+
+**強制要求**：
+- 所有五個階段必須完成，不可跳過。若受阻，必須記錄原因、缺口與下一步，並在調查文件中標示未完成狀態。
+- 未完成 Phase 1-3 前禁止提出修正方案或改動程式碼。
+- 所有輸出文件與報告以正體中文為主；保留原始 log、程式碼與欄位名稱。
+
+## 紅旗（出現即停止，回到 Phase 1）
+
+- 「先快修再說，之後再查」
+- 「先改幾個地方試試看」
+- 「我不確定但先試」
+- 「先跳過測試，手動驗證就好」
+- 連續修復 2 次仍失敗，準備嘗試第 3 次
+
+## 使用者提示你方向錯了
+
+- 「這樣真的有證據嗎？」
+- 「會不會根本不是那一層？」
+- 「先停一下，不要猜」
+
+## 知識庫
 
 調查過程中獲得的程式功能邏輯文件應同步存放在**專案內部**的知識庫資料夾：
 
 ```
 docs/knowledge/
 ├── [feature-name]/
-│   ├── data-flow.md       # 資料流圖解
-│   ├── key-functions.md   # 關鍵函數說明
-│   └── related-tables.md  # 相關資料表結構
+│   ├── investigation.md      # 調查總表與進度
+│   ├── data-flow.md           # 資料流圖解
+│   ├── key-functions.md       # 關鍵函數說明
+│   ├── related-tables.md      # 相關資料表結構
+│   └── solution-proposal.md   # 修正方案與決策依據
 ```
 
 **好處**：
@@ -35,70 +59,24 @@ docs/knowledge/
 - 日後調查類似問題時可先查閱
 - 減少重複的 code tracing
 
-**範例參考**：查看 `examples/state-inconsistency-example/` 了解完整的調查案例範例。
+**範例參考**：`references/examples.md` 與 `examples/state-inconsistency-example/`。
 
-## When to Use
+## 參考
 
-Use this skill when:
-- A bug report describes unexpected behavior
-- There's a discrepancy between expected and actual data
-- You need to trace an issue through multiple system layers
-- The problem involves data synchronization issues
-
-## How to Activate
-
-觸發此技能的方式：
-- 明確提及 "bug investigation" 或 "調查 Bug"
-- 描述資料不一致或異常行為問題
-- 請求追蹤資料流或分析程式碼
-- 使用關鍵詞："investigate", "trace", "root cause"
+- `references/scripts.md`：工具安裝與腳本使用說明
+- `references/examples.md`：調查案例與寫作模板
+- `references/root-cause-tracing.md`：根因回溯追蹤技巧
+- `references/defense-in-depth.md`：多層防護驗證模式
+- `references/condition-based-waiting.md`：以條件為基準的等待（解決 flaky 測試）
+- `references/wait-for-helper.ts`：條件等待 helper 範本（可直接複製）
+- `references/phase-templates.md`：各 Phase 文件與 SQL/表格模板
+- `references/checklists.md`：完整檢查清單
 
 ---
 
-## Tools & Scripts
+## Phase 1: 問題釐清
 
-此技能使用專業工具來加速 Bug 調查工作。腳本位於 `scripts/`
-
-### 必要工具檢查
-
-**首次使用前，請執行工具檢查**:
-
-```bash
-cd scripts
-./check-tools.sh
-```
-
-此腳本會檢查並提供以下工具的安裝指引：
-
-| 工具 | 用途 | 必要性 |
-|------|------|--------|
-| `ripgrep` (rg) | 程式碼搜尋 - 優化的正規表達式搜尋 | ⭐⭐⭐ 必要 |
-| `fd` | 檔案搜尋 - 快速模式比對 | ⭐⭐ 建議 |
-| `ast-grep` | 程式結構分析 - AST 層級搜尋 | ⭐⭐ 建議 |
-| `jq` | JSON 資料處理 | ⭐ 可選 |
-| `yq` | YAML 資料處理 | ⭐ 可選 |
-
-**AI 助手可協助安裝**：如果缺少工具，可請 AI 助手協助安裝以加速調查工作。
-
-### 可用腳本
-
-所有腳本已通用化，不綁定特定表或流程：
-
-| 腳本 | 功能 | 用法範例 |
-|------|------|----------|
-| `check-tools.sh` | 檢查工具並提供安裝指引 | `./check-tools.sh` |
-| `trace-data-flow.sh` | 追蹤任意變數的資料流 | `./trace-data-flow.sh <variable> [path] [types]` |
-| `search-database-queries.sh` | 搜尋任意資料表的 SQL 查詢 | `./search-database-queries.sh <table>` |
-| `analyze-function-calls.sh` | 分析任意檔案的函數呼叫 | `./analyze-function-calls.sh <file>` |
-| `generate-flow-diagram.sh` | 生成任意函數的 Mermaid 流程圖 | `./generate-flow-diagram.sh <func> <file>` |
-
-詳細說明請參考: [scripts/README.md](scripts/README.md)
-
-
-
----
-
-## Phase 1: Problem Discovery
+> 提示：首次使用先執行 `./scripts/check-tools.sh`（詳見 `references/scripts.md`）。
 
 ### 1.1 收集初始資訊
 
@@ -110,66 +88,19 @@ cd scripts
 
 ### 1.2 建立調查文件
 
-在**專案內部**的知識庫目錄中建立 `brainstorming.md`：
-
-```bash
-# 建立功能專屬的知識庫目錄
-mkdir -p docs/knowledge/[feature-name]
-```
-
-**路徑說明**：
-- 所有調查文件存放於 `docs/knowledge/[feature-name]/`
-- 與專案程式碼一同版本控制，團隊可共享
-- 避免使用 AI 工具的 artifacts 目錄（對話結束後無法存取）
-
-建立 `docs/knowledge/[feature-name]/brainstorming.md`：
-
-```markdown
-# [Issue Title] Investigation
-
-## Problem Statement
-- **Expected**: [Expected behavior]
-- **Actual**: [Actual behavior]
-- **Sample Data**: [Transaction ID, etc.]
-
-## Investigation Progress
-- [ ] Phase 1: Problem Discovery
-- [ ] Phase 2: Evidence Gathering
-- [ ] Phase 3: Root Cause Analysis
-- [ ] Phase 4: Knowledge Documentation
-- [ ] Phase 5: Solution Proposal
-```
+在 `docs/knowledge/[feature-name]/investigation.md` 建立調查文件，模板見 `references/phase-templates.md`。
 
 ---
 
-## Phase 2: Evidence Gathering
+## Phase 2: 證據蒐集
 
 ### 2.1 資料庫驗證
 
-產生 SQL 查詢以驗證問題：
-
-```sql
--- Template: Check main transaction
-SELECT * FROM [main_table] WHERE [id] = '[sample_id]';
-
--- Template: Check related records
-SELECT * FROM [related_table] WHERE [foreign_key] = '[sample_id]';
-
--- Template: Check logs
-SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
-```
+產生 SQL 查詢以驗證問題，模板見 `references/phase-templates.md`。
 
 ### 2.2 記錄發現
 
-在 `docs/knowledge/[feature-name]/brainstorming.md` 中記錄資料庫證據：
-
-```markdown
-## Database Evidence
-
-| Table | Field | Expected | Actual |
-|-------|-------|----------|--------|
-| [table] | [field] | [expected] | [actual] |
-```
+在 `docs/knowledge/[feature-name]/investigation.md` 中記錄資料庫證據，表格模板見 `references/phase-templates.md`。
 
 ### 2.3 識別矛盾點
 
@@ -178,29 +109,44 @@ SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
 - [ ] Log 記錄是否與交易資料一致？
 - [ ] 資料中是否有時序問題？
 
+### 2.4 跨層蒐證（多元件系統）
+
+當流程跨越多層（前端 → API → 背景作業 → DB）時：
+- [ ] 在每一層記錄「輸入」與「輸出」的資料
+- [ ] 檢查設定/環境變數是否正確傳遞
+- [ ] 一次收集證據以定位斷裂的層級
+
 ---
 
-## Phase 3: Root Cause Analysis
+## Phase 3: 根因分析
 
 ### 3.1 追蹤資料流向
 
 描繪資料從輸入到資料庫的完整路徑：
 
 ```
-1. User Action → [Function/API]
+1. 使用者動作 → [函式/API]
            ↓
-2. Frontend Processing → [JS Function]
+2. 前端處理 → [JS 函式]
            ↓
-3. Backend API → [Controller/Action]
+3. 後端 API → [Controller/Action]
            ↓
-4. Database Write → [Table(s)]
+4. 資料庫寫入 → [資料表]
 ```
 
-### 3.2 程式碼調查
+需要完整回溯技巧時，參考 `references/root-cause-tracing.md`。
+
+### 3.2 對照可運作範例
+
+- [ ] 找出同專案中相似且正常的流程/程式碼
+- [ ] 完整閱讀，不要略過細節
+- [ ] 列出所有差異（哪怕很小）
+
+### 3.3 程式碼調查
 
 對資料流中的每個步驟：
 
-1. **Search for key variables** (使用專業工具):
+1. **搜尋關鍵變數** (使用專業工具):
    ```bash
    # 使用 ripgrep (推薦)
    rg "<variable_name>" --type php --type js
@@ -213,235 +159,96 @@ SELECT * FROM [log_table] WHERE [reference] = '[sample_id]';
    ```
 
 2. **追蹤資料來源**：
-   - 哪個 function 計算或提供此值？
+   - 哪個函式計算或提供此值？
    - 資料如何從前端傳遞到後端？
-   - 使用 `analyze-function-calls.sh` 分析 function 呼叫關係
+   - 使用 `analyze-function-calls.sh` 分析函式呼叫關係
 
 3. **識別分歧點**：
    - 預期與實際行為在哪裡分歧？
    - 什麼條件導致進入錯誤的路徑？
    - 使用 `generate-flow-diagram.sh` 生成流程圖輔助分析
 
-### 3.3 記錄根本原因
+### 3.4 單一假設與最小驗證
 
-更新 `docs/knowledge/[feature-name]/brainstorming.md`：
+- [ ] 明確寫下單一假設：「我認為 X 是根因，因為 Y」
+- [ ] 設計最小修改或最小檢查來驗證
+- [ ] 驗證失敗就回到 3.1-3.3 重新建立假設
 
-```markdown
-## Root Cause Analysis
+### 3.5 記錄根本原因
 
-### Data Flow
-[Diagram or step-by-step flow]
-
-### Problem Location
-- **File**: [file path]
-- **Line**: [line number]
-- **Issue**: [description]
-
-### Why It Happens
-[Explanation of the condition that triggers the bug]
-```
+更新 `docs/knowledge/[feature-name]/investigation.md`，模板見 `references/phase-templates.md`。
 
 ---
 
-## Phase 4: Knowledge Documentation
+## Phase 4: 修正方案設計
 
-> [!NOTE]
-> **順序調整說明**：Knowledge Documentation 應在 Solution Proposal 之前完成，
-> 因為使用者需要參考完整的調查文件才能對解決方案做出判斷。
+### 4.1 建立修正方案文件（必做）
 
-### 4.1 檢查現有知識庫
+在 `docs/knowledge/[feature-name]/solution-proposal.md` 記錄修正方案與判斷依據，模板見 `references/phase-templates.md`。
 
-在深入研究程式碼之前，檢查是否已有相關文件：
+### 4.2 設計解決方案選項
 
-```bash
-# Search knowledge base for related feature
-ls docs/knowledge/
-```
+提出 2-3 個解決方案，並回填到 `solution-proposal.md`。
 
-### 4.2 建立功能知識文件
-
-調查完成後，記錄功能邏輯供未來參考：
-
-```bash
-mkdir -p docs/knowledge/[feature-name]
-```
-
-Create the following files:
-
-#### `data-flow.md`
-```markdown
-# [Feature Name] - Data Flow
-
-## Overview
-[Brief description of the feature]
-
-## Data Flow Diagram
-```
-User Action → [Frontend Function] → [Backend API] → [Database Tables]
-```
-
-## Key Variables
-| Variable | Location | Purpose |
-|----------|----------|---------|
-| `[var]` | [file:line] | [description] |
-```
-
-#### `key-functions.md`
-```markdown
-# [Feature Name] - Key Functions
-
-## Frontend (JavaScript)
-| Function | File | Description |
-|----------|------|-------------|
-| `[func]()` | [file:line] | [what it does] |
-
-## Backend (PHP)
-| Function | File | Description |
-|----------|------|-------------|
-| `[func]()` | [file:line] | [what it does] |
-```
-
-#### `related-tables.md`
-```markdown
-# [Feature Name] - Database Tables
-
-## Primary Tables
-| Table | Key Field | Purpose |
-|-------|-----------|---------|
-| `[table]` | `[pk]` | [description] |
-
-## Log Tables
-| Table | Key Field | Purpose |
-|-------|-----------|---------|
-| `[table]` | `[pk]` | [description] |
-```
-
-### 4.3 更新調查文件
-
-將 Phase 4 完成狀態更新至 `brainstorming.md`：
-
-```markdown
-### Phase 4: Knowledge Documentation
-- [x] Checked existing knowledge base
-- [x] Created/updated feature knowledge documents
-- [x] Documented data flow
-- [x] Listed key functions with file locations
-- [x] Recorded related database tables
-```
-
----
-
-## Phase 5: Solution Proposal
-
-> [!IMPORTANT]
-> **Notify User Checkpoint**: 此階段完成方案設計後，必須通知使用者選擇方案。
-> 使用者可參考 Phase 4 產生的知識文件做出判斷。
-
-### 5.1 設計解決方案選項
-
-提出 2-3 個解決方案：
-
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A | [Frontend fix] | [...] | [...] |
-| B | [Backend fix] | [...] | [...] |
-| C | [Combined fix] | [...] | [...] |
-
-### 5.2 推薦解決方案
+### 4.3 推薦解決方案
 
 向使用者呈現建議：
 - 推薦哪個選項？為什麼？
 - 有什麼風險？
 - 需要什麼測試？
 
-### 5.3 🔔 Notify User - 方案選擇
+### 4.4 建立失敗測試/最小重現（必做）
 
-**此時必須執行 `notify_user` 通知使用者**，內容包含：
-- 調查摘要（連結至 `docs/knowledge/[feature-name]/brainstorming.md`）
-- 解決方案選項表格
-- 推薦方案及理由
-- 請求使用者選擇方案
+- [ ] 建立最小可重現案例或自動化測試
+- [ ] 有測試框架時先寫 failing test
+- [ ] 需要完整測試流程時使用 `test-driven-development` 技能
+- [ ] 若是 flaky/timeout，改用 `references/condition-based-waiting.md` 的條件等待
 
-```markdown
-## 調查完成 - 請選擇解決方案
+### 4.5 建立 OpenSpec Proposal（如適用）
 
-### 調查文件
-- [brainstorming.md](docs/knowledge/[feature-name]/brainstorming.md)
-- [data-flow.md](docs/knowledge/[feature-name]/data-flow.md)
-
-### 解決方案選項
-| Option | Description | Recommendation |
-|--------|-------------|----------------|
-| A | ... | |
-| B | ... | ⭐ 推薦 |
-
-請選擇您希望採用的方案（A/B/C）。
-```
-
-### 5.4 建立 OpenSpec Proposal
-
-**使用者選擇方案後**，使用 `openspec-proposal` 技能建立規格文件：
+如果修復需要正式文件化，先參考 `openspec/AGENTS.md` 的格式與流程：
 
 ```bash
-# 觸發 openspec-proposal 技能
-# 依據選定的方案建立 proposal
+# 建立 OpenSpec proposal
 mkdir -p openspec/changes/[YYYY-MM-DD]-[fix-description]
 ```
 
-Include:
-- `proposal.md` - Problem analysis and solution
-- `tasks.md` - Implementation checklist
-- `specs/[capability]/spec.md` - Specification changes
+包含：
+- `proposal.md` - 問題分析與解決方案
+- `tasks.md` - 實作檢查清單
+- `specs/[capability]/spec.md` - 規格變更
 
-### 5.5 🔔 Notify User - 規格審核
+### 4.6 修復連續失敗時的停損
 
-**OpenSpec Proposal 建立完成後**，再次執行 `notify_user`：
+- [ ] 已嘗試修復 2 次仍失敗：回到 Phase 1-3 重新調查
+- [ ] 已嘗試 3 次仍失敗：停止再修，先討論架構/設計問題
 
-```markdown
-## OpenSpec Proposal 已建立 - 請審核
-
-### 規格文件
-- [proposal.md](openspec/changes/[YYYY-MM-DD]-[fix-description]/proposal.md)
-- [tasks.md](openspec/changes/[YYYY-MM-DD]-[fix-description]/tasks.md)
-
-請審核以上規格文件，審核通過後將進入 TDD 開發階段。
-```
-
-### 5.6 執行 TDD 開發
-
-**規格審核通過後**，使用 `test-driven-development` 技能進行開發：
-
-1. 依據 `tasks.md` 建立測試案例
-2. 執行 Red-Green-Refactor 循環
-3. 驗證修復不會引入新問題
+修復涉及資料驗證時，採用 `references/defense-in-depth.md` 的多層防護。
 
 ---
 
-## Skill Integration Workflow
+## Phase 5: 知識文件化
 
-> [!TIP]
-> 此技能與其他技能的串接流程圖：
+### 5.1 檢查現有知識庫
 
-```mermaid
-flowchart TD
-    A[Phase 1-3: 調查分析] --> B[Phase 4: Knowledge Documentation]
-    B --> C[Phase 5: Solution Proposal]
-    C --> D{🔔 Notify User<br/>方案選擇}
-    D -->|用戶選擇方案| E[openspec-proposal 技能<br/>建立規格文件]
-    E --> F{🔔 Notify User<br/>規格審核}
-    F -->|審核通過| G[test-driven-development 技能<br/>TDD 開發實作]
-    F -->|需修改| E
-    G --> H[完成]
+在深入研究程式碼之前，檢查是否已有相關文件：
+
+```bash
+# 搜尋知識庫是否已有相關文件
+ls docs/knowledge/
 ```
 
-### 關鍵檢查點
+### 5.2 建立功能知識文件
 
-| 階段 | 動作 | 產出 |
-|------|------|------|
-| Phase 4 完成後 | 自動進入 Phase 5 | `docs/knowledge/[feature-name]/` 文件 |
-| Phase 5.2 完成後 | 🔔 `notify_user` | 方案選項，等待用戶選擇 |
-| Phase 5.4 完成後 | 🔔 `notify_user` | OpenSpec Proposal，等待審核 |
-| 審核通過後 | 切換至 TDD 技能 | 依規格進行開發 |
+調查完成後，記錄功能邏輯供未來參考：
+建立以下文件，模板見 `references/phase-templates.md`：
+- `data-flow.md`
+- `key-functions.md`
+- `related-tables.md`
+
+### 5.3 更新檢查清單
+
+檢查清單模板見 `references/checklists.md`。
 
 ---
 
@@ -454,6 +261,7 @@ flowchart TD
 - **記錄一切** - 保留調查軌跡
 
 ### 溝通方式
+- **全程正體中文** - 所有輸出與文件維持正體中文
 - **游進式報告** - 不要等到最後才報告
 - **提出澄清問題** - 與使用者驗證假設
 - **解釋推理** - 幫助使用者理解分析
@@ -463,11 +271,15 @@ flowchart TD
 - **預防未來問題** - 考慮如何避免類似的 bug
 - **完整測試** - 驗證修復不會引入新問題
 
+## 例外處理（仍須完成 Phase 1-5）
+
+若調查確認問題源於外部系統/環境/時序：
+- **清楚記錄證據與限制**
+- **在 Phase 4 設計防護**（重試、timeout、錯誤訊息、監控）
+- **在 Phase 5 留下觀測點**
+
 ---
 
 ## 檢查清單總結
 
-完整的調查檢查清單請參考：**[references/checklist.md](references/checklist.md)**
-
-該文件包含所有五個階段的詳細檢查項目，適合在調查過程中作為參考。
-
+完整版本請見 `references/checklists.md`。
