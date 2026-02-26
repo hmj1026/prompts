@@ -11,15 +11,21 @@
 
 ## Available Agents
 
-for project specific using Located in `~/.claude/agents/`:
+**專案專屬** (`.claude/agents/`)：
+
+| Agent | 檔案 | Purpose |
+|-------|------|---------|
+| tdd-guide-zdpos_dev | `tdd-guide-zdpos_dev.md` | TDD for PHP 5.6 + PHPUnit 5.7（含 strcasecmp、assertInternalType 等陷阱）|
+| database-reviewer-mysql | `database-reviewer-mysql.md` | MySQL 5.7 query review |
+| security-reviewer-zdpos_dev | `security-reviewer-zdpos_dev.md` | PHP/Yii security analysis |
+| architect-zdpos_dev | `architect-zdpos_dev.md` | zdpos DDD system design |
+| refactor-cleaner-zdpos_dev | `refactor-cleaner-zdpos_dev.md` | Dead code cleanup |
+
+**通用備援** (`~/.claude/agents/`)：
 
 | Agent | Purpose |
 |-------|---------|
-| architect-zdpos_dev | System design and architecture |
-| database-reviewer-mysql | Mysql development |
-| refactor-cleaner-zdpos_dev | Dead code cleanup |
-| security-reviewer-zdpos_dev | Security vulnerability analysis |
-| tdd-guide-zdpos_dev | Test-driven development |
+| code-reviewer | Code review（最穩定，PHP 專案也適用）|
 | bug-investigator | root cause analysis and data flow tracing |
 
 ---
@@ -46,7 +52,6 @@ for project specific using Located in `~/.claude/agents/`:
 ## Output Contract
 - 回覆格式預設為：`結論` -> `變更檔案` -> `驗證` -> `風險/待確認`。
 - 找不到答案或受限於環境時，必須回覆：`阻塞原因`、`已嘗試`、`下一個可行方案`。
-- 不輸出內部推理；只輸出可執行的結論與依據。
 
 ## Skill Policy
 當多個 skill 同時命中時，依序選擇：
@@ -74,8 +79,6 @@ for project specific using Located in `~/.claude/agents/`:
 ## Core Engineering Rules
 - 單一真相來源（SSOT）：延展既有邏輯，不重複造輪子。
 - 先讀後寫：優先用 `rg`/`fd` 找既有模式再改。
-- 簡潔優先：清楚意圖 > 炫技寫法，遵循 SRP/DRY。
-- 測試策略：可驗證行為變更時採 TDD（Red -> Green -> Refactor）。
 - 資料庫操作必須使用 PDO prepared statements。
 
 ## Environment Constraints
@@ -118,24 +121,19 @@ for project specific using Located in `~/.claude/agents/`:
 - `is_null($queryRow())` **永遠不會** 為 true
 - 所有查詢方法使用參數綁定（`:param` 風格），防止 SQL Injection
 
-**查詢使用範例：**
-```php
-// ✅ 正確
-$result = Yii::app()->db->createCommand()
-    ->select('store_no')
-    ->from('data_store')
-    ->where('store_type=:type', [':type' => '0'])
-    ->queryRow();
+**DDD 層次與常用常數：**
+- DDD 呼叫路徑：`Controller → $this->app()->{service}->fetchXxx() → Repository->forXxx()`
+- `$this->app()` 定義於 `protected/controllers/traits/DomainApplicable.php`
+- `PayTypeGroup` 常數位於 `domain/Models/PayTypeGroup.php`（禁用魔法字串）：
+  - `PayTypeGroup::THIRD_PARTY` = `'3rdParty'`
+  - `PayTypeGroup::MULTI_PAY`   = `'multiPay'`
+  - `PayTypeGroup::TOTAL_PAY`   = `'TotalPay'`
+  - `PayTypeGroup::TICKET`      = `'ticket'`
 
-if (!$result) {  // 檢查 false，不用 is_null()
-    // 處理無結果情況
-}
-
-// ❌ 錯誤
-if (is_null($result)) {  // 永遠為 false，無法捕捉無結果情況
-    // 此分支永遠不會執行
-}
-```
+**MySQL collation 與測試排序驗證：**
+- DB 使用 `utf8_unicode_ci`（大小寫不敏感）排序
+- PHP 測試驗證 ORDER BY 結果時，**必須用 `strcasecmp()`，禁用 `strcmp()`**
+- 原因：`strcmp('ipass', 'ND')` 返回 27（ASCII 差值），但 MySQL 認為 i < N
 
 ## Filesystem / Runtime Policy
 - 寫入權限以「當前 runtime 實測結果」為準，不以固定磁碟路徑假設。
@@ -143,11 +141,9 @@ if (is_null($result)) {  // 永遠為 false，無法捕捉無結果情況
 - 涉及 Web Root 相對路徑時，先明確說明路徑基準再落檔。
 
 ## OpenSpec Workflow
-1. Planning：在 `openspec/changes/<change-id>/` 維護 `proposal.md`、`specs/*/spec.md`、`design.md`、`tasks.md`
-2. Use CLI：`openspec status --change "<change-id>" --json`
-3. Use CLI：`openspec instructions <artifact-id> --change "<change-id>" --json`
-4. Coding：依 artifacts 小步實作（**tasks.md 必須先建立才能開始實作；禁止先寫程式再補文件**）
-5. Checking：由使用者驗證後再提交 `git commit`
+artifacts 目錄：`openspec/changes/<change-id>/`（proposal → specs → design → tasks）
+
+> **IMPORTANT：tasks.md 必須先建立才能開始實作；禁止先寫程式再補文件。**
 
 ## Anti-Loop Protocol
 同一問題連續失敗 3 次，立即停止並用下列模板回報：
@@ -156,13 +152,15 @@ if (is_null($result)) {  // 永遠為 false，無法捕捉無結果情況
 3. `建議決策`：推薦下一步與原因
 
 ## Testing & Validation
+> **IMPORTANT：實作完成後必須主動執行相關測試，以驗證變更正確性。**
+
 - 單元測試：Docker PHPUnit
 - 手動驗證：`https://www.posdev.test/dev3/controller/action`
 - 日誌：`protected/runtime/application.log`
 
 ```bash
 # Windows Git Bash 相容格式
-docker exec -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
+docker exec -i -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Test_Path]
 ```
 
 ## Reference Index
