@@ -1,0 +1,169 @@
+/* =================================================================== */
+/* 通用與基礎樣式 (General & Base Styles)                                 */
+/* =================================================================== */
+
+select {
+    font-size: 17px;
+}
+
+::-webkit-scrollbar {
+    width: 20px;
+    height: 0.8em;
+    background-color: #fff;
+    background: -webkit-gradient(linear, left center, right center, from(#cccccc), to(#eeeeee));
+}
+
+::-webkit-scrollbar-thumb {
+    border-top: 1px solid #fff;
+    background: -webkit-gradient(linear, left bottom, left top, from(#ccc), to(#aaa));
+    -webkit-border-radius: 5px;
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+}
+
+/* =================================================================== */
+/* 元件：歷史進價彈窗 (Component: Price History Dialog)                 */
+/* =================================================================== */
+
+#price-history-dialog {
+    padding: 10px;
+    /*max-height: 400px;*/
+    /*overflow-y: auto;*/
+    outline: none;
+}
+
+/* 歷史進價表格的基礎樣式 */
+.price-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* th 和 td */
+.price-history-table th,
+.price-history-table td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+/* thead */
+.price-history-table thead th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    position: sticky;
+    top: -11px;/* 微調固定位置，補償容器 padding */
+    z-index: 1;
+}
+
+/* tr */
+.price-history-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.price-history-table tbody tr:hover {
+    background-color: #e9f5ff;
+}
+
+.price-history-table tbody tr.highlight {
+    background-color: #d0eaff;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.price-history-table .price-cell {
+    text-align: right;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* 2025/07/10 paul [V1]進貨輸入介面UI優化 start */
+
+/* =================================================================== */
+/* 1. 基礎樣式 (針對 1024px 及以下螢幕)                                     */
+/* =================================================================== */
+
+.form-grid-container {
+    display: grid;
+    gap: 4px 15px;
+    align-items: center;
+    /* 設為【一行四元件】佈局 */
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.form-item {
+    display: flex;
+    align-items: center;
+}
+
+.form-item label {
+    margin-right: 5px;
+    white-space: nowrap;
+    color: #fff;
+}
+
+.form-item .form-input-style,
+.form-item .select2-container {
+    width: 100%;
+}
+
+.excel-button-container {
+    grid-column-start: 4; /* 位置在第四個，尾端 */
+    justify-self: flex-end; /* 靠右對齊 */
+}
+
+/* =================================================================== */
+/* 2. 螢幕寬度 > 1024px                                                  */
+/* =================================================================== */
+
+@media (min-width: 1025px) {
+    .form-grid-container {
+        /* 【一行六元件】佈局 */
+        grid-template-columns: repeat(6, 1fr);
+        gap: 2px 15px;
+    }
+
+    .excel-button-container {
+        /* 位置在第六個，尾端 */
+        grid-column-start: 6;
+    }
+}
+
+/* =================================================================== */
+/* 表單元件樣式 (統一管理)                                                 */
+/* =================================================================== */
+
+/* 通用輸入框樣式 */
+.form-input-style {
+    box-sizing: border-box;
+    width: 100%;
+    height: 24px;
+    background-color: #ffffff;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    padding: 2px 8px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 18px;
+    vertical-align: middle;
+}
+
+.form-input-style:focus {
+    border-color: #66afe9;
+    outline: 0;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(102, 175, 233, 0.6);
+}
+
+input[disabled].form-input-style {
+    background-color: #eee;
+}
+
+/* Select2 元件樣式 */
+.select2-container .select2-choice {
+    height: 24px;
+    line-height: 24px;
+    border-radius: 4px;
+}
+/*	2025/07/08 paul [V1]進貨輸入介面UI優化_0708 end */

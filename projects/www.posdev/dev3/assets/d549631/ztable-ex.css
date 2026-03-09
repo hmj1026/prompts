@@ -1,0 +1,147 @@
+/* ---------- 共用變數（可在不同主題覆寫） ---------- */
+.zdn-table {
+    --zdn-head-bg-start: #b5bdc8;
+    --zdn-head-bg-mid: #828c95;
+    --zdn-head-bg-end: #28343b;
+    --zdn-head-color: #fff;
+    --zdn-body-bg: #666;
+    --zdn-body-sticky-bg: #333;
+    --zdn-row-padding: 5px;
+    --zdn-body-height: 300px;
+    --zdn-table-color: #333;
+    --zdn-table-sticky-color: #fff;
+    --zdn-border-color: rgba(255, 255, 255, 0.1);
+    width: 100%;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial;
+    color: var(--zdn-table-color);
+}
+
+/* ---------- 外層容器：提供背景與水平滾動 ---------- */
+.zdn-table-container {
+    background-color: var(--zdn-body-bg);
+    overflow-x: auto;
+    /*border-radius: 6px;*/
+}
+
+/* ---------- 表格本體 ---------- */
+.zdn-table-inner {
+    width: 100%;
+    /*border-collapse: collapse;*/
+    border-collapse: separate;
+    border-spacing: 0;
+    /* 保持欄位對齊 auto 的話 .zdn-table-inner td, .zdn-table-inner th 要搭配 white-space: nowrap; */
+    table-layout: auto;
+    /* 保持欄位對齊 fixed 的話 .zdn-table-inner td, .zdn-table-inner th 要搭配 white-space: normal; */
+    /*table-layout: fixed;*/
+}
+
+/* ---------- 表頭 ---------- */
+.zdn-table-inner thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(
+            to bottom,
+            var(--zdn-head-bg-start) 0%,
+            var(--zdn-head-bg-mid) 36%,
+            var(--zdn-head-bg-end) 100%
+    );
+    color: var(--zdn-head-color);
+    padding: var(--zdn-row-padding);
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--zdn-border-color);
+}
+
+/* ---------- 滾動區 ---------- */
+.zdn_tbody {
+    /*max-height: var(--zdn-body-height);*/
+    overflow-y: auto; /* 垂直滾動 */
+    /*overflow-x: hidden;*/
+    overflow-x: visible; /* 不隱藏橫向捲動，由外層控制 */
+    background-color: var(--zdn-body-bg);
+}
+
+/* ---------- 儲存格通用 ---------- */
+.zdn-table-inner td,
+.zdn-table-inner th {
+    padding: var(--zdn-row-padding);
+    /*text-overflow: ellipsis;*/
+    /*overflow: hidden;*/
+    white-space: nowrap;
+    /*white-space: normal;*/
+    /*word-break: break-all;*/
+    border-bottom: 1px solid var(--zdn-border-color);
+    border-left: #FFF 1px solid;
+    border-right: #FFF 1px solid;
+    line-height: 1em;
+}
+
+/* ---------- 滾動條樣式（可視化但不突兀） ---------- */
+.zdn_tbody::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.zdn_tbody::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+}
+
+.zdn_tbody::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox */
+.zdn_tbody {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* ---------- 響應式：小螢幕可換行 ---------- */
+@media (max-width: 640px) {
+    .zdn-table-inner td,
+    .zdn-table-inner th {
+        white-space: normal;
+    }
+}
+
+/* 固定表頭 (通用設定) */
+.zdn-table-inner thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: linear-gradient(
+            to bottom,
+            var(--zdn-head-bg-start, #b5bdc8),
+            var(--zdn-head-bg-mid, #828c95) 36%,
+            var(--zdn-head-bg-end, #28343b)
+    );
+    color: var(--zdn-head-color, #fff);
+}
+
+/* 任何 sticky 欄位 (由 JS 設定) */
+.zdn-table-inner th.is-sticky,
+.zdn-table-inner td.is-sticky {
+    color: var(--zdn-table-sticky-color);
+    position: sticky;
+    z-index: 4;
+    background: var(--zdn-body-sticky-bg, #666);
+    background-clip: padding-box;
+    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.1); /* 分隔線 */
+}
+
+/* 滾動條樣式 */
+.zdn-table-container::-webkit-scrollbar {
+    /*height: 8px;*/
+    height: 15px;
+}
+.zdn-table-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+}
+
+/* 隱藏或顯示控制欄位視窗 z-index */
+#zdn_controller div.zdn_columns {
+    z-index: 10;
+}

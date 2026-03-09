@@ -1,0 +1,139 @@
+#setting_panel {
+    padding: 2px;
+    background-color: #333333;
+}
+
+#setting_panel label {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #FFFFFF;
+    margin-left: 10px;
+}
+
+#point_change {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    border-radius: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: 60px;
+}
+
+#bt3 {
+    margin-left: 10px;
+}
+
+input[type='text'], input[type='number'] {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    border-radius: 5px;
+    padding-left: 5px;
+    font-weight: bold;
+}
+
+div.template table td {
+    padding: 0;
+}
+
+img.flip90 {
+    -webkit-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.multselect {
+    width: 100%;
+    margin: auto;
+}
+
+.multselect .multTitle {
+    font-size: 16px;
+    text-align: center;
+    background-color: #FFF;
+    border: 1px solid #999;
+}
+
+.multselect .multNabla {
+    text-align: center;
+    background-color: #EEE;
+    border: 1px solid #999;
+}
+
+.multselectMenu {
+    font-size: 18px;
+    background-color: #EEE;
+    border: 1px solid #999;
+}
+
+.multselectMenu div {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.multselectMeun {
+    background-color: #EEE;
+}
+
+.selectOption {
+    background-color: #0054a8;
+    color: #fff;
+}
+
+/* 2021-07-30 顧客資料維護可發送【簡訊功能】 shang start【3】*/
+#dialog-sms div {
+    display: inline-block;
+    padding-bottom: 5px;
+    margin: 0px;
+    padding: 0px;
+    white-space: nowrap;
+    width: 100%
+}
+
+ul {
+    /*width: 500px;*/
+    overflow: hidden;
+    /*white-space:nowrap;*/
+    margin: 0px;
+    padding: 0px;
+}
+
+li {
+    margin: 0px;
+    padding: 0px;
+    display: inline-block;;
+    float: left;
+    margin-left: 5px;
+    cursor: pointer;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    font-weight: bold;
+    border-radius: 5px;
+    background-color: #666;
+    color: #FFFFFF;
+    text-shadow: #333 1px 1px 1px;
+    text-align: -webkit-match-parent;
+}
+
+.redColor {
+    background: red;
+}
+
+.reColor {
+    background-color: #666;
+}
+
+.sms1 {
+    display: inline;
+    float: left;
+}
+
+.sms2 {
+
+}

@@ -1,0 +1,21 @@
+{
+  "id" : "https://www.zdpos.tw/dev2/",
+  "start_url": "https://www.zdpos.tw/dev2/",
+  "name": "DEV",
+  "short_name": "中鼎POS",
+  "display": "standalone",
+  "background_color": "#000",
+  "theme_color": "#000",
+  "icons": [
+    {
+      "src": "./images/icons_app/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./images/icons_app/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
