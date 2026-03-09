@@ -9,10 +9,23 @@
 - 本檔僅提供索引與觸發邊界，不重複定義 `CLAUDE.md` 的規則。
 - 架構背景與範例參考：`docs/prompt-reference.md`。
 
+## GPT-5.4 Prompt Guidance (Delta Only)
+- 適用範圍：撰寫 prompt、skill、command、sub-agent instructions 時，可補充使用以下 GPT-5.4 偏好；專案規範仍以 `CLAUDE.md` 為準。
+- 先寫最小可行 prompt：先明確 `goal`、`success criteria`、`constraints`、`output format`，觀察偏差後再補範例或進階規則。
+- Completion contract 要具體：明講做到什麼算完成、何時停止、缺資料或失敗時如何回報。
+- 優先用 Markdown 標題與平面條列切開 `context`、`task`、`rules`、`output`；避免長段混寫，也避免巢狀 bullets。
+- few-shot 僅在格式一致性或邊界案例真的不足時再加，避免無意義擴張 context。
+- Tool-using 任務要明講查找、驗證、修改、回報的順序與邊界，不要假設模型會自行補足完成條件。
+- `reasoning_effort` 視為最後微調旋鈕：先補 `completeness`、`verification loop`、`tool persistence` 規則，再考慮提高；workflow / execution-heavy 任務先從 `none` 或 `low` 評估。
+- 若使用 Responses API 且需自行回放 assistant history，長流程要保留 `phase`，避免 preamble 或 progress updates 被誤判為 final answer。
+- Source: <https://developers.openai.com/api/docs/guides/prompt-guidance>
+
 ## Skill Source Policy
-1. 優先使用專案內 skills（`./.codex/skills`、`./.agents/skills`）
-2. 專案內不存在時才 fallback 到 user-level skills
-3. 同名 skill 僅允許一個生效來源（以專案內為準）
+1. Canonical project-level skill path: `.agent/skills` (authoritative; `.agents/skills` is a legacy alias fallback — currently empty)
+2. 優先使用專案內 skills（`./.codex/skills`、`./.agent/skills`）
+3. 專案內不存在時才 fallback 到 user-level skills
+4. 同名 skill 僅允許一個生效來源（以專案內為準）
+5. ⚠️ Warning: 若只存在 `.agents/skills`（legacy alias），需回收至 `.agent/skills`
 
 ## Skill Trigger Policy (Index Only)
 - 使用者明確點名 skill：必用
