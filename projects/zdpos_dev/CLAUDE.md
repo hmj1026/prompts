@@ -57,13 +57,7 @@
 - DB：`zdpos_dev_2`（MySQL 5.7.33）
 - 本機網址：`https://www.posdev.test/dev3`
 
-### PHP 5.6 Hard Limits
-| 禁止 | 替代方案 / 要求 |
-|------|------------------|
-| `??` | `isset($var) ? $var : $default` |
-| `function(int $id)` | PHPDoc `@param int $id` |
-| `: void` | PHPDoc `@return void` |
-| 直接存取 `$_POST` | `Yii::app()->request->getPost()` |
+> PHP 5.6 語法限制詳見 `~/.claude/rules/php/coding-style.md`（含禁用 `??`、型別提示、`$_POST` 等）
 
 其他要求：
 - PHP 陣列使用 `[]`，禁用 `array()`
@@ -77,16 +71,9 @@
 ### Yii 1.1 Framework Reference
 **Framework 位置:** `/mnt/e/projects/yii_framework/`
 
-| 方法 | 位置 | 返回值 | 用途 |
-|------|------|--------|------|
-| `CDbCommand::queryRow()` | `/db/CDbCommand.php:412` | `false` (非 `null`) 當無結果 | 查詢單一列 |
-| `CDbCommand::queryAll()` | `/db/CDbCommand.php:397` | `[]` (空陣列) 當無結果 | 查詢多列 |
-| `CDbCommand::queryScalar()` | `/db/CDbCommand.php:430` | `false` 當無結果 | 查詢單一值 |
-
 **關鍵注意：**
-- `queryRow()` 返回 `false` (不是 `null`)，檢查應用 `if (!$result)` 或 `if ($result === false)`
-- `is_null($queryRow())` **永遠不會** 為 true
-- 所有查詢方法使用參數綁定（`:param` 風格），防止 SQL Injection
+- `queryRow()` 返回 `false`（不是 `null`），檢查用 `if (!$result)`（完整方法表見 `php-pro` skill → `yii1-1.md`）
+- 所有查詢方法使用 `:param` 風格參數綁定，防止 SQL Injection
 
 **DDD 層次與常用常數：**
 - DDD 呼叫路徑：`Controller → $this->app()->{service}->fetchXxx() → Repository->forXxx()`
@@ -97,10 +84,7 @@
   - `PayTypeGroup::TOTAL_PAY`   = `'TotalPay'`
   - `PayTypeGroup::TICKET`      = `'ticket'`
 
-**MySQL collation 與測試排序驗證：**
-- DB 使用 `utf8_unicode_ci`（大小寫不敏感）排序
-- PHP 測試驗證 ORDER BY 結果時，**必須用 `strcasecmp()`，禁用 `strcmp()`**
-- 原因：`strcmp('ipass', 'ND')` 返回 27（ASCII 差值），但 MySQL 認為 i < N
+> MySQL collation 陷阱（strcasecmp vs strcmp）見 `~/.claude/rules/php/testing.md`
 
 ## Filesystem / Runtime Policy
 
