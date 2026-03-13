@@ -92,6 +92,14 @@
 - 若工作目錄不可寫，改寫入 `output/` 或使用者指定可寫目錄。
 - 涉及 Web Root 相對路徑時，先明確說明路徑基準再落檔。
 
+### WSL / Windows Filesystem 限制
+
+> 如果專案環境位於 WSL DrvFs 掛載的 Windows NTFS 磁碟，才適用以下規範。
+
+- **git 狀態查詢**：禁用 `git status --short --ignore-submodules`，
+  改用 `git status --short`
+  （`--ignore-submodules` 在 DrvFs 觸發大量 inotify，導致指令卡住）
+
 ## Reference Index
 
 - Prompt/架構長文參考：`docs/prompt-reference.md`
