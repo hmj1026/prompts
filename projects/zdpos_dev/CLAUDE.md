@@ -15,7 +15,6 @@
 
 | Agent | 檔案 | Purpose |
 |-------|------|---------|
-| bug-investigator | `bug-investigator.md` | Root cause analysis and data flow tracing |
 | code-reviewer | `code-reviewer.md` | Code review（品質、安全、回歸風險）|
 | tdd-guide-zdpos_dev | `tdd-guide-zdpos_dev.md` | TDD for PHP 5.6 + PHPUnit 5.7（含 strcasecmp、assertInternalType 等陷阱）|
 | database-reviewer-mysql | `database-reviewer-mysql.md` | MySQL 5.7 query review |
@@ -23,11 +22,14 @@
 | architect-zdpos_dev | `architect-zdpos_dev.md` | zdpos DDD system design |
 | refactor-cleaner-zdpos_dev | `refactor-cleaner-zdpos_dev.md` | Dead code cleanup |
 
-**通用備援**（Claude Code: `~/.claude/agents/` / Codex CLI: `~/.codex/agents/`）
+**通用備援**（Claude Code: `~/.claude/agents/` / Codex CLI: `~/.codex/agents/`）— 含 `bug-investigator`（root cause analysis）
 
 ---
 
 ## Planning Protocol (Conditional)
+
+> **Claude Code 環境**：以 `.claude/rules/execution-policy.md` 為準，本節為通用 AI（Gemini 等）的備援說明。
+
 僅在下列情況，先提出計畫並等待使用者回覆 `Go`：
 1. 新功能或新能力（含：新增事件監聽、新 API 端點、新物件/方法、新頁面行為）
 2. Breaking change
