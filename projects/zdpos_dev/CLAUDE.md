@@ -65,4 +65,8 @@
 | Yii / DDD 框架參考 | `.claude/rules/php/yii-framework.md` |
 | Filesystem / WSL 限制 | `.claude/rules/environment.md` |
 | Prompt / 架構長文 | `docs/prompt-reference.md` |
-| 代理入口 | `AGENTS.md`、`protected/AGENTS.md`、`protected/tests/AGENTS.md` |
+| 層次在地規範（Claude Code 可見） | `protected/CLAUDE.md`、`domain/CLAUDE.md`、`infrastructure/CLAUDE.md`、`js/CLAUDE.md` |
+| 完整 slash command 列表 | `.claude/docs/commands.md`（按需查閱） |
+| EILogger 使用要點 | `.claude/docs/eilogger.md`（按需查閱） |
+| Yii 常數查閱表 | `.claude/docs/yii-constants.md`（按需查閱） |
+| 文件寫作規範 | `.claude/docs/docs-writing.md`（按需查閱） |
