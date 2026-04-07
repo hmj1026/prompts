@@ -20,21 +20,64 @@ MANY SMALL FILES > FEW LARGE FILES:
 - Extract utilities from large modules
 - Organize by feature/domain, not by type
 
-## Error Handling
+## Guard Clauses (Early Return)
 
-ALWAYS handle errors comprehensively:
-- Handle errors explicitly at every level
-- Provide user-friendly error messages in UI-facing code
-- Log detailed error context on the server side
-- Never silently swallow errors
+Validate preconditions at the top, return/throw early. Keeps the happy path unindented:
 
-## Input Validation
+```
+// WRONG: deeply nested
+function process(order) {
+  if (order) {
+    if (order.isValid) {
+      if (order.items.length > 0) {
+        // actual logic buried at level 3
+      }
+    }
+  }
+}
 
-ALWAYS validate at system boundaries:
-- Validate all user input before processing
-- Use schema-based validation where available
-- Fail fast with clear error messages
-- Never trust external data (API responses, user input, file content)
+// CORRECT: guard clauses
+function process(order) {
+  if (!order) return error("no order")
+  if (!order.isValid) return error("invalid")
+  if (order.items.length === 0) return error("empty")
+
+  // happy path at level 0
+}
+```
+
+Rules:
+- Check error/edge cases first, exit immediately
+- One guard per condition (no compound guards)
+- Happy path stays at lowest indentation level
+
+## SLAP (Single Level of Abstraction Principle)
+
+Each function should operate at ONE abstraction level. Mix of high-level orchestration and low-level detail is a code smell:
+
+```
+// WRONG: mixed levels
+function processOrder(order) {
+  // high-level: validate
+  validate(order)
+  // suddenly low-level: raw SQL, string formatting
+  db.query("INSERT INTO orders ...")
+  email = "Dear " + order.customer + "..."
+  sendEmail(email)
+}
+
+// CORRECT: uniform high-level
+function processOrder(order) {
+  validate(order)
+  saveOrder(order)
+  notifyCustomer(order)
+}
+```
+
+Rules:
+- If a function mixes orchestration + implementation detail, extract the detail into a helper
+- Read the function top-to-bottom: every line should be at the same conceptual level
+- Indicator: if you need a blank-line "paragraph break" to separate concerns, extract a function
 
 ## Code Quality Checklist
 

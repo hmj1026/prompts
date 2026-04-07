@@ -1,24 +1,50 @@
-# 環境設定 (包含實際路徑，不應提交)
+# Environment (contains actual paths, do not commit)
 .env
 
-# 備份檔案
+# Backup files
 *.bak
 *.backup
 
-# 系統檔案
+# System files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE 設定
+# IDE settings
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# 暫存檔案
+# Temp files
 *.tmp
 *.temp
 
+# OpenSpec working directory
 /openspec
+
+# Runtime / ephemeral data (never track)
+**/homunculus/
+**/session-data/
+**/session-env/
+**/sessions/
+**/*.log
+**/cache/
+**/debug/
+**/plans/
+**/tasks/
+**/todos/
+**/file-history/
+**/backups/
+**/shell-snapshots/
+**/paste-cache/
+**/.credentials.json
+**/security_warnings_state_*.json
+**/stats-cache.json
+**/history.jsonl
+**/ide/
+**/telemetry/
+**/metrics/
+**/downloads/
+**/plugins/

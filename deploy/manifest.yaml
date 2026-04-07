@@ -1,0 +1,56 @@
+# Prompts Deployment Manifest
+# Declares what gets symlinked where.
+# deploy.sh reads this to create/verify symlinks.
+
+user:
+  target: "~/.claude"
+  symlink:
+    - CLAUDE.md
+    - CX.md
+    - settings.json
+    - statusline.sh
+    - commands/
+    - rules/
+    - rules-archive/
+    - scripts/
+    - skills/claude-health/
+  skip:
+    # Agent templates are a reference library, not deployed
+    - agents/
+
+lib:
+  skills:
+    bug-investigation:
+      targets: [zdpos_dev, ccas]
+    software-architecture:
+      targets: [zdpos_dev, ccas]
+    git-smart-commit:
+      targets: [zdpos_dev]
+
+projects:
+  zdpos_dev:
+    target: "~/projects/zdpos_dev"
+    managed: true
+    symlink:
+      - .claude/settings.local.json
+      - .claude/agents/
+      - .claude/rules/
+      - .claude/docs/
+      - .claude/skills/
+      - CLAUDE.md
+      - GEMINI.md
+      - AGENTS.md
+  ccas:
+    target: "~/projects/ccas"
+    managed: self
+    # Self-managed: only lib/ skills/commands are symlinked
+    # Project's own .claude/ is in its own git repo
+  docker_run:
+    target: "~/projects/docker_run"
+    managed: self
+  line-bot:
+    target: "~/projects/line-bot"
+    managed: true
+    symlink:
+      - .claude/settings.local.json
+      - CLAUDE.md

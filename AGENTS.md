@@ -1,32 +1,15 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `projects/` holds per-project context. Each subfolder should include model-specific files like `GEMINI.md`, `CLAUDE.md`, and, when needed, `AGENTS.md` (example: `projects/zdpos_dev/AGENTS.md`).
-- `user/` contains global, model-level instructions (for example `user/.gemini/GEMINI.md` or `user/.claude/CLAUDE.md`).
-- `workflows/` contains reusable SOPs such as `workflows/create_openspec_proposal.md`.
-- `GEMINI.md` at the repo root provides a high-level overview and conventions.
+- `user/` contains global, model-level instructions (for example `user/.claude/CLAUDE.md` or `user/.gemini/GEMINI.md`).
+- `lib/` contains shared resources reused across projects: skills (`lib/skills/`), commands (`lib/commands/`), and language rule templates (`lib/rules/`).
+- `projects/` holds per-project context. Each subfolder should include model-specific files like `CLAUDE.md`, `GEMINI.md`, and, when needed, `AGENTS.md` (example: `projects/zdpos_dev/AGENTS.md`).
+- `deploy/` contains deployment tooling (`deploy.sh`, `manifest.yaml`) for symlink-based deployment.
 
 ## Build, Test, and Development Commands
 - There is no build system or executable code in this repository; changes are direct Markdown edits.
+- Deploy configs via `./deploy/deploy.sh user` (global) or `./deploy/deploy.sh project <name>` (project-level).
+- Check sync status: `./deploy/deploy.sh --check all`.
 - Useful navigation commands:
   - `rg --files` to list all documents.
   - `rg -n "AGENTS.md" projects` to locate project agent instructions.
@@ -34,7 +17,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ## Coding Style & Naming Conventions
 - Use clear Markdown structure: short paragraphs, descriptive headings, and bullets for steps.
-- File naming is consistent: `GEMINI.md`, `CLAUDE.md`, `AGENTS.md`. Workflow files use lower_snake_case (for example `create_openspec_proposal.md`).
+- File naming is consistent: `GEMINI.md`, `CLAUDE.md`, `AGENTS.md`. Workflow files use lower_snake_case (for example `deploy_project.sh`).
 - Match the language used by the target agent file (some project files may be in Traditional Chinese).
 
 ## Testing Guidelines

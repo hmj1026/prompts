@@ -3,19 +3,11 @@
 ## Mandatory Security Checks
 
 Before ANY commit:
-- [ ] No hardcoded secrets (API keys, passwords, tokens)
-- [ ] All user inputs validated
-- [ ] SQL injection prevention (parameterized queries)
-- [ ] XSS prevention (sanitized HTML)
-- [ ] CSRF protection enabled
-- [ ] Authentication/authorization verified
-- [ ] Rate limiting on all endpoints
-- [ ] Error messages don't leak sensitive data
+- [ ] Rate limiting on all public endpoints
+- [ ] Authentication/authorization verified on protected routes
 
 ## Secret Management
 
-- NEVER hardcode secrets in source code
-- ALWAYS use environment variables or a secret manager
 - Validate that required secrets are present at startup
 - Rotate any secrets that may have been exposed
 

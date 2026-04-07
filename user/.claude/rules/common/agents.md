@@ -1,28 +1,20 @@
 # Agent Orchestration
 
-## Available Agents
+## Available Agent Roles
 
-Located in `~/.claude/agents/`:
+Use via Task tool `subagent_type`. These are **generic role names** — project-level
+`execution-policy.md` defines the actual agent names (SSOT). When a project
+provides specific agent names (e.g. `tdd-guide-zdpos_dev`), always use those
+instead of the generic names below.
 
-| Agent | Purpose | When to Use |
-|-------|---------|-------------|
-| planner | Implementation planning | Complex features, refactoring |
+| Role | Purpose | When to Use |
+|------|---------|-------------|
 | architect | System design | Architectural decisions |
 | tdd-guide | Test-driven development | New features, bug fixes |
 | code-reviewer | Code review | After writing code |
 | security-reviewer | Security analysis | Before commits |
-| build-error-resolver | Fix build errors | When build fails |
-| e2e-runner | E2E testing | Critical user flows |
-| refactor-cleaner | Dead code cleanup | Code maintenance |
-| doc-updater | Documentation | Updating docs |
-
-## Immediate Agent Usage
-
-No user prompt needed:
-1. Complex feature requests - Use **planner** agent
-2. Code just written/modified - Use **code-reviewer** agent
-3. Bug fix or new feature - Use **tdd-guide** agent
-4. Architectural decision - Use **architect** agent
+| database-reviewer | Query optimization, schema design | SQL queries, migrations |
+| refactor-cleaner | Dead code removal, deduplication | Cleanup tasks |
 
 ## Parallel Task Execution
 
@@ -38,12 +30,3 @@ Launch 3 agents in parallel:
 # BAD: Sequential when unnecessary
 First agent 1, then agent 2, then agent 3
 ```
-
-## Multi-Perspective Analysis
-
-For complex problems, use split role sub-agents:
-- Factual reviewer
-- Senior engineer
-- Security expert
-- Consistency reviewer
-- Redundancy checker
