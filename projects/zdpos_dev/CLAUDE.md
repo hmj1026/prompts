@@ -32,6 +32,7 @@
 | Yii / DDD 框架參考 | `.claude/rules/php/yii-framework.md` |
 | Filesystem / WSL 限制 | `.claude/rules/environment.md` |
 | 層次在地規範 | `protected/CLAUDE.md`、`domain/CLAUDE.md`、`infrastructure/CLAUDE.md`、`js/CLAUDE.md` |
+| View 在地規範 | `protected/views/CLAUDE.md` |
 | EILogger | `.claude/docs/eilogger.md` |
 | Yii 常數 | `.claude/docs/yii-constants.md` |
 | 文件寫作規範 | `.claude/docs/docs-writing.md` |
