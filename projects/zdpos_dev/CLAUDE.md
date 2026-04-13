@@ -20,7 +20,7 @@
 
 - 單一真相來源（SSOT）：延展既有邏輯，不重複造輪子。
 - 先讀後寫：優先用 `rg`/`fd` 找既有模式再改。
-- PHP 語法規則見 `~/.claude/rules/php/coding-style.md`
+- PHP 語法規則見 `.claude/rules/php/coding-style.md`
 
 ## Reference Index
 
