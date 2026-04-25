@@ -30,7 +30,7 @@
 | Agent 導覽（Codex） | `AGENTS.md` |
 | 前端規則 | `.claude/rules/frontend.md` |
 | Yii / DDD 框架參考 | `.claude/rules/php/yii-framework.md` |
-| Filesystem / WSL 限制 | `.claude/rules/environment.md` |
+| 部署環境清單（5 環境）/ Filesystem / WSL / SSH | `.claude/rules/environment.md` |
 | 層次在地規範 | `protected/CLAUDE.md`、`domain/CLAUDE.md`、`infrastructure/CLAUDE.md`、`js/CLAUDE.md` |
 | View 在地規範 | `protected/views/CLAUDE.md` |
 | EILogger | `.claude/docs/eilogger.md` |
