@@ -1,40 +1,38 @@
-# Project Context: zdpos_dev
+# zdpos_dev — Project Context
 
-> 本檔為常駐規範（always-on），供所有 AI 使用。Claude Code 專屬執行策略見 `.claude/rules/`。
+PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 ## Rule Priority
 1. System/Platform constraints
-2. User request in current turn
-3. This document (`CLAUDE.md`)
-4. `AGENTS.md`
-5. Other docs (e.g. `GEMINI.md`)
+2. Current user request
+3. This file (CLAUDE.md)
+4. AGENTS.md
+5. Other docs
 
-## Communication Rules
+## Communication
+- Reply in Traditional Chinese; code comments in Traditional Chinese
+- Keep domain terms in English (Controller, Model, View, Action)
+- Lead with conclusion, add details after
 
-- 回應語言：正體中文
-- 程式註解：正體中文
-- 專有名詞保留英文（Controller, Model, View, Action）
-- 先給結論或建議，再補必要細節
+## Core Rules
+- **SSOT**: Extend existing logic, never duplicate
+- **Read-before-write**: `rg`/`fd` before coding
+- PHP syntax: `.claude/rules/php/coding-style.md`
 
-## Core Engineering Rules
+## Code Exploration & Memory Tools
+- **GitNexus hard rules**: `gitnexus_impact` before editing a symbol / `gitnexus_detect_changes` before commit / `gitnexus_rename` for renaming (no find-and-replace); flag HIGH/CRITICAL risk
+- **Full routing** (cx / gitnexus / claude-mem / Read / Grep decision tree + costs) → `.claude/rules/tool-routing.md`
 
-- 單一真相來源（SSOT）：延展既有邏輯，不重複造輪子。
-- 先讀後寫：優先用 `rg`/`fd` 找既有模式再改。
-- PHP 語法規則見 `.claude/rules/php/coding-style.md`
-
-## Reference Index
-
-| 主題 | 檔案 |
-|------|------|
-| 執行策略 / Agent 觸發 | `.claude/rules/execution-policy.md` |
-| Agent 導覽（Codex） | `AGENTS.md` |
-| 前端規則 | `.claude/rules/frontend.md` |
-| Yii / DDD 框架參考 | `.claude/rules/php/yii-framework.md` |
-| 部署環境清單（5 環境）/ Filesystem / WSL / SSH | `.claude/rules/environment.md` |
-| 層次在地規範 | `protected/CLAUDE.md`、`domain/CLAUDE.md`、`infrastructure/CLAUDE.md`、`js/CLAUDE.md` |
-| View 在地規範 | `protected/views/CLAUDE.md` |
+## Key References
+| Topic | File |
+|-------|------|
+| Execution strategy + agents | `.claude/rules/execution-policy.md` |
+| Tool routing (cx/gitnexus/claude-mem) | `.claude/rules/tool-routing.md` |
+| PHP/Yii DDD patterns | `.claude/rules/php/yii-framework.md` |
+| 5 deploy environments / SSH | `.claude/rules/environment.md` |
+| Frontend (AJAX, JS) | `.claude/rules/frontend.md` |
 | EILogger | `.claude/docs/eilogger.md` |
-| Yii 常數 | `.claude/docs/yii-constants.md` |
-| 文件寫作規範 | `.claude/docs/docs-writing.md` |
-| Page Service | `docs/page-service-pattern.md` |
-| Compact 策略 | `.claude/docs/compact-strategy.md` |
+| Docs writing rules | `.claude/docs/docs-writing.md` |
+| Layer governance | `protected/CLAUDE.md`, `domain/CLAUDE.md`, `infrastructure/CLAUDE.md` |
+| Page Service pattern | `docs/page-service-pattern.md` |
+| Wanpo offline report SOP | `docs/playbooks/wanpo-offline-report.md` (load on-demand: "wanpo offline report" / "salesConsolidate chunk") |
