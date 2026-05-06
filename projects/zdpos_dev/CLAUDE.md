@@ -29,10 +29,11 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 | Execution strategy + agents | `.claude/rules/execution-policy.md` |
 | Tool routing (cx/gitnexus/claude-mem) | `.claude/rules/tool-routing.md` |
 | PHP/Yii DDD patterns | `.claude/rules/php/yii-framework.md` |
-| 5 deploy environments / SSH | `.claude/rules/environment.md` |
+| 5 deploy environments / SSH / cron / MySQL / log paths | skill `zdpos-environment` (按需載入；觸發詞：cron、SSH、deploy、Cloud SQL、application.log、5 環境差異) |
 | Frontend (AJAX, JS) | `.claude/rules/frontend.md` |
 | EILogger | `.claude/docs/eilogger.md` |
 | Docs writing rules | `.claude/docs/docs-writing.md` |
 | Layer governance | `protected/CLAUDE.md`, `domain/CLAUDE.md`, `infrastructure/CLAUDE.md` |
 | Page Service pattern | `docs/page-service-pattern.md` |
-| Wanpo offline report SOP | `docs/playbooks/wanpo-offline-report.md` (load on-demand: "wanpo offline report" / "salesConsolidate chunk") |
+| Wanpo offline report SOP | `docs/operations/playbooks/wanpo-offline-report.md` (load on-demand: "wanpo offline report" / "salesConsolidate chunk") |
+| Artifact contract（agent 落檔規範） | `docs/contracts/artifact-contract.md` (按需查；agent prompt 已內嵌精簡規則) |
