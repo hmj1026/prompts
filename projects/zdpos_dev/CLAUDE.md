@@ -30,13 +30,14 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 | Execution strategy + sentinel review gates | `.claude/rules/execution-policy.md` |
 | Tool routing (cx / gitnexus / claude-mem) | `.claude/rules/tool-routing.md` |
 | Sub-agent prompt boilerplate (cx + DB) | `.claude/docs/subagent-prompt-template.md` |
-| Agent roster (11 agents) | `.claude/agents/INDEX.md` |
+| Agent roster (14 agents) | `.claude/agents/INDEX.md` |
+| MCP server inventory (gitnexus / context7 / codex / claude-mem / chrome-devtools) | `.claude/docs/mcp-servers.md` |
 | PHP / Yii / DDD patterns | `.claude/rules/php/{yii-framework,patterns,coding-style,testing,security}.md` |
 | Frontend (AJAX, JS) | `.claude/rules/frontend.md` |
 | 5 deploy environments / SSH / cron / MySQL | skill `zdpos-environment` (load on demand) |
 | EILogger / docs writing | `.claude/docs/{eilogger,docs-writing}.md` |
 | Layer governance | `protected/CLAUDE.md`, `domain/CLAUDE.md`, `infrastructure/CLAUDE.md` |
-| Page Service pattern | `docs/page-service-pattern.md` |
+| Page Service pattern | `docs/guides/page-service-pattern.md` |
 | Wanpo offline report SOP | `docs/operations/playbooks/wanpo-offline-report.md` (on demand) |
 | Artifact contract (agent file spec) | `docs/contracts/artifact-contract.md` (on demand) |
 
@@ -44,29 +45,29 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 - `.claude/settings.json` — team-shared, committed.
 - `.claude/settings.local.json` — personal SSH / curl / cx perms, gitignored.
+- `.claude/.harness-profile` — optional one-line profile (`minimal` / `standard` / `strict`), gitignored. Env `$ZDPOS_HOOK_PROFILE` overrides; falls back to `standard`. `minimal` suppresses Stop-hook reminders.
 
 <!-- gitnexus:start -->
-## GitNexus — code intelligence (skills load on demand)
+# GitNexus — Code Intelligence
 
-zdpos_dev is indexed by GitNexus (91k symbols, 207k relationships).
+Indexed as **zdpos_dev** (97k symbols, 216k relationships, 300 execution flows). If a tool warns the index is stale → `npx gitnexus analyze` first.
 
-**Hard rules** (also enforced in `.claude/rules/tool-routing.md`):
+**Hard rules**:
+- MUST `gitnexus_impact({target, direction:"upstream"})` before editing any symbol; report blast radius; warn on HIGH/CRITICAL.
+- MUST `gitnexus_detect_changes()` before committing.
+- NEVER rename via find-and-replace; use `gitnexus_rename`.
 
-- Edit existing symbol → `gitnexus_impact({target, direction:"upstream"})` first. **Append-only exemption**: pure additions not touching existing symbol body/signature/PHPDoc may skip impact; state "append-only — gitnexus_impact skipped" in plan/commit.
-- Before commit → `gitnexus_detect_changes()`.
-- Rename → `gitnexus_rename` (find-and-replace forbidden).
-- HIGH / CRITICAL risk → halt + warn user.
+For unfamiliar code: `gitnexus_query({query})`. For full symbol context: `gitnexus_context({name})`.
 
-Detail per task type:
+| Task | Skill file |
+|------|------------|
+| Architecture / "how does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / impact | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools / schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
-| Task | Skill |
-|---|---|
-| Architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Bug tracing / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, schema, resources reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index / status / clean / wiki CLI | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+Resources: `gitnexus://repo/zdpos_dev/{context,clusters,processes,process/<name>}`.
 
-Stale index → run `npx gitnexus analyze` in terminal.
 <!-- gitnexus:end -->
