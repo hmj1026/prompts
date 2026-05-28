@@ -37,7 +37,7 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 | Anti-rationalization patterns | `${CLAUDE_PLUGIN_ROOT}/rules/anti-rationalization.md` + `.claude/rules/anti-rationalization.md` |
 | Sub-agent prompt boilerplate (cx + DB) | `.claude/docs/subagent-prompt-template.md` |
 | Agent roster | `${CLAUDE_PLUGIN_ROOT}/agents/INDEX.md` (canonical 16 dhpk agents) + `.claude/agents/INDEX.md` (zdpos chain mapping incl. 6th-slot migration-reviewer) |
-| Commands catalog | `${CLAUDE_PLUGIN_ROOT}/commands/INDEX.md` (canonical ~70 dhpk commands under `dhpk:` namespace) + `.claude/commands/INDEX.md` (zdpos locals: `/create-dev`, `/update-codemaps`) |
+| Commands catalog | `${CLAUDE_PLUGIN_ROOT}/commands/INDEX.md` (canonical ~70 dhpk commands under `dhpk:` namespace) + `.claude/commands/INDEX.md` (zdpos local: `/update-codemaps`; `/create-dev` is now the dhpk plugin command `/dhpk:create-dev`) |
 | MCP server inventory (gitnexus / context7 / codex / claude-mem / chrome-devtools) | `.claude/docs/mcp-servers.md` |
 | PHP / Yii / DDD patterns | `.claude/rules/php/{yii-framework,patterns,coding-style,testing,security}.md` |
 | Frontend (AJAX, JS) | `.claude/rules/frontend.md` |
@@ -57,24 +57,43 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-Indexed as **zdpos_dev** (97k symbols, 216k relationships, 300 execution flows). If a tool warns the index is stale → `npx gitnexus analyze` first.
+This project is indexed by GitNexus as **zdpos_dev** (96624 symbols, 217668 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-**Hard rules**:
-- MUST `gitnexus_impact({target, direction:"upstream"})` before editing any symbol; report blast radius; warn on HIGH/CRITICAL.
-- MUST `gitnexus_detect_changes()` before committing.
-- NEVER rename via find-and-replace; use `gitnexus_rename`.
+> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
-For unfamiliar code: `gitnexus_query({query})`. For full symbol context: `gitnexus_context({name})`.
+## Always Do
 
-| Task | Skill file |
-|------|------------|
-| Architecture / "how does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / impact | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools / schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
+- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
 
-Resources: `gitnexus://repo/zdpos_dev/{context,clusters,processes,process/<name>}`.
+## Never Do
+
+- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
+- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
+
+## Resources
+
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/zdpos_dev/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/zdpos_dev/clusters` | All functional areas |
+| `gitnexus://repo/zdpos_dev/processes` | All execution flows |
+| `gitnexus://repo/zdpos_dev/process/{name}` | Step-by-step execution trace |
+
+## CLI
+
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->
