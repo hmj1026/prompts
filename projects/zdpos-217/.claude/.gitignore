@@ -1,0 +1,15 @@
+# Claude Code local state — do not commit
+settings.local.json
+.harness-profile
+cache/
+.tmp*
+*.zip
+.claude_review_state.json
+scheduled_tasks.lock
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+# WSL NTFS alternate data streams
+*:Zone.Identifier

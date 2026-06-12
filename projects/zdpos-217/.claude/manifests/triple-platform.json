@@ -1,0 +1,168 @@
+{
+  "version": "1.0.0",
+  "description": "Per-asset profile assignment across Claude / Codex / Gemini harnesses. Consumed by multi-ai-sync and harness-adapter-compliance.",
+  "rubric_reference": "harness-audit.js rubric 2026-03-30",
+  "profiles": {
+    "triple": {
+      "description": "Asset belongs in all three harnesses (Claude / Codex / Gemini).",
+      "skills": [
+        "adaptive-dev-workflow",
+        "bug-fix",
+        "bug-investigation",
+        "code-explore",
+        "code-investigate",
+        "feature-dev",
+        "feature-verify",
+        "git-investigate",
+        "git-smart-commit",
+        "gitnexus",
+        "issue-analyze",
+        "legacy-code-characterization",
+        "op-session",
+        "openspec-apply-change",
+        "openspec-archive-change",
+        "openspec-bulk-archive-change",
+        "openspec-continue-change",
+        "openspec-explore",
+        "openspec-ff-change",
+        "openspec-new-change",
+        "openspec-onboard",
+        "openspec-sync-specs",
+        "openspec-verify-change",
+        "opsx-load-context",
+        "opsx-post-obs",
+        "php-pro",
+        "php56-yii-dev",
+        "phpunit-batch-refactor",
+        "post-dev-test",
+        "project-audit",
+        "project-setup",
+        "repo-intake",
+        "risk-assess",
+        "security-review",
+        "tech-spec",
+        "test-review",
+        "yii1-security-audit",
+        "zdpos-environment",
+        "zdpos-exception-logging",
+        "zdpos-in-queries"
+      ],
+      "commands": [
+        "create-dev",
+        "create-pr",
+        "create-request",
+        "deep-analyze",
+        "dep-audit",
+        "git-investigate",
+        "git-worktree",
+        "harness-audit",
+        "merge-prep",
+        "next-step",
+        "op-session",
+        "post-dev-test",
+        "pr-review",
+        "pr-summary",
+        "precommit",
+        "precommit-fast",
+        "project-audit",
+        "project-brief",
+        "project-setup",
+        "repo-intake",
+        "review-spec",
+        "risk-assess",
+        "simplify",
+        "smart-commit",
+        "tech-spec",
+        "update-codemaps",
+        "update-docs",
+        "verify",
+        "yii1-security-audit",
+        "zh-tw"
+      ],
+      "agents": [
+        "dhpk:architect",
+        "dhpk:code-reviewer",
+        "dhpk:database-reviewer",
+        "doc-updater",
+        "docs-lookup",
+        "dhpk:refactor-cleaner",
+        "dhpk:security-reviewer",
+        "dhpk:tdd-guide"
+      ]
+    },
+    "claude-only": {
+      "description": "Claude-Code-specific surfaces with no Codex/Gemini equivalent.",
+      "skills": [
+        "claude-health",
+        "multi-ai-sync",
+        "skill-health-check",
+        "skill-judge",
+        "opsx-*"
+      ],
+      "commands": [
+        "claude-health",
+        "check-skill",
+        "check-coverage",
+        "create-skill",
+        "harness-revise",
+        "install-hooks",
+        "install-rules",
+        "install-scripts",
+        "opsx-apply-resume",
+        "INDEX"
+      ],
+      "agents": [
+        "harness-optimizer",
+        "harness-reviser",
+        "dhpk:ui-ux-verifier",
+        "INDEX"
+      ]
+    },
+    "codex-only": {
+      "description": "Codex MCP-specific delegations (require Codex runtime).",
+      "skills": [
+        "codex-architect",
+        "codex-brainstorm",
+        "codex-cli-review",
+        "codex-code-review",
+        "codex-explain",
+        "codex-implement"
+      ],
+      "commands": [
+        "codex-architect",
+        "codex-brainstorm",
+        "codex-cli-review",
+        "codex-explain",
+        "codex-implement",
+        "codex-review",
+        "codex-review-branch",
+        "codex-review-doc",
+        "codex-review-fast",
+        "codex-security",
+        "codex-test-gen",
+        "codex-test-review"
+      ],
+      "agents": []
+    },
+    "gemini-only": {
+      "description": "Gemini-CLI-specific surfaces.",
+      "skills": [
+        "gemini-commit"
+      ],
+      "commands": [],
+      "agents": []
+    },
+    "skip-incompatible": {
+      "description": "Surfaces that have no portable mapping. Multi-ai-sync MUST skip these and not mark as drift.",
+      "reason": "Hard-coupled to a specific harness runtime; cross-platform port would require behavior change.",
+      "items": [
+        "contract-decode (Foundry-specific, EVM contract decoder)",
+        "de-ai-flavor (Claude-internal heuristic, no Codex/Gemini analogue)",
+        "doc-review (Codex MCP backend)",
+        "feasibility-study (Codex MCP backend)",
+        "doc-refactor (command-only, no Codex/Gemini analogue)",
+        "ui-ux-verify (Claude-only Skill tool dependency)"
+      ]
+    }
+  }
+}

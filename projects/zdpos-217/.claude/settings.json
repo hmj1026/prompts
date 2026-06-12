@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read(/tmp/**)",
+
+      "WebFetch(domain:phpunit.de)",
+      "WebFetch(domain:docs.anthropic.com)",
+
+      "Skill(openspec:proposal)",
+      "Skill(create-skill)",
+      "Skill(playwright-cli)",
+      "Skill(review-spec)",
+      "Skill(codex-code-review)",
+
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__get_console_message",
+      "mcp__chrome-devtools__get_network_request",
+      "mcp__chrome-devtools__handle_dialog",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__wait_for",
+
+      "mcp__codex__codex",
+      "mcp__codex__codex-reply",
+
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_context7_context7__resolve-library-id",
+
+      "mcp__plugin_claude-mem_mcp-search__build_corpus",
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "mcp__plugin_claude-mem_mcp-search__list_corpora",
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "mcp__plugin_claude-mem_mcp-search__smart_outline",
+      "mcp__plugin_claude-mem_mcp-search__smart_search",
+      "mcp__plugin_claude-mem_mcp-search__smart_unfold",
+      "mcp__plugin_claude-mem_mcp-search__timeline",
+
+      "Bash(git:*)",
+      "Bash(gh pr:*)",
+
+      "Bash(docker --version)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker-compose up:*)",
+
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx playwright:*)",
+      "Bash(playwright-cli:*)",
+
+      "Bash(php:*)",
+
+      "Bash(pip3 install:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(uv tool *)",
+
+      "Bash(codex --help)",
+      "Bash(codex exec *)",
+      "Bash(cx:*)",
+      "Bash(openspec:*)",
+
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(command -v *)",
+      "Bash(command -v jq)",
+      "Bash(du:*)",
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(iconv:*)",
+      "Bash(ls:*)",
+      "Bash(\\ls *)",
+      "Bash(rg:*)",
+      "Bash(sed:*)",
+      "Bash(sort:*)",
+      "Bash(stat:*)",
+      "Bash(test:*)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)",
+
+      "Bash(bash:*)",
+      "Bash(cd:*)",
+      "Bash(chmod +x:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(sqlite3 *)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git rebase:*)"
+    ],
+    "ask": [],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-edit-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-bash-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-commit-js-validation.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-agent-warmstart.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-remind.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-write-crlf-fix.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-js-lint.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-php-syntax.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-composer-guard.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-skill-index.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-review-reminder.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/reap-stale-sentinels.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-completion-evidence.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-graduation-scan.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/subagent-stop-verify.sh"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-failure-log.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "ZDPOS_HOOK_PROFILE": "standard"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/statusline.sh"
+  },
+  "pluginConfigs": {
+    "dhpk@dhpk": {
+      "options": {
+        "modules": ["php-5.6", "yii-1.1", "phpunit-5.7", "js"]
+      }
+    }
+  }
+}
