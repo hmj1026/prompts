@@ -4,7 +4,7 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 ## Dependencies
 
-- **dhpk plugin v0.4.0+** (required) — provides ~70 commands + 16 role agents + 17 modules of stack guidance + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk@v0.4.0`. Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
+- **dhpk plugin v0.9.x** (required; verified range 記錄於 `.claude/artifacts/dhpk-tidy/verified-versions.json`，session-start 自動比對) — provides ~70 commands + 16 role agents + 17 modules of stack guidance + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk@v0.9.1`. Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
 - **OpenSpec plugin** (required) — provides `/opsx:*` commands. Install separately per OpenSpec docs.
 
 ## Rule priority
