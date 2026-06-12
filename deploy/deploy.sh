@@ -265,6 +265,80 @@ deploy_project() {
 
   # Also deploy lib/ resources
   deploy_lib "$project"
+
+  check_pluginconfig_drift "$src_base" "$project_path"
+}
+
+# Compare dhpk pluginConfigs.modules between the committed template (settings.json)
+# and the real local file (settings.local.json). The dhpk reader only reads
+# settings.local.json (no fallback), so silent drift between the two sources
+# would otherwise go unnoticed until a "modules=none" banner appears.
+check_pluginconfig_drift() {
+  local src_settings="$1/.claude/settings.json"
+  local local_settings="$2/.claude/settings.local.json"
+  [ -f "$src_settings" ] && [ -f "$local_settings" ] || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  local drift
+  drift="$(python3 - "$src_settings" "$local_settings" <<'PY'
+import json, sys
+
+def mods(path):
+    try:
+        with open(path) as f:
+            d = json.load(f)
+        return d.get("pluginConfigs", {}).get("dhpk@dhpk", {}).get("options", {}).get("modules")
+    except Exception:
+        return None
+
+team, local = mods(sys.argv[1]), mods(sys.argv[2])
+if team is not None and local is not None and team != local:
+    print("team=%s local=%s" % (team, local))
+PY
+)"
+  if [ -n "$drift" ]; then
+    log_warn "pluginConfigs.modules drift: $drift — dhpk 只讀 settings.local.json，請對齊兩處"
+  fi
+}
+
+# Check a managed project without modifying (mirrors deploy_project)
+check_project() {
+  local project="$1"
+  local project_path
+
+  case "$project" in
+    zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
+    zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
+    line-bot)   project_path="$PROJECTS_ROOT/line-bot" ;;
+    *)
+      log_warn "Project '$project' is self-managed; nothing to check."
+      return 0
+      ;;
+  esac
+
+  local src_base="$REPO_ROOT/projects/$project"
+
+  if [ ! -d "$src_base" ]; then
+    log_error "Project not found in repo: $src_base"
+    return 1
+  fi
+
+  log_info "Checking project: $project -> $project_path"
+
+  if [ -d "$src_base/.claude" ]; then
+    shopt -s dotglob
+    for item in "$src_base/.claude"/*; do
+      check_symlink "$item" "$project_path/.claude/$(basename "$item")"
+    done
+    shopt -u dotglob
+  fi
+
+  for f in CLAUDE.md GEMINI.md AGENTS.md; do
+    if [ -f "$src_base/$f" ]; then
+      check_symlink "$src_base/$f" "$project_path/$f"
+    fi
+  done
+
+  check_pluginconfig_drift "$src_base" "$project_path"
 }
 
 # Deploy everything
@@ -288,10 +362,9 @@ check_all() {
   check_user
   echo ""
   log_info "Checking projects..."
-  for project_dir in "$REPO_ROOT/projects"/*/; do
-    local project
-    project="$(basename "$project_dir")"
-    log_info "  Project: $project"
+  for project in zdpos_dev zdpos-217 line-bot; do
+    check_project "$project"
+    echo ""
   done
 }
 
@@ -312,6 +385,16 @@ if [ $# -eq 0 ]; then
   echo "Platform: $PLATFORM"
   exit 0
 fi
+
+# Pre-scan flags so position doesn't matter（`project zdpos-217 --check` 也能生效）。
+# while 迴圈內的 --check/--dry-run case 仍保留消耗 trailing flags（刪掉會落入
+# Unknown command exit 1）；pre-scan 與其並存是 defence-in-depth。
+for _arg in "$@"; do
+  case "$_arg" in
+    --check)   CHECK_ONLY=true ;;
+    --dry-run) DRY_RUN=true ;;
+  esac
+done
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -337,7 +420,11 @@ while [[ $# -gt 0 ]]; do
         log_error "Missing project name"
         exit 1
       fi
-      deploy_project "$1"
+      if $CHECK_ONLY; then
+        check_project "$1"
+      else
+        deploy_project "$1"
+      fi
       shift
       ;;
     lib)

@@ -45,13 +45,18 @@ projects:
     managed: true
     # Whole shareable .claude/ surface is symlinked from projects/zdpos-217/.claude/
     # (rules/ hooks/ scripts/ docs/ agents/ commands/ skills/ manifests/ +
-    #  settings.json statusline.sh memory.md .gitignore).
+    #  settings.json statusline.sh memory.md .gitignore settings.local.json.example).
     # UNLIKE zdpos_dev, settings.local.json is NOT symlinked here: it stays a real
     # local file because it holds dhpk pluginConfigs.modules + project-specific perms.
     # Personal/runtime kept local & out of this repo:
     #   settings.local.json, artifacts/, cache/, worktrees/, .harness-profile
+    # Root CLAUDE.md / GEMINI.md are pack-relative symlinks -> ../zdpos_dev/
+    # (same codebase, shared instructions; was an unmanaged manual link before
+    #  2026-06-12). AGENTS.md stays a real local file (zdpos-217-specific).
     symlink:
       - .claude/      # all items present under projects/zdpos-217/.claude/
+      - CLAUDE.md     # -> ../zdpos_dev/CLAUDE.md (shared pack)
+      - GEMINI.md     # -> ../zdpos_dev/GEMINI.md (shared pack)
   ccas:
     target: "~/projects/ccas"
     managed: self
