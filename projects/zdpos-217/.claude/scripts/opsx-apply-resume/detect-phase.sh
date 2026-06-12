@@ -21,7 +21,16 @@ NOW=$(date +%s)
 if [[ -z "$SAVED_AT" ]]; then
   FILE_TS=0
 else
-  FILE_TS=$(date -d "$SAVED_AT" +%s 2>/dev/null || echo 0)
+  # GNU date -d；macOS BSD date 無 -d → fallback 取檔案 mtime 近似
+  # （saved_at 與寫檔時間幾乎同刻；silent 0 會把剛存的 state 誤判成 resume）
+  FILE_TS=$(date -d "$SAVED_AT" +%s 2>/dev/null || echo "")
+  if [[ -z "$FILE_TS" ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+      FILE_TS=$(stat -f %m "$FILE" 2>/dev/null || echo 0)
+    else
+      FILE_TS=$(stat -c %Y "$FILE" 2>/dev/null || echo 0)
+    fi
+  fi
 fi
 AGE=$(( NOW - FILE_TS ))
 

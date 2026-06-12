@@ -28,7 +28,8 @@ if [[ -z "$HEALTH" ]]; then
   exit 0
 fi
 
-RESULT_FILE=$(mktemp /tmp/claude-mem-obs-result-XXXXXX.json)
+# 模板 X 必須在結尾（macOS BSD mktemp 不支援 X 後綴）；副檔名非必要，jq 用顯式路徑讀
+RESULT_FILE=$(mktemp "${TMPDIR:-/tmp}/claude-mem-obs-result.XXXXXX")
 trap 'rm -f "$RESULT_FILE"' EXIT
 
 curl -s -m 5 -X POST "http://127.0.0.1:${PORT}/api/observations" \

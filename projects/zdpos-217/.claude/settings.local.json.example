@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "複製本檔為 settings.local.json（gitignored、不可 symlink）。dhpk reader 只讀 settings.local.json 且不回退 — pluginConfigs 區塊缺失時 session banner 會顯示 modules=none。個人權限（SSH / curl / 本機工具路徑）自行往 permissions.allow 增補。",
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(npx jest *)",
+      "Bash(npx gitnexus *)",
+      "Bash(npx openspec *)",
+      "Read(//tmp/**)"
+    ]
+  },
+  "pluginConfigs": {
+    "dhpk@dhpk": {
+      "options": {
+        "modules": ["php-5.6", "yii-1.1", "phpunit-5.7", "js"]
+      }
+    }
+  },
+  "worktree": {
+    "baseRef": "head",
+    "bgIsolation": "none"
+  }
+}

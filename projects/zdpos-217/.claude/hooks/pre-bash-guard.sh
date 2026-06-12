@@ -88,4 +88,30 @@ case "$CMD_STRIPPED" in
     ;;
 esac
 
+# Pattern 7: playwright E2E → opcache reset 提醒（advisory，不阻擋；JSON additionalContext）。
+# dev4 直接 render 本 repo views，但 opcache revalidate_freq=60 會服務舊 bytecode →
+# E2E 偽綠 / RED demo 失效（memory: trap_dev4_opcache_revalidate_false_green）。
+# 以 marker mtime 節流：30 分鐘內只提醒一次，避免 playwright-cli 連續呼叫洗版。
+if printf '%s' "$CMD_STRIPPED" | grep -Eq '(^|[[:space:]])(npx[[:space:]]+playwright|playwright-cli)([[:space:]]|$)'; then
+  _ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  _MARKER="$_ROOT/.claude/artifacts/sessions/.opcache-reminded"
+  _now="$(date +%s)"
+  _last=0
+  if [ -f "$_MARKER" ]; then
+    if [ "$(uname)" = "Darwin" ]; then
+      _last="$(stat -f %m "$_MARKER" 2>/dev/null || echo 0)"
+    else
+      _last="$(stat -c %Y "$_MARKER" 2>/dev/null || echo 0)"
+    fi
+  fi
+  if [ $((_now - _last)) -gt 1800 ]; then
+    mkdir -p "$(dirname "$_MARKER")" 2>/dev/null
+    touch "$_MARKER" 2>/dev/null
+    cat <<'JSON'
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"[guard] E2E 提醒：dev4 opcache revalidate_freq=60 — 跑 E2E / 截圖前先 docker exec -i pos_php sh -c 'kill -USR2 1' reset，避免偽綠（trap_dev4_opcache_revalidate_false_green）。"}}
+JSON
+    exit 0
+  fi
+fi
+
 exit 0

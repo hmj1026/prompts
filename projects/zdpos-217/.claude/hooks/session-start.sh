@@ -50,6 +50,24 @@ if [[ "$PROFILE" != "minimal" ]]; then
     bash "$ROOT/.claude/scripts/check-dhpk-version.sh" || true
 fi
 
+# 1f. .claude/ + 根目錄 symlink 完整性快檢（git pull / clean 誤刪防護 — 斷鏈即大聲警告）。
+# 部署模型：共享項 symlink → 版控 prompts repo；斷鏈代表 deploy 層被破壞，開場即知。
+if [ ! -d "$ROOT/.claude" ]; then
+    echo "[session-start] WARN: $ROOT/.claude itself missing or broken — run: cd ~/projects/prompts && ./deploy/deploy.sh project zdpos-217"
+fi
+_broken="$(find "$ROOT/.claude" -maxdepth 1 -type l ! -exec test -e {} \; -print 2>/dev/null)"
+for _f in CLAUDE.md GEMINI.md; do
+    if [ -L "$ROOT/$_f" ] && [ ! -e "$ROOT/$_f" ]; then
+        _broken="${_broken}${_broken:+$'\n'}$ROOT/$_f"
+    fi
+done
+if [ -n "$_broken" ]; then
+    echo "[session-start] WARN: broken harness symlinks detected:"
+    echo "$_broken" | sed 's/^/  - /'
+    echo "[session-start] restore: cd ~/projects/prompts && ./deploy/deploy.sh project zdpos-217"
+fi
+unset _broken _f
+
 # 2. Collect status
 TS="$(date +'%Y-%m-%d %H:%M:%S %Z')"
 BRANCH="$(git -C "$ROOT" branch --show-current 2>/dev/null || echo '(detached)')"

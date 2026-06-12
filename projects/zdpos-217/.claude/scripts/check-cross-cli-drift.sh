@@ -28,8 +28,8 @@ DRIFT_THRESHOLD="${ZDPOS_CROSS_CLI_DRIFT_THRESHOLD:-3600}"
 [ -d "$CLAUDE_DIR" ] || exit 0
 
 # 取 dir 內 skills / commands / agents / hooks / rules 子目錄裡任一檔案的最新 mtime（epoch 秒）。
-# 採用 -printf '%T@\n'（GNU find）。WSL 與 zdpos Docker pos_php 內 find 都是 GNU 版，
-# macOS BSD find 不支援 -printf — zdpos 無 macOS 部署需求，可省 fallback。
+# Linux/WSL 採 GNU find -printf '%T@'；macOS BSD find 無 -printf，改 stat -f '%m'
+# fallback（2026-06-12 harness 健檢 P3 補上跨平台分支）。
 newest_mtime() {
     local dir="$1"
     [ -d "$dir" ] || { echo 0; return; }
@@ -38,11 +38,19 @@ newest_mtime() {
         [ -d "$dir/$sub" ] && subdirs+=("$dir/$sub")
     done
     [ ${#subdirs[@]} -eq 0 ] && { echo 0; return; }
-    find "${subdirs[@]}" \
-        -type f \
-        \( -name '*.md' -o -name '*.sh' -o -name '*.py' -o -name '*.json' -o -name '*.toml' -o -name '*.js' \) \
-        -printf '%T@\n' 2>/dev/null \
-        | sort -nr | head -1 | awk '{print int($1)}'
+    if [ "$(uname)" = "Darwin" ]; then
+        find "${subdirs[@]}" \
+            -type f \
+            \( -name '*.md' -o -name '*.sh' -o -name '*.py' -o -name '*.json' -o -name '*.toml' -o -name '*.js' \) \
+            -exec stat -f '%m' {} + 2>/dev/null \
+            | sort -nr | head -1
+    else
+        find "${subdirs[@]}" \
+            -type f \
+            \( -name '*.md' -o -name '*.sh' -o -name '*.py' -o -name '*.json' -o -name '*.toml' -o -name '*.js' \) \
+            -printf '%T@\n' 2>/dev/null \
+            | sort -nr | head -1 | awk '{print int($1)}'
+    fi
 }
 
 claude_t="$(newest_mtime "$CLAUDE_DIR")"

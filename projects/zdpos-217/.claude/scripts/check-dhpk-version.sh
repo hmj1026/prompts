@@ -24,8 +24,11 @@ VERIFIED_JSON="$ROOT/.claude/artifacts/dhpk-tidy/verified-versions.json"
 [ -f "$VERIFIED_JSON" ] || exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 
-# 列出安裝的版本（目錄名）
-mapfile -t INSTALLED < <(ls -1 "$DHPK_CACHE" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V)
+# 列出安裝的版本（目錄名）。while-read 取代 mapfile：macOS 內建 bash 3.2 無 mapfile。
+INSTALLED=()
+while IFS= read -r _v; do
+    [ -n "$_v" ] && INSTALLED+=("$_v")
+done < <(ls -1 "$DHPK_CACHE" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V)
 [ ${#INSTALLED[@]} -eq 0 ] && exit 0
 
 # python3 比對：把每個 installed 版本對 verified.range[] 做 prefix match

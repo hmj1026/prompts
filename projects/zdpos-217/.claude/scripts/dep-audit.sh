@@ -41,8 +41,8 @@ echo "Package Manager: $PM"
 echo "Minimum Level: $LEVEL"
 echo ""
 
-# 建立臨時目錄
-TMP_DIR="$(mktemp -d)"
+# 建立臨時目錄（顯式模板：macOS BSD mktemp -d 無模板時行為不一致）
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/dep-audit.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 AUDIT_FILE="$TMP_DIR/audit.json"
 SUMMARY_FILE="$TMP_DIR/summary.txt"
