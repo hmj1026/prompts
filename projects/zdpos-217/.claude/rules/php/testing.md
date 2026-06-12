@@ -60,6 +60,8 @@ UI / post-fix verification only. Business logic → PHPUnit.
 
 `develop` 與 `master` long-lived branch 的 PHPUnit baseline MUST 為 0 error / 0 failure / 0 skip / 0 risky。任何 PR 進入 develop 前 MUST 維持此 invariant。
 
+> Coverage 註記：全域 `~/.claude/rules/common/testing.md` 的 80% coverage 為通用目標，與本 invariant 正交（品質 vs 覆蓋）。本 legacy codebase 全 repo coverage 量測受限（見 Common Traps coverage-harness 條目），全 repo 數字不作 gate；新增 Domain / Infrastructure 程式碼在可量測範圍內以 80% 為目標。
+
 | 違反情境 | 處理 |
 |---------|------|
 | Source class 刪除 → 留下 orphan test | PR 同時 `git rm` 對應 test 檔（`include() failed` errors 必清） |
