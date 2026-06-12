@@ -62,7 +62,9 @@ if printf '%s' "$CMD_STRIPPED" | grep -Eq '(^|[[:space:]])git[[:space:]]+push([[
   HOOK_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
   SENTINEL_DIR="$HOOK_ROOT/.claude/artifacts/sessions"
   FOUND=""
-  for _s in .pending-review .pending-db-review .pending-security-review; do
+  # 用 _lib/payload.sh 的 SENTINEL_NAMES SSOT（全 6 槽），避免硬寫清單漏掉
+  # frontend / doc / migration review。payload.sh 已於檔頭 source。
+  for _s in "${SENTINEL_NAMES[@]}"; do
     [ -f "$SENTINEL_DIR/$_s" ] && FOUND="$FOUND $_s"
   done
   if [ -n "$FOUND" ]; then

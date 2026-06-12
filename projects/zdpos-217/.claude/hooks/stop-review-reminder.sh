@@ -7,6 +7,15 @@ set -o pipefail
 
 . "$(dirname "$0")/_lib/payload.sh"
 
+# Stop hook 重入 guard：Claude Code 在前一次 exit 2 後重入 Stop 會帶
+# stop_hook_active=true。此時不再 block，避免 Stop 阻擋迴圈／看似當機的
+# 「blocked N times」。reminder 為 advisory（nag 一次即可）；真正硬性
+# enforcement 由 pre-bash-guard.sh 的 git push gate 負責，不受此 guard 影響。
+PAYLOAD="$(cat 2>/dev/null || true)"
+if [[ "$(extract_top_field stop_hook_active "$PAYLOAD")" == "true" ]]; then
+    exit 0
+fi
+
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 PROFILE="$(get_hook_profile)"
 

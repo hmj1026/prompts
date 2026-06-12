@@ -36,6 +36,34 @@ except Exception:
     return 0
 }
 
+# 從 Stop / SubagentStop 等 payload 取出「頂層」欄位（非 tool_input.<field>）。
+# 主要用途：Stop hook 讀 stop_hook_active 判斷是否為 exit-2 後的重入，藉以避免
+# Stop 阻擋迴圈。jq 優先、python3 fallback，與 extract_tool_input 同策略。
+# **Contract**：boolean `false` 與「欄位不存在」皆回 ""（jq `// empty` 對 false 視為
+#   falsy → 與 absent 不可區分）。caller 只可測 `== "true"`，**不可**用本函式區分
+#   explicit-false vs absent。需要該區分的未來 caller 必須改寫 jq 表達式。
+# Usage: value="$(extract_top_field <field> "$payload")"
+extract_top_field() {
+    local field="$1" payload="$2" out=""
+    [ -z "$payload" ] && return 0
+    if command -v jq >/dev/null 2>&1; then
+        out="$(printf '%s' "$payload" | jq -r ".${field} // empty" 2>/dev/null || true)"
+    fi
+    if [ -z "$out" ] && command -v python3 >/dev/null 2>&1; then
+        out="$(printf '%s' "$payload" | FIELD="$field" python3 -c '
+import sys, os, json
+try:
+    d = json.load(sys.stdin)
+    v = d.get(os.environ.get("FIELD", ""))   # None when absent
+    print("true" if v is True else "" if v is False or v is None else str(v))
+except Exception:
+    pass
+' 2>/dev/null || true)"
+    fi
+    printf '%s' "$out"
+    return 0
+}
+
 # Review sentinel SSOT — name + clearing agent + statusline short label。
 # 對應 execution-policy.md「Mandatory post-steps」表格順序：
 #   code(0) → db(1) → sec(2) → frontend(3) → doc(4) → migration(5)

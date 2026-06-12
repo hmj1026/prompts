@@ -24,6 +24,9 @@ ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 
 PAYLOAD="$(cat 2>/dev/null || true)"
 FILE_PATH="$(extract_tool_input file_path "$PAYLOAD")"
+# Write 工具用 camelCase filePath；缺 file_path 時 fallback，否則經 Write 寫
+# SKILL.md 會 silent skip、INDEX.md 不重生（對齊 post-edit-remind / js-lint）。
+[ -z "$FILE_PATH" ] && FILE_PATH="$(extract_tool_input filePath "$PAYLOAD")"
 [ -z "$FILE_PATH" ] && exit 0
 
 # 只處理 .claude/skills/*/SKILL.md（含 absolute / relative 兩種寫法）
