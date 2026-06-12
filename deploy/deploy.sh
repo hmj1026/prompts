@@ -192,6 +192,7 @@ deploy_lib() {
 
   case "$project" in
     zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
+    zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
     ccas)       project_path="$PROJECTS_ROOT/ccas" ;;
     docker_run) project_path="$PROJECTS_ROOT/docker_run" ;;
     line-bot)   project_path="$PROJECTS_ROOT/line-bot" ;;
@@ -224,6 +225,7 @@ deploy_project() {
 
   case "$project" in
     zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
+    zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
     line-bot)   project_path="$PROJECTS_ROOT/line-bot" ;;
     *)
       log_warn "Project '$project' is self-managed. Use 'deploy.sh lib $project' for shared resources."
@@ -240,13 +242,18 @@ deploy_project() {
 
   log_info "Deploying project: $project -> $project_path"
 
-  # Deploy .claude/ contents
+  # Deploy .claude/ contents (incl. dotfiles like .gitignore).
+  # NOTE: only items present in the SSOT get linked; personal/runtime files
+  # (settings.local.json, artifacts/, cache/, worktrees/) live only in the
+  # working tree and are never present here, so they are left untouched.
   if [ -d "$src_base/.claude" ]; then
+    shopt -s dotglob
     for item in "$src_base/.claude"/*; do
       local name
       name="$(basename "$item")"
       create_symlink "$item" "$project_path/.claude/$name"
     done
+    shopt -u dotglob
   fi
 
   # Deploy root-level files (CLAUDE.md, GEMINI.md, AGENTS.md)
@@ -265,7 +272,7 @@ deploy_all() {
   deploy_user
   echo ""
 
-  for project in zdpos_dev line-bot; do
+  for project in zdpos_dev zdpos-217 line-bot; do
     deploy_project "$project"
     echo ""
   done
