@@ -82,11 +82,14 @@ command -v python3 >/dev/null 2>&1 || exit 0
 mkdir -p "$(dirname "$COUNTS_JSON")" 2>/dev/null || true
 
 # === 主邏輯交給 python3：掃描 transcript + 維護 counts.json + regenerate md ===
+# timeout 10 防大型 session transcript 拖慢收尾（macOS 無 coreutils timeout 時退回裸跑）。
+TIMEOUT_CMD=""
+command -v timeout >/dev/null 2>&1 && TIMEOUT_CMD="timeout 10"
 TRANSCRIPT="$TRANSCRIPT" \
 COUNTS_JSON="$COUNTS_JSON" \
 CANDIDATES_MD="$CANDIDATES_MD" \
 HOOK_REPO_ROOT="$ROOT" \
-python3 <<'PY' || true
+$TIMEOUT_CMD python3 <<'PY' || true
 import json, os, re, sys, datetime, pathlib
 
 transcript_path = os.environ["TRANSCRIPT"]

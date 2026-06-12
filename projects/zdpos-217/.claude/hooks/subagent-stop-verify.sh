@@ -118,7 +118,7 @@ if [ "$EXIT_STATUS" != "0" ]; then
     echo "$TIMESTAMP $SUBAGENT exit=$EXIT_STATUS sentinel=$SENTINEL_STATE" >> "$LOG" || true
     echo >&2 ""
     echo >&2 "-----------------------------------------------------------"
-    echo >&2 "⚠  SUBAGENT FAILURE: $SUBAGENT (exit=$EXIT_STATUS)"
+    echo >&2 "[WARN] SUBAGENT FAILURE: $SUBAGENT (exit=$EXIT_STATUS)"
     if [ -f "$SENTINEL_FILE" ]; then
         echo >&2 "   對應 sentinel 仍存在：$SENTINEL_NAME"
         echo >&2 "   reviewer chain rule 後續 agent 可能不會被觸發"
@@ -130,7 +130,7 @@ elif [ -f "$SENTINEL_FILE" ]; then
     echo "$TIMESTAMP $SUBAGENT exit=0 sentinel=$SENTINEL_NAME (uncleared)" >> "$LOG" || true
     echo >&2 ""
     echo >&2 "-----------------------------------------------------------"
-    echo >&2 "⚠  SENTINEL UNCLEARED: $SUBAGENT 完成但 $SENTINEL_NAME 未清除"
+    echo >&2 "[WARN] SENTINEL UNCLEARED: $SUBAGENT 完成但 $SENTINEL_NAME 未清除"
     echo >&2 "   可能原因：agent Closing hook 未呼叫 clear-sentinel.sh"
     echo >&2 "   手動清除：bash .claude/hooks/clear-sentinel.sh $SENTINEL_NAME manual"
     echo >&2 "   已記錄到：.claude/artifacts/agent-failures.log"

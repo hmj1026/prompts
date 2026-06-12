@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# pre-commit-js-validation.sh — PreToolUse Bash hook
+# pre-commit-js-validation.sh — git commit 時的 staged JS lint/typecheck gate
 # 攔截 `git commit*` 命令；若 staged diff 命中 `js/**/*.{js,ts}` 則跑 lint + typecheck。
 # 失敗 exit 2 → Claude Code 視為 reject，commit 不會發生。
+#
+# Wiring（2026-06-12 起）：不再直接 wire 在 settings.json PreToolUse(Bash)；
+# 改由 pre-bash-guard.sh Pattern 6 偵測到 git commit 時以 stdin 轉送 payload 委派呼叫，
+# 避免每次 Bash 呼叫都 spawn 本腳本空轉。單獨測試：echo "$payload" | bash 本檔。
 #
 # 設計理由：
 # - JS 靜態檢查（eslint + tsc --noEmit）是 modernize-zpos-js-static-checks change 的 CI gate；

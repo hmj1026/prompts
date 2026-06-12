@@ -45,7 +45,7 @@ check_one() {
     # 觸發 code-reviewer 自動跑；user 在 terminal 也看得到（stderr 預設顯示）。
     echo >&2 ""
     echo >&2 "-----------------------------------------------------------"
-    echo >&2 "⚠  PENDING: $agent ($count 個檔案待審)"
+    echo >&2 "[WARN] PENDING: $agent ($count 個檔案待審)"
     echo >&2 "   觸發檔案："
     echo >&2 "$file_list"
     [[ -n "$extra" ]] && echo >&2 "$extra"

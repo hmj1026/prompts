@@ -74,4 +74,18 @@ if printf '%s' "$CMD_STRIPPED" | grep -Eq '(^|[[:space:]])git[[:space:]]+push([[
   fi
 fi
 
+# Pattern 6: git commit → staged JS lint/typecheck gate（委派 pre-commit-js-validation.sh）。
+# 該腳本原本獨立 wire 在 PreToolUse(Bash)，導致每次 Bash 呼叫都 spawn 第二個 hook process
+# 空轉（source payload.sh + 解析 stdin）。改由本 guard 先以字串便宜判斷 git commit
+# 才委派，settings.json 不再單獨 wire（2026-06-12 harness 健檢 H-1）。
+# 排除 git commit-tree（plumbing，rebase / merge 內部使用）與委派腳本內部邏輯一致。
+case "$CMD_STRIPPED" in
+  *"git commit-tree"*) : ;;
+  *"git commit"*)
+    if ! printf '%s' "$PAYLOAD" | bash "$(dirname "$0")/pre-commit-js-validation.sh"; then
+      exit 2
+    fi
+    ;;
+esac
+
 exit 0

@@ -123,7 +123,7 @@ extra=""
 
 echo >&2 ""
 echo >&2 "-----------------------------------------------------------"
-echo >&2 "⚠  COMPLETION CLAIM 但無對應 test 變更"
+echo >&2 "[WARN] COMPLETION CLAIM 但無對應 test 變更"
 echo >&2 "   偵測到 assistant 宣稱完成，但 git diff 顯示 $code_count 個 code 檔案變更而無 test："
 echo >&2 "$sample"
 [ -n "$extra" ] && echo >&2 "$extra"
