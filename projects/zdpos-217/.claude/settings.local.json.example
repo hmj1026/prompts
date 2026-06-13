@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "_comment": "複製本檔為 settings.local.json（gitignored、不可 symlink）。dhpk reader 只讀 settings.local.json 且不回退 — pluginConfigs 區塊缺失時 session banner 會顯示 modules=none。個人權限（SSH / curl / 本機工具路徑）自行往 permissions.allow 增補。",
+  "_comment": "複製本檔為 settings.local.json（gitignored、不可 symlink）。dhpk loader 存在 settings.local.json 時只讀該檔（不與 settings.json 合併）— 因此 pluginConfigs 區塊必須完整複製，缺 key 會回落 plugin 預設而非 settings.json 的值。個人權限（SSH / curl / 本機工具路徑）自行往 permissions.allow 增補。",
   "permissions": {
     "allow": [
       "Bash(curl:*)",
@@ -13,7 +13,54 @@
   "pluginConfigs": {
     "dhpk@dhpk": {
       "options": {
-        "modules": ["php-5.6", "yii-1.1", "phpunit-5.7", "js"]
+        "modules": [
+          "php-5.6",
+          "yii-1.1",
+          "phpunit-5.7",
+          "js"
+        ],
+        "hook_profile": "standard",
+        "docker_containers": [
+          "pos_php",
+          "pos_mysql"
+        ],
+        "review_trigger_extra_paths": [
+          "db:infrastructure/Repositories/",
+          "sec:infrastructure/Config/",
+          "mig:protected/migrations/"
+        ],
+        "lockfile_sync_commands": [
+          "composer.json:docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php composer update --lock"
+        ],
+        "php_bin": "php",
+        "completion_evidence_enabled": true,
+        "agent_warmstart_enabled": true,
+        "graduation_scan_enabled": true,
+        "harness_restore_hint": "cd ~/projects/prompts && ./deploy/deploy.sh project zdpos-217",
+        "js_core_files": [
+          "zpos.js",
+          "zpos.v2.js",
+          "mpos.js",
+          "pos_core.js",
+          "main.js"
+        ],
+        "js_vendor_globs": [
+          "js/ckeditor/",
+          "js/ckfinder/",
+          "js/jquery-*",
+          "js/dataTables.*",
+          "js/jqPlug/",
+          "js/ubereats*/",
+          "js/ueditor/",
+          "js/utils/",
+          "js/service*/",
+          "js/omniorder/",
+          "js/oss/",
+          "js/modules/",
+          "js/async/",
+          "js/dashboard/",
+          "js/admin/core/RecordTable.js"
+        ]
       }
     }
   },
