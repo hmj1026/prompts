@@ -37,25 +37,17 @@ unset _gn_pids _gn_newest _gn_pid
 #         continues to warn at 24h. Drop to 7d after 1-2 weeks if no false positives.
 bash "$(dirname "$0")/reap-stale-sentinels.sh" --purge --threshold-hours 336 || true
 
-# 1d. Cross-CLI mirror drift advisory (.claude/ vs .codex/ / .gemini/).
-# minimal profile 跳過（與其他 advisory 一致）。Threshold 1 小時，> threshold 即提醒。
-if [[ "$PROFILE" != "minimal" ]]; then
-    bash "$ROOT/.claude/scripts/check-cross-cli-drift.sh" || true
-fi
+# 1d/1e（已撤）：cross-CLI drift 與 plugin 版本 advisory 已由 dhpk plugin
+# (>=0.10.0) 的 session-start 接手（check-cross-cli-drift.sh /
+# check-plugin-version.sh + .claude/dhpk-versions.json pin）。
 
-# 1e. dhpk plugin 版本 advisory (vs verified-versions.json 範圍)。
-# Claude Code 沒有 plugin version pin 語法；以 artifact 比對代替 settings.json pin。
-# 安裝版本超出 verified[].range 即 advisory。
-if [[ "$PROFILE" != "minimal" ]]; then
-    bash "$ROOT/.claude/scripts/check-dhpk-version.sh" || true
-fi
-
-# 1f. .claude/ + 根目錄 symlink 完整性快檢（git pull / clean 誤刪防護 — 斷鏈即大聲警告）。
-# 部署模型：共享項 symlink → 版控 prompts repo；斷鏈代表 deploy 層被破壞，開場即知。
+# 1f. 根目錄 symlink 完整性快檢（git pull / clean 誤刪防護 — 斷鏈即大聲警告）。
+# .claude/ 直屬斷鏈由 plugin session-start 偵測（harness_restore_hint 印還原指令）；
+# 本段僅保留 plugin 看不到的兩個根目錄項：.claude 本體 + CLAUDE.md / GEMINI.md。
 if [ ! -d "$ROOT/.claude" ]; then
     echo "[session-start] WARN: $ROOT/.claude itself missing or broken — run: cd ~/projects/prompts && ./deploy/deploy.sh project zdpos-217"
 fi
-_broken="$(find "$ROOT/.claude" -maxdepth 1 -type l ! -exec test -e {} \; -print 2>/dev/null)"
+_broken=""
 for _f in CLAUDE.md GEMINI.md; do
     if [ -L "$ROOT/$_f" ] && [ ! -e "$ROOT/$_f" ]; then
         _broken="${_broken}${_broken:+$'\n'}$ROOT/$_f"

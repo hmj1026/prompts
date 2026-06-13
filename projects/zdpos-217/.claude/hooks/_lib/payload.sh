@@ -65,17 +65,19 @@ except Exception:
 }
 
 # Review sentinel SSOT — name + clearing agent + statusline short label。
-# 對應 execution-policy.md「Mandatory post-steps」表格順序：
-#   code(0) → db(1) → sec(2) → frontend(3) → doc(4) → migration(5)
+# 2026-06-12 de-fork：陣列順序改為 **鏡像 dhpk plugin (>=0.10.0)
+# scripts/hooks/_lib/payload.sh 的 7 槽官方順序**（migration 已升級為官方
+# 第 7 槽，本檔不再是 fork 而是 mirror — 改 plugin 端時兩邊同步）：
+#   code(0) → db(1) → sec(2) → frontend(3) → doc(4) → polyfill(5) → migration(6)
 # 執行順序（chain rule）：db → migration → security → frontend → code → doc
-# （陣列順序 ≠ 執行順序；slot 索引只用於 NEEDS array，chain order 由 execution-policy.md 規範）
-# 新增 reviewer 時，同步擴充三個陣列即可，所有 hook / statusline 自動跟進。
+# （陣列順序 ≠ 執行順序；chain order 由 execution-policy.md 規範）
 SENTINEL_NAMES=(
     ".pending-review"
     ".pending-db-review"
     ".pending-security-review"
     ".pending-frontend-review"
     ".pending-doc-review"
+    ".pending-polyfill-review"
     ".pending-migration-review"
 )
 SENTINEL_AGENTS=(
@@ -84,6 +86,7 @@ SENTINEL_AGENTS=(
     "dhpk:security-reviewer"
     "dhpk:frontend-reviewer"
     "dhpk:doc-reviewer"
+    "dhpk:polyfill-reviewer"
     "dhpk:migration-reviewer"
 )
 # statusline.sh 顯示用 short label（保持與 SENTINEL_NAMES 索引 1:1 對齊）
@@ -93,6 +96,7 @@ SENTINEL_SHORT_NAMES=(
     "sec"   # .pending-security-review
     "fe"    # .pending-frontend-review
     "doc"   # .pending-doc-review
+    "poly"  # .pending-polyfill-review
     "mig"   # .pending-migration-review
 )
 
