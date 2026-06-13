@@ -75,7 +75,7 @@ description: ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2
 - 既存技術債：`js/admin/core/RecordTable.js`（ES2022 class field）
 - spec task 2.7「最費工」分多 PR 收斂：`js/zpos/list.js`（14.7K 行最大 leaf）— 後續清理路徑：抽出 section 至獨立小檔（如 `list-receipt.js` / `list-shopping.js`），獨立小檔受 Tier 1 嚴格規則約束
 
-> **Hook 端的 vendor 判定** SSOT 在 `.claude/hooks/_lib/js-tier-detect.sh`（`detect_js_tier()`），需與 ESLint Global ignores 保持一致。新增 vendor 路徑時兩處同步。
+> **Hook 端的 vendor 判定** SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_js_tier()`），zdpos 的 core/vendor 清單經 settings.local.json `js_core_files` / `js_vendor_globs` userConfig 覆寫（2026-06-12 de-fork，原本地 `.claude/hooks/_lib/js-tier-detect.sh` 已刪）。需與 ESLint Global ignores 保持一致：新增 vendor 路徑時 config 與 ESLint 兩處同步。
 
 ---
 

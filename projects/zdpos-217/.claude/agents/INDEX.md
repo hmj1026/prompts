@@ -4,18 +4,19 @@
 
 ## Mandatory chain (sentinel-driven)
 
-zdpos extends dhpk's 5-slot review_agents with a 6th slot:
+dhpk v0.10.0 起為官方 7 槽（migration 已升格，zdpos 不再需要本地擴充槽）：
 
 | Slot | Sentinel | Agent | Trigger source |
 |---|---|---|---|
-| 0 | `.pending-review` | `dhpk:code-reviewer` | post-edit-remind.sh (PHP / JS / CLAUDE.md) |
+| 0 | `.pending-review` | `dhpk:code-reviewer` | plugin post-edit-remind.sh (PHP / JS / CLAUDE.md) |
 | 1 | `.pending-db-review` | `dhpk:database-reviewer` | Repository / migration / model / .sql |
 | 2 | `.pending-security-review` | `dhpk:security-reviewer` | controllers / config / auth |
-| 3 | `.pending-frontend-review` | `dhpk:frontend-reviewer` | JS / TS / view-layer scripts |
+| 3 | `.pending-frontend-review` | `dhpk:frontend-reviewer` | JS / TS / view-layer scripts（js module triggers） |
 | 4 | `.pending-doc-review` | `dhpk:doc-reviewer` | .claude/{agents,rules,commands,...}/*.md |
-| 5 | `.pending-migration-review` | `dhpk:migration-reviewer` | protected/migrations/**/*.php (zdpos local) |
+| 5 | `.pending-polyfill-review` | `dhpk:polyfill-reviewer` | library-author module（zdpos 未啟用，槽位保留） |
+| 6 | `.pending-migration-review` | `dhpk:migration-reviewer` | yii-1.1 module triggers + `mig:protected/migrations/` extra path |
 
-Sentinel mapping SSOT lives in `.claude/hooks/_lib/payload.sh` (`SENTINEL_NAMES` / `SENTINEL_AGENTS` arrays).
+Sentinel mapping SSOT lives in the plugin's `${CLAUDE_PLUGIN_ROOT}/scripts/hooks/_lib/payload.sh`; the local `.claude/hooks/_lib/payload.sh` is an order-mirroring copy for statusline / remaining local hooks.
 
 ## Situational agents (back-stop, AI-judgment)
 

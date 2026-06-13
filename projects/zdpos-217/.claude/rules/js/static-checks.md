@@ -12,11 +12,11 @@ Capability: `zpos-static-check-gate`
 
 ## Edit-time feedback
 
-JS/TS edit 後由 `.claude/hooks/post-edit-js-lint.sh`（async PostToolUse）即時跑 ESLint，發現問題 stderr 提示；commit time 由 `.claude/hooks/pre-commit-js-validation.sh` 把關。
+2026-06-12 de-fork 起由 **dhpk js module** 接手：JS/TS edit 後 `modules/js/hooks/post-edit-js-lint.sh`（經 post-edit-dispatch 背景跑）即時 ESLint；commit time 由 `modules/js/hooks/pre-commit-js-validation.sh`（經 pre-bash-dispatch 的 git commit 預過濾）把關。npm script 名稱可經 `js_lint_script` / `js_typecheck_script` userConfig 覆寫。
 
 ## Hook 端 vendor / core 判定
 
-SSOT 在 `.claude/hooks/_lib/js-tier-detect.sh` 的 `detect_js_tier()`；需與 ESLint Global ignores 與 Tier 1.5 core 白名單保持一致（新增 vendor 路徑 / 新加 core 檔，兩處同步）。
+SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_js_tier()`）；需與 ESLint Global ignores 與 Tier 1.5 core 白名單保持一致（新增 vendor 路徑 / 新加 core 檔，兩處同步）。
 
 ## Progressive-loaded references
 
