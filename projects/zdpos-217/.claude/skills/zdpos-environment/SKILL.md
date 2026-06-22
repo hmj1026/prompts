@@ -24,6 +24,16 @@ allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *)
 - **API keys** hardcoded in class constants, shared across 5 envs — UAT/DEV throttled to avoid burning PROD quota.
 - **Adding a merchant**: drop `protected/config/{newshop}.php`; cron auto-discovers via `listMerchants` — no cron change needed.
 
+### Local dev4 entry（zdpos-217 working tree 的入口）
+
+- 測 zdpos-217 改動**一律走 `www.posdev.test/dev4`**：薄 entry `dev4/index.php` 載入 `../zdpos-217/protected/config/dev4.php` → dev4 直接 render 本 working tree 的 views/JS/PHP，**編輯即生效**（無需 rsync）。`dev3` 載入舊 `zdpos_dev` checkout，測 zdpos-217 改動不會生效。
+- `protected/config/dev4.php`（gitignored）已內含 docker `dir_path` override；`protected/tests/bootstrap.php` 自 `155e64d` 起 env-aware（有 dev4.php 優先、否則 fallback dev3.php），`git checkout/pull` 不會再把測試入口還原回 dev3。
+- E2E：`js/tests/e2e/_helpers/login.js` 預設 `BASE_URL` 已是 dev4 → bare `npx playwright test` 即打 dev4，只有要改打其他環境才設 `POS_BASE_URL`。
+- ⚠️ **opcache false-green**：`pos_php` opcache `revalidate_freq=60` → 改完 view/PHP 後 60 秒內仍服務舊 bytecode，E2E 可能以舊碼假綠。**每次改完、跑 E2E 前必 reset**：
+  ```bash
+  docker exec -i pos_php sh -c 'kill -USR2 1'   # 須 sh -c；直接 docker exec ... kill 找不到 kill binary
+  ```
+
 ## Command templates
 
 ```bash
@@ -33,12 +43,23 @@ YIIC="/usr/bin/php $ZDPOS_ROOT/protected/yiic.php"
 docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php php protected/yiic.php
 ```
 
+> ⚠️ **workdir 必用 `/var/www/www.posdev/zdpos-217`**。`pos_php` 同時掛載 `zdpos-217`（本專案）與舊 `zdpos_dev` 兩個 checkout；用 `-w .../zdpos_dev` 跑 phpunit **不報錯**，會 silently 測到另一份 codebase（新檔在 zdpos-217 → `Cannot open file`）。
+
 ## MySQL
 
 | Env | Connection |
 |-----|------------|
 | local | `docker exec -i pos_mysql mysql -u root` (empty password); DB `zdpos_dev_2` |
 | DEV/UAT/PROD | Cloud SQL Proxy (`/home/deploy/scripts/cloud-sql-proxy.sh`, started `@reboot`) |
+
+### Read-only MCP（schema introspection；2026-06-15 建）
+
+兩個唯讀 MCP（套件 `@benborla29/mcp-server-mysql`，`claude mcp add --scope local` → 只進個人 `~/.claude.json`，**不**進 repo——因 `.claude/` symlink 進 prompts repo，server-scope 會擴散到團隊/zdpos_dev）：
+- `mysql-dev-ro` → local `pos_mysql` MySQL 5.7，帳號 `claude_ro`，`GRANT SELECT, SHOW VIEW` 給 6 個本地商家庫（含 `zdpos_dev_2`；**無** phpunit 的 `zdpos_dev`）。
+- `mysql-dev-remote` → DEV `192.168.2.254` MariaDB 10.1.37（內網直連、不需 ssh tunnel），只 GRANT 11 個 dev/test/demo 庫。
+- ⚠️ DEV 主機**非乾淨 sandbox**（600+ 庫含真實商家 PII）→ **永遠不要 `*.*` grant、不要省略 `MYSQL_DB` 開全庫**；擴範圍只補對應 GRANT。
+- multi-DB 模式下 `DATABASE()` 為 null → 查詢**必帶 schema 前綴**（`zdpos_dev_2.<table>`），否則報 no database selected。
+- 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。**cpos218 (UAT) 暫緩**：與 PROD CPOS217 共用 Cloud SQL，連它＝直接讀 production。
 
 ## MySQL sql_mode（event-dispatcher listener prerequisites）
 
