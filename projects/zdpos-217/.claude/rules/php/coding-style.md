@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.php"
+---
+
 # PHP Coding Style (zdpos-specific)
 
 > Extends `~/.claude/rules/common/coding-style.md`. PHP 5.6 baseline — assume **all** PHP 7.0+ syntax is forbidden (typed params/returns/properties, `??`, `?->`, `match`, arrow fn, named args, group use, multi-catch, short list `[$a,$b]=`, `new class`, union types). Use PHPDoc for types, `isset() ?:` for null coalescing.

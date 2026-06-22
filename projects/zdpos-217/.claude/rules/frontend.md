@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.{js,jsx,ts,tsx}"
+  - "protected/views/**"
+---
+
 # Frontend Rules
 
 Legacy POS, **no build step**; direct DOM + `POS.*` global.

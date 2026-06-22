@@ -1,3 +1,8 @@
+---
+paths:
+  - "protected/tests/**"
+---
+
 # PHP Testing (PHPUnit 5.7, zdpos)
 
 > Extends `~/.claude/rules/common/testing.md`. Full standards: `protected/tests/docs/TESTING_STANDARDS.md`.

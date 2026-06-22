@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.php"
+---
+
 # Yii 1.1 Framework (zdpos-specific)
 
 Framework source: `~/projects/yii_framework/`.

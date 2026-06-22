@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.php"
+---
+
 # PHP Patterns (zdpos-specific)
 
 > Extends `~/.claude/rules/common/patterns.md`. Yii 1.1 + DDD layering.
@@ -65,7 +70,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
   - **Throwing 模式（JSON / AJAX）**：需要 422 / 403 語意時呼叫 `$request->validateOrFail()` 或 `$request->validated()`。**禁止** 新寫散落的 `if (empty($_POST['x']))` / 在 controller 內直接拋 `\InvalidArgumentException`。
 - Validation 規則 SSOT：`public function rules()` 內宣告；**禁止** 在 controller 端 inline 重複規則。
 - ValidationException catch 端用 `$e->getErrors()` 取 `[field => string[]]` 結構（對齊 Laravel `errors()->all()`）。
-- 命名偏離 Laravel：用 `validateOrFail()`（不是 Laravel 的 `validate()`），因既有 `protected function validate()` 與 20 個子類 override 在 PHP 5.6 下無法被 widen — 詳見 `openspec/changes/add-form-request-abstract/design.md` D1.1。
+- 命名偏離 Laravel：用 `validateOrFail()`（不是 Laravel 的 `validate()`），因既有 `protected function validate()` 與 20 個子類 override 在 PHP 5.6 下無法被 widen — 詳見 `openspec/specs/form-request-abstract/spec.md`。
 - **禁止** 引入 Symfony Validator / Respect Validation / illuminate/validation（皆需 PHP 7+）。Validator engine 為自製 `Infrastructure\Validation\Validator`。
 - Authorize 走 Yii ACL：子類覆寫 `requiredPermission()` 回 ACL operation 字串；複雜邏輯 override `authorize()`。**禁止** 在 controller 端複製一次同樣的 `Yii::app()->user->checkAccess()` 檢查。Constructor **不自動** 跑 authorize（避免改變既有 `new XxxRequest()` 不 throw 的契約）；ACL 須顯式呼叫 `validateOrFail()` / `passes()` 觸發。
 

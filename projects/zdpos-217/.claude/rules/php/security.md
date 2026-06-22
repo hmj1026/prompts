@@ -1,3 +1,8 @@
+---
+paths:
+  - "**/*.php"
+---
+
 # PHP Security (zdpos-specific)
 
 > Extends `~/.claude/rules/common/security.md` — Yii 1.1 mappings and project traps only.
