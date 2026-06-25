@@ -14,7 +14,7 @@ Inject `IXxxRepository` into Domain Service (not AR model directly). Service Lay
 ## DB Query Layering (SQL location SSOT)
 
 1. **Builder priority**: prefer `Infrastructure\Database\Query\Builder` via `$repo->queryBuilder()->where()->get()/first()/value()/count()/update()`; fall back to Yii `createCommand()` only when the toolkit doesn't fit.
-2. **Location**: all SQL lives in Repository. Controller / Domain service / trait SHALL NOT call `Yii::app()->db->createCommand()` directly or build SQL strings.
+2. **Location**: all SQL lives in Repository. Controller / Domain service / trait / **`protected/views/**`** SHALL NOT call `Yii::app()->db->createCommand()` directly or build SQL strings. View-layer SQL（e.g. `views/pos/saleorder7.php` 既有 5 段 inline query）須上移：Controller 呼叫 Repository 取資料 → 經 `render()` 的 `configs` 傳入 view；view 只消費已備妥資料。
 3. **Naming**: business semantics + explicit required columns (`createWeatherContext($storeNo, ...)`). Forbidden: `insertRow($row)` / `updateBy($where, $set)` / `executeRaw($sql)`.
 4. **Migration cadence**: new code follows 1+2 immediately; existing inline SQL only pushed down when its section is being modified.
 5. **No mirror-existing escape hatch**: neighbor using `createCommand()` is not justification — create a **V2 parallel method** with `queryBuilder()` if upgrading is impractical, and annotate the legacy method `@see xxxV2`.

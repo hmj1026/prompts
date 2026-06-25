@@ -12,7 +12,7 @@ paths:
 | Topic | Rule |
 |-------|------|
 | **SQL** | PDO bind: `$cmd->bindParam(':id', $id, PDO::PARAM_INT)`; or AR `Order::model()->findByPk($id)` |
-| **IN / NOT IN** | `$c = new CDbCriteria(); $c->addInCondition('col', $ids);` — **forbidden**: `"col IN ({$str})"` string interpolation |
+| **IN / NOT IN** | 防注入要點：`CDbCriteria::addInCondition()`，**禁** `"col IN ({$str})"` 字串內插。完整規則（empty-array guard / `array_values` / 複合 LIKE+IN）→ `php/patterns.md` "IN / NOT IN Queries" |
 | **XSS** | All output via `CHtml::encode($v)` |
 | **CSRF** | `CActiveForm::beginWidget()` auto-attaches; hand-rolled forms must add `<?= Yii::app()->request->csrfTokenName ?>` |
 | **Auth** | `if (Yii::app()->user->isGuest) throw new CHttpException(403);` |

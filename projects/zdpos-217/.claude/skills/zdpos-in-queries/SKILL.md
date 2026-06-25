@@ -64,7 +64,12 @@ $c->addNotInCondition('id', $excludeIds);  // 若 $excludeIds = [] → 無效 SQ
 
 ## Builder 替代
 
-新代碼若使用 `Infrastructure\Database\Query\Builder`（DB Query Layering），改用 Builder 提供的 IN 方法（見 `infrastructure/CLAUDE.md` Database Query Toolkit / `docs/guides/query-toolkit-cookbook.md`）。`CDbCriteria` 寫法仍適用於 legacy code 與 AR `findAll($criteria)`。
+判準：
+
+- **新寫的 Repository / 查詢層** → 用 `Infrastructure\Database\Query\Builder`（DB Query Layering）提供的 IN 方法（型別安全、自動綁參）。見 `infrastructure/CLAUDE.md` Database Query Toolkit 段 / `docs/guides/query-toolkit-cookbook.md`。
+- **改既有 legacy code、AR `findAll($criteria)`、或要併入既有 `CDbCriteria` 條件鏈** → 沿用本頁 `addInCondition` / `addNotInCondition` 寫法（強行換 Builder 反而擴大 diff、破壞 surgical change）。
+
+兩者底層同走 PDO bind，安全性等價；選擇看「所在層是否已是 Builder 風格」，不為換而換。
 
 ## 全域規則參考
 
