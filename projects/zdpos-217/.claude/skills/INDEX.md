@@ -27,9 +27,9 @@ Total: **18** skills (7 zdpos-* / 10 openspec-* / 1 other)
 | `zdpos-exception-logging` | zdpos catch 區塊統一規範：所有 `catch (\Exception $e)` 必須同時呼叫 ExceptionLogHelper::logCaughtExceptionToApplication() 寫 application.log + 領域 logger（如 SalesWeatherLogger）。使用時機：寫 try / catch、處理 CDbException、Exc... |
 | `zdpos-git-worktree` | zdpos 專案 `.claude/worktrees/<name>/` 跑 phpunit.xml 完整套件或 Playwright E2E 必跑的五件套 setup（yii_framework symlink / protected/config cp / protected/runtime mkdir+755 / `npm i @playwright/test` 後還原 lock / ... |
 | `zdpos-in-queries` | zdpos IN / NOT IN 查詢安全寫法：用 CDbCriteria::addInCondition() / addNotInCondition()，禁止字串內插（`IN ({$str})`），且必須 array_values($ids) 避免非連續 key bug，addNotInCondition 需 guard 空陣列。使用時機：寫 SQL IN / NOT IN 條件、處理多... |
-| `zdpos-js-lint-config` | ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2 + Global ignores)、自定 AST selector、`zdposLegacyGlobals` 三檔同步、TypeScript noEmit gate 設計。Use when 規劃 per-leaf cleanup、改 eslint.config.js... |
-| `zdpos-js-static-check-strategy` | zdpos modernize-zpos-js-static-checks Phase 2 — `// @ts-check` per-leaf 漸進策略、`zdposLegacyGlobals` 三檔同步 (eslint.config.js / ambient.d.ts / jsdoc-globals.js)、tsconfig exclude、19 leaf 過渡分類、line-anchor... |
-| `zdpos-legacy-js-refactor` | zdpos legacy POS JS 模組抽出 / leaf module 拆解的共通契約（原始檔鎖死、IIFE + window.X re-export、不改 ES6 class）、audit grep 範本、Mechanical extraction 800 LOC 例外、leaf 切分後三段驗證。Use when 規劃拆 zpos / pos_core / mpos / main /... |
+| `zdpos-js-lint-config` | zdpos JS 靜態檢查的 config 結構 SSOT 對映 — ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2 + Global ignores)、自定 `restrictedAjaxSyntax` AST selector、`zdposLegacyGlobals` 白名單分類、tsconfig noEmi... |
+| `zdpos-js-static-check-strategy` | zdpos `// @ts-check` per-leaf 漸進清理的執行 playbook（capability `zpos-static-check-gate`）— 寫單支 leaf 的 @ts-check cleanup PR、三檔同步程序 (eslint.config.js / js/zpos/zdpos-ambient.d.ts / jsdoc-globals.js)、19 lea... |
+| `zdpos-legacy-js-refactor` | zdpos legacy POS JS 巨檔抽出 / leaf module 拆解的共通契約 — 原始檔鎖死、IIFE + `window.X` re-export 模板（不改 ES6 class）、audit-grep-first design.md、Mechanical extraction 800 LOC closure 例外、leaf 切分後三段驗證 (golden fixture ... |
 
 ### OpenSpec plugin
 
