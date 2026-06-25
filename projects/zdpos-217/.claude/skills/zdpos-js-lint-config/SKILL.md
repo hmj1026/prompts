@@ -1,6 +1,6 @@
 ---
 name: zdpos-js-lint-config
-description: ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2 + Global ignores)、自定 AST selector、`zdposLegacyGlobals` 三檔同步、TypeScript noEmit gate 設計。Use when 規劃 per-leaf cleanup、改 eslint.config.js / tsconfig.json / ambient.d.ts、frontend-reviewer 審 tier 一致性、新檔該落哪 tier 拿不定。Not for 日常寫 JS 業務邏輯（用 .claude/rules/frontend.md 即可）。
+description: zdpos JS 靜態檢查的 config 結構 SSOT 對映 — ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2 + Global ignores)、自定 `restrictedAjaxSyntax` AST selector、`zdposLegacyGlobals` 白名單分類、tsconfig noEmit gate 設計。Use when 改 eslint.config.js / tsconfig.json / js/zpos/zdpos-ambient.d.ts 的設定本身、判斷新檔或新全域該落哪個 tier / 哪一類白名單、frontend-reviewer 審 tier 一致性、新增 vendor 路徑要 config 與 hook 兩處同步。Not for：跑 per-leaf `// @ts-check` PR 的執行流程與進度量測（→ skill `zdpos-js-static-check-strategy`）、把巨檔拆成 leaf module（→ skill `zdpos-legacy-js-refactor`）、日常 JS 業務邏輯（→ `.claude/rules/frontend.md`）。
 ---
 
 # zdpos JS 靜態檢查 config 內結構（Tier + Selector + 白名單）
@@ -107,36 +107,29 @@ description: ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2
 - **POS state runtime globals (writable)**：`socket` / `SaveData_timer` / `readCard_timer` / `aPayments` / `oldLiffCouponAmt` / `NfullnGift` / `employee_name` / `pointLimit` / `serviceType` / `storeType` / `priceType` / `paytype` / `payment` / `arc_flag` / `lock` / `flag` / `gpnm` 等
 - **Admin DataTables editor**：`editText` / `editOption`
 
-**新增 leaf 引入新全域時 MUST 三處同步**：
+**新增 leaf 引入新全域 → 三檔同步**（`eslint.config.js` / `js/zpos/zdpos-ambient.d.ts` / `js/zpos/jsdoc-globals.js`），任一漏更 → ESLint 報 `no-undef` 或 tsc 報 TS2304。
 
-1. `eslint.config.js` — `zdposLegacyGlobals` 加入
-2. `js/zdpos-ambient.d.ts` — TypeScript 型別宣告同步
-3. `js/zpos/jsdoc-globals.js` — JSDoc 型別 SSOT
-
-任一不同步 → ESLint 或 tsc 報 `no-undef` / 型別錯誤。
-
-> 詳細規則、19 leaf 過渡分類、漸進策略、tsconfig 配置決策、grep gameable 歷史教訓全部進度細節 → skill `zdpos-js-static-check-strategy`。
+> 同步程序（readonly/writable 標註、漂移防線）、`// @ts-check` 漸進策略、19 leaf 過渡分類、tsconfig 配置決策、grep-gameable 歷史教訓 → SSOT skill `zdpos-js-static-check-strategy`。
 
 ---
 
 ## 進度衡量速查
 
 ```bash
-# 看當前 strict / nocheck / unmarked 分佈
-/ts-check-status
+# 全檔型別檢查（noEmit gate）
+npm run typecheck
 
-# 手動版（exit gate = 兩個 find 都輸出空才達成）
-find js/zpos -maxdepth 1 -name '*.js' -exec grep -L '^\s*//\s*@ts-check\s*$' {} \;
-find js/zpos -maxdepth 1 -name '*.js' -exec grep -l '^\s*//\s*@ts-nocheck' {} \;
+# strict opt-in 分佈（exit gate = 兩個 find 都輸出空才達成）
+find js/zpos -maxdepth 1 -name '*.js' -exec grep -L '^\s*//\s*@ts-check\s*$' {} \;   # 未啟用 strict 的 leaf
+find js/zpos -maxdepth 1 -name '*.js' -exec grep -l '^\s*//\s*@ts-nocheck' {} \;     # 仍 @ts-nocheck 過渡
 ```
 
-> **重要 trap**：`@ts-check` / `@ts-nocheck` 行錨點偽通過陷阱 — 弱 `grep -L '@ts-check'` 會被 `// TODO: @ts-check` 或 `// see @ts-check` 註解假裝啟用。必用 line-anchored regex `^\s*//\s*@ts-check\s*$`，且只認單一獨立行。詳見 `MEMORY.md::trap_tscheck_grep_gameable.md`。
+> ⚠️ 必用上面的 **line-anchored** regex；弱 `grep -L '@ts-check'` 會被註解內 token（`// TODO: @ts-check`）騙成偽綠。完整 grep-gameable 教訓 → skill `zdpos-js-static-check-strategy` + memory `trap_tscheck_grep_gameable.md`。
 
 ---
 
-## 相關 spec
+## 相關規範
 
-- `openspec/changes/modernize-zpos-js-static-checks/proposal.md`
-- `openspec/changes/modernize-zpos-js-static-checks/design.md`（D1-D4 ESLint + TypeScript 靜態檢查決策）
-- `openspec/changes/modernize-zpos-js-static-checks/specs/zpos-static-check-gate/spec.md`
-- `openspec/changes/modernize-zpos-js-static-checks/tasks.md`
+- SSOT rule：`.claude/rules/js/static-checks.md`（工具鏈 + enforce 點 + skill 路標）
+- 姊妹 skill：`zdpos-js-static-check-strategy`（per-leaf 執行 / 三檔同步程序 / Phase 2 exit gate）
+- Capability `zpos-static-check-gate`：OpenSpec change `modernize-zpos-js-static-checks` 已落地（Phase 1 ESLint + Phase 2 TS noEmit），change dir 已隨歸檔移除；現況防線以上述 SSOT rule 為準。

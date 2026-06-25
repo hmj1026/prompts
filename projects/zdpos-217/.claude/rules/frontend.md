@@ -13,6 +13,9 @@ Legacy POS, **no build step**; direct DOM + `POS.*` global.
 - New features **forbidden** to use `$.ajax` / `$.post` / `$.get` / `fetch` / `axios` — must use existing AJAX wrappers
 - `POS` global is SSOT — no bypassing or parallel constructions
 - Exception: core JS files (`zpos.js` / `mpos.js` / `pos_core.js` / `main.js`) define the wrappers and are exempt
+- **ES6-native over jQuery（範圍：僅新檔案 / 新抽出的 leaf module）**：新建立的 JS 檔 / 模組，其 **DOM 查詢 / 事件 / 語法** 用原生 ES6（`querySelector` / `querySelectorAll` / `addEventListener` / `const` / `let` / 箭頭函式）而非 jQuery（`$()` / `.on()` / `.click()` / `var`）。例外：
+  - **transport 例外**：AJAX 仍走上述 `POS.*` wrapper（**不可**為了「原生」改用 raw `fetch`）— 此條與 AJAX hard limit 不衝突，只規範 DOM/事件/語法。
+  - **legacy 例外**：修改既有 jQuery-locked 檔（`pos/index` 鎖 jQuery 1.9.1、現有 monolith leaf、`js/permission.js` 等）跟隨原檔風格，**不強制改寫**（範圍規則，避免擴張 blast radius）。
 - **Lint enforcement**：上列 hard limit 由 `npm run lint` (ESLint 9 flat config) 強制；config 結構 / tier 設計 / 自定 selector / 全域白名單 SSOT 詳見 [`.claude/rules/js/static-checks.md`](js/static-checks.md)
 
 ## Existing AJAX Wrappers

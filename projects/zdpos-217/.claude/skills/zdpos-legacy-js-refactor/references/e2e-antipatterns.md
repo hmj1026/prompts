@@ -85,10 +85,4 @@ OpenSpec 寫「MUST 點實際 UI 元件，MUST NOT 只 stub」時，下列等價
 
 ## 6. Worktree 跑 E2E 前置
 
-進 worktree 寫/跑 spec 前先跑 setup script：
-
-```bash
-bash scripts/worktree-setup-e2e.sh
-```
-
-涵蓋 yii_framework / config / runtime / node_modules / accounts 五件套 → 詳細 trap 解析請載入 skill `zdpos-git-worktree`。
+進 worktree 寫/跑 spec 前先跑五件套 setup（yii_framework / config / runtime / node_modules / accounts）— 一條龍指令與各 trap 根因見 skill `zdpos-git-worktree`。

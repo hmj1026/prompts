@@ -5,7 +5,7 @@ paths:
 
 # JS 靜態檢查防線 SSOT (index)
 
-OpenSpec change: `modernize-zpos-js-static-checks`（Phase 1 ESLint + Phase 2 TypeScript noEmit 已落地；未來時機成熟後一次性全 ESM 重構為獨立 change）
+OpenSpec change: `modernize-zpos-js-static-checks`（Phase 1 ESLint + Phase 2 TypeScript noEmit 已落地，change dir 已隨歸檔移除；未來時機成熟後一次性全 ESM 重構為獨立 change）
 Capability: `zpos-static-check-gate`
 
 ## 工具鏈
@@ -35,7 +35,4 @@ SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_
 
 ## 相關 spec
 
-- `openspec/changes/modernize-zpos-js-static-checks/proposal.md`
-- `openspec/changes/modernize-zpos-js-static-checks/design.md`（D1-D4 ESLint + TypeScript 靜態檢查決策）
-- `openspec/changes/modernize-zpos-js-static-checks/specs/zpos-static-check-gate/spec.md`
-- `openspec/changes/modernize-zpos-js-static-checks/tasks.md`
+> OpenSpec change `modernize-zpos-js-static-checks`（Phase 1 ESLint + Phase 2 TS noEmit）已落地並歸檔，change dir（proposal / design D1-D4 / specs/zpos-static-check-gate / tasks）已移除。現況防線即本檔；per-leaf 執行細節見 skill `zdpos-js-static-check-strategy`、config tier 結構見 skill `zdpos-js-lint-config`。
