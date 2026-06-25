@@ -1,6 +1,7 @@
 {
   "_comment": "dhpk plugin verified-version pin（由 plugin check-plugin-version.sh 於 SessionStart 比對；range 為 prefix match）。驗證新版後手動更新。取代舊 .claude/artifacts/dhpk-tidy/verified-versions.json + 本地 check-dhpk-version.sh（2026-06-12 de-fork）。",
   "verified": [
+    { "range": "0.12.x", "note": "verified 2026-06-25 — 0.12.3 hook-level sentinel triage (comment-only + pure-CSS, language-aware, fail-open; triage 14/14) + harness-revise script fixes; harness green-line 100/100 on zdpos .claude" },
     { "range": "0.10.x", "note": "verified 2026-06-12 — 7-slot sentinel chain + de-fork smoke (sentinel parity, push block, manifest-guard, php -l, warmstart)" }
   ],
   "incompatible": []

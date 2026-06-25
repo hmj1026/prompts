@@ -69,7 +69,7 @@ for name in "${SENTINEL_NAMES[@]}"; do
         else
             echo "[reap-sentinels] STALE: $name (age ${hours}h, threshold ${THRESHOLD_HOURS}h)" >&2
             echo "[reap-sentinels]   Likely cause: review agent crash or interrupted session." >&2
-            echo "[reap-sentinels]   To clear manually: bash .claude/hooks/clear-sentinel.sh \"$name\"" >&2
+            echo "[reap-sentinels]   To clear manually: rm -f \"$sentinel\"" >&2
         fi
     fi
 done

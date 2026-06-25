@@ -69,8 +69,9 @@ except Exception:
 # scripts/hooks/_lib/payload.sh 的 7 槽官方順序**（migration 已升級為官方
 # 第 7 槽，本檔不再是 fork 而是 mirror — 改 plugin 端時兩邊同步）：
 #   code(0) → db(1) → sec(2) → frontend(3) → doc(4) → polyfill(5) → migration(6)
-# 執行順序（chain rule）：db → migration → security → frontend → code → doc
-# （陣列順序 ≠ 執行順序；chain order 由 execution-policy.md 規範）
+# 此陣列順序僅為 slot enumeration / statusline 對映，**非執行順序**。
+# 派發模型（execution-policy.md 規範）：triage 砍假陽性 → 倖存 reviewer 平行派發
+# （同訊息多 Agent calls）→ code-reviewer 收口合併去重。已非舊串行 chain。
 SENTINEL_NAMES=(
     ".pending-review"
     ".pending-db-review"

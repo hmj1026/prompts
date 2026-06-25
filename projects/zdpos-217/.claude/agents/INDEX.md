@@ -30,4 +30,4 @@ Sentinel mapping SSOT lives in the plugin's `${CLAUDE_PLUGIN_ROOT}/scripts/hooks
 ## See also
 
 - `${CLAUDE_PLUGIN_ROOT}/agents/INDEX.md` for the canonical dhpk roster (15 role agents + 1 module-scoped polyfill-reviewer)
-- `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` for the full chain rule + dispatch table
+- `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` for the full triage / parallel-dispatch rule + dispatch table

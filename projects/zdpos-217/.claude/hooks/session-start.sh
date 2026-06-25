@@ -16,20 +16,29 @@ SESSION_FILE="$ARTIFACTS/sessions/latest.md"
 # 1. Pre-create artifact directories
 mkdir -p "$ARTIFACTS/reviews" "$ARTIFACTS/plans" "$ARTIFACTS/audits" "$ARTIFACTS/refactors" "$ARTIFACTS/codemaps" "$ARTIFACTS/adr" "$ARTIFACTS/sessions"
 
-# 1b. Reap stale gitnexus MCP processes, keep only the newest one.
-# Reason: each session starts a new gitnexus mcp process; old ones are not auto-reaped.
-#         Concurrent processes competing for the LadybugDB write lock break the FTS index.
-_gn_pids=($(pgrep -f "gitnexus mcp" 2>/dev/null | sort -n))
-if [[ ${#_gn_pids[@]} -gt 1 ]]; then
-    _gn_newest="${_gn_pids[$((${#_gn_pids[@]} - 1))]}"
-    for _gn_pid in "${_gn_pids[@]}"; do
-        if [[ "$_gn_pid" != "$_gn_newest" ]]; then
-            kill "$_gn_pid" 2>/dev/null
-        fi
-    done
-    echo "[session-start] reaped $((${#_gn_pids[@]} - 1)) stale gitnexus mcp processes"
-fi
-unset _gn_pids _gn_newest _gn_pid
+# 1b. Reap STALE gitnexus MCP processes (the owning session has ended).
+# Reason: each session spawns a gitnexus mcp as a DIRECT child of its `claude`
+#         process; when that claude exits the orphan is adopted by the session
+#         subreaper (WSL/Claude Code reparents to `Relay(...)`, other hosts to
+#         user `systemd` or init/PID 1) and lingers, competing for the LadybugDB
+#         write lock and corrupting the FTS index. Per memory trap_mcp_zombie_processes
+#         we identify staleness by the PARENT, not "newest": a LIVE gitnexus's parent
+#         is `claude`, so we reap ONLY on a recognised subreaper/init parent and KEEP
+#         on anything else (claude or any ambiguous parent) — never broad-kill a live
+#         process (e.g. a concurrent worktree session's gitnexus). Errs false-negative
+#         (an unreaped stray is recoverable; a killed live session is not).
+_gn_reaped=0
+while IFS= read -r _gn_pid; do
+    [ -z "$_gn_pid" ] && continue
+    _gn_ppid="$(ps -o ppid= -p "$_gn_pid" 2>/dev/null | tr -d ' ')"
+    _gn_pcomm="$(ps -o comm= -p "${_gn_ppid:-0}" 2>/dev/null)"
+    case "${_gn_ppid:-}:${_gn_pcomm:-}" in
+        1:*|*:Relay*|*:systemd|*:init|*:init-*)
+            kill "$_gn_pid" 2>/dev/null && _gn_reaped=$((_gn_reaped + 1)) ;;
+    esac
+done < <(pgrep -f "gitnexus mcp" 2>/dev/null)
+[[ "$_gn_reaped" -gt 0 ]] && echo "[session-start] reaped $_gn_reaped stale gitnexus mcp processes"
+unset _gn_pid _gn_ppid _gn_pcomm _gn_reaped
 
 # 1c. Auto-purge sentinels older than 14 days (conservative initial threshold).
 # Reason: orphan sentinels from crashed review agents block git push (pre-bash-guard.sh)

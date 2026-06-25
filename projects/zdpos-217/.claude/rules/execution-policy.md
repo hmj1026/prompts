@@ -1,6 +1,6 @@
 # Execution Policy
 
-> **Canonical**: `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` (dhpk v0.4.0+) — read that first for task modes, sentinel chain rule, agent dispatch table, AI-judgment back-stop semantics.
+> **Canonical**: `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` (dhpk v0.4.0+) — read that first for task modes, the sentinel **triage + parallel-dispatch** rule (reviewers run concurrently after triage drops false positives; not a serial chain), agent dispatch table, AI-judgment back-stop semantics.
 
 ## zdpos overrides
 
@@ -14,7 +14,7 @@
 
 ## Cross-references
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` — canonical task modes + chain rule
+- `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` — canonical task modes + triage / parallel-dispatch rule
 - `${CLAUDE_PLUGIN_ROOT}/rules/tool-routing.md` — cx / gitnexus / claude-mem decision tree
 - `${CLAUDE_PLUGIN_ROOT}/rules/anti-rationalization.md` — self-rebuttal table
 - `.claude/rules/php/{coding-style,patterns,security,testing,yii-framework}.md` — zdpos PHP / Yii 1.1 specifics (kept local; not in dhpk)
