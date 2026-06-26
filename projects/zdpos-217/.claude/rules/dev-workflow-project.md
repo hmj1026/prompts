@@ -1,3 +1,6 @@
+---
+paths: []
+---
 # Dev Workflow — Project Override (zdpos_dev)
 
 > 內容已移至 [`.claude/docs/dev-workflow-project.md`](../docs/dev-workflow-project.md)
