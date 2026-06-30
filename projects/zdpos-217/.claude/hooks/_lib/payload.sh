@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # payload.sh — shared helpers for Claude Code hooks. SSOT for sentinel ↔ agent ↔
-# short-label triple. Agent names use dhpk: prefix (dhpk plugin v0.4.0+). The 6th
-# slot (migration-reviewer) is a zdpos-local extension wired via this hook —
-# dhpk's userConfig.review_agents default is 5 slots; v0.5.x may add slot 6 to the
-# plugin schema, at which point this override becomes redundant.
+# short-label triple. Agent names use dhpk: prefix (dhpk plugin v0.4.0+). All 7
+# slots (incl. migration-reviewer + polyfill-reviewer) ship natively in dhpk 0.17.0+;
+# local mirror retained for statusline / session-start read-outs only.
 # Source-only — do not execute directly.
 # Sourced by pre-bash-guard.sh / pre-edit-guard.sh / post-edit-remind.sh /
 # stop-review-reminder.sh / statusline.sh. Constants-only export + one
