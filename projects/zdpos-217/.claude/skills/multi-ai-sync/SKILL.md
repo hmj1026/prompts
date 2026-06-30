@@ -1,6 +1,7 @@
 ---
 name: multi-ai-sync
 description: "Sync Claude-first `.claude/` (skills, commands, hooks, agents, rules) to Codex / Gemini / Antigravity. Includes compliance gate + post-sync validation. Use when aligning multi-platform AI config or migrating Claude → other platforms. Not for reverse sync, single-platform edits, or missing `.claude` source."
+disable-model-invocation: true
 ---
 
 # Multi AI Sync (Claude First)
