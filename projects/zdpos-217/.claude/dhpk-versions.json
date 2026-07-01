@@ -1,7 +1,8 @@
 {
   "_comment": "dhpk plugin verified-version pin（由 plugin check-plugin-version.sh 於 SessionStart 比對；range 為 prefix match。check 僅驗證 running 版本——$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json——cache dirs 僅在無 running 版本時 fallback）。驗證新版後手動更新。取代舊 .claude/artifacts/dhpk-tidy/verified-versions.json + 本地 check-dhpk-version.sh（2026-06-12 de-fork）。",
   "verified": [
-    { "range": "0.19.x", "note": "verified 2026-06-30 — running plugin = local dev checkout /home/paul/projects/dhpk @ v0.19.0。新增：ECC agent port（4 agents）、opsx coverage gate（--min-coverage）、孤兒 sentinel 自動清理。pluginConfigs 補齊：hot_tables（5 張熱表）、reap_stale_mcp_processes=true。" },
+    { "range": "0.20.x", "note": "verified 2026-06-30 — running plugin = local dev checkout /home/paul/projects/dhpk @ v0.20.0。新增：python-build-resolver + rust-build-resolver（agent 22→24）、doc-reviewer 吸收 artifact-reviewer（7 槽 sentinel 不變）、route-table 雙語收斂、opsx apply-resume 優化。" },
+    { "range": "0.19.x", "note": "retained fallback — verified 2026-06-30 @ v0.19.0。" },
     { "range": "0.14.x", "note": "retained fallback — verified 2026-06-26 @ v0.14.0。" },
     { "range": "0.13.x", "note": "retained fallback — verified 2026-06-26 @ v0.13.0（新增 /harness-govern audit→fix orchestrator）。" },
     { "range": "0.12.x", "note": "retained fallback — 最新 on-disk cache（0.12.3），verified 2026-06-25；僅在 running 版本改由 cache 解析（dev checkout 不在時）才會被驗證。" }
