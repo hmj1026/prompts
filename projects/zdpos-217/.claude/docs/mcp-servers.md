@@ -4,6 +4,8 @@
 
 zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。session 中可見的 MCP namespace **全部由 user-level plugins 注入**，跨專案共用。本文件列出每個 namespace 的來源 plugin、用途、與 zdpos 工作流的對應入口。
 
+> **已知風險（另案追蹤，本文件不重述細節）**：本專案 `mysql-dev-ro` / `mysql-dev-remote` 兩個 project-scoped MCP server（見 `~/.claude.json` `projects["/home/paul/projects/zdpos-217"].mcpServers`）的資料庫密碼為明文儲存，已於 2026-07-03 確認排除在本 harness-doc change 外、獨立追蹤處理。
+
 ## Active MCP Namespaces
 
 > 來源類型分三類：(1) `.claude.json` user-level `mcpServers`、(2) plugin 注入、(3) claude.ai 內建 remote MCP（透過 oauth 啟用）。
@@ -13,8 +15,8 @@ zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。
 | Namespace | Source | 主要用途 | zdpos 入口 |
 |---|---|---|---|
 | `mcp__gitnexus__*` | `.claude.json` user-level (`gitnexus mcp` binary) | Code intelligence: impact / context / query / rename / detect_changes | `.claude/rules/tool-routing.md`、各 `gitnexus-*` skill |
-| `mcp__codex__codex`, `codex-reply` | codex@openai-codex (user scope v1.0.4) | Codex MCP delegation: review / architect / implement | `.claude/skills/codex-*`、agent `codex-rescue` |
-| `mcp__plugin_claude-mem_mcp-search__*` | claude-mem@thedotmack v13.3.0 | Cross-session memory: smart_search / search / get_observations / timeline | skill `claude-mem:mem-search`、SessionStart hook auto-context |
+| `mcp__codex__codex`, `codex-reply` | codex@openai-codex (user scope v1.0.5) | Codex MCP delegation: review / architect / implement | `.claude/skills/codex-*`、agent `codex-rescue` |
+| `mcp__plugin_claude-mem_mcp-search__*` | claude-mem@thedotmack v13.9.2 | Cross-session memory: smart_search / search / get_observations / timeline | skill `claude-mem:mem-search`、SessionStart hook auto-context |
 | `mcp__plugin_context7_context7__*` | context7@claude-plugins-official (npm `@upstash/context7-mcp`) | Library / framework / API docs lookup（local fallback） | skill `docs-lookup`、agent `docs-lookup` |
 
 ### claude.ai Built-in Remote MCP
@@ -30,6 +32,17 @@ zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。
 | `mcp__claude_ai_Google_Calendar__*` | `https://calendarmcp.googleapis.com/mcp/v1` | Calendar 讀寫（zdpos 不主動用） |
 
 **Context7 雙佈署註記**：tool 命名前綴混用是 Claude Code 的 namespacing 細節。優先用 remote（穩定度高、版本由 Upstash 管），plugin 版作為 offline fallback；如要單一路徑可在 `~/.claude/settings.json` `permissions.deny` 屏蔽其中一邊，但目前共存無實害。
+
+## Codex Model Configuration
+
+`mcp__codex__codex` / `codex-reply` 與 codex plugin 自己的 agent/skill（`codex:rescue`、`/codex-review*` 等）走**兩條互不相關的路徑**，各自的 model/effort 設定位置不同、不需要同步：
+
+| 路徑 | 設定位置 | 現況 | 影響範圍 |
+|---|---|---|---|
+| MCP server（`mcp__codex__codex`） | `~/.claude.json` 全域 `mcpServers.codex.args`（`-c model=… -c model_reasoning_effort=…`） | `model=gpt-5.3-codex`、`model_reasoning_effort=high` | **全域**，影響所有專案，非 per-project |
+| codex plugin agent/skill（`codex:rescue` 等，經 `codex app-server`） | `~/.codex/config.toml`（`model` / `model_reasoning_effort` 頂層鍵） | `model=gpt-5.5`、`model_reasoning_effort=xhigh` | 僅影響未帶 `--model`/`--effort` 明確覆寫的 app-server 呼叫 |
+
+換 MCP server 的模型：編輯 `~/.claude.json` 的 `mcpServers.codex.args` 字串值。換 plugin agent/skill 的預設模型：編輯 `~/.codex/config.toml` 頂層 `model` / `model_reasoning_effort`。兩者刻意分離，換一邊不會影響另一邊。
 
 ## Installation Status
 
@@ -81,6 +94,14 @@ cat /home/paul/.claude/mcp-health-cache.json           # persistent probe cache
 ```
 
 `mcp-health-cache.json` 只記 user-level `.claude.json` 內 `mcpServers` 的 server（目前是 `gitnexus` / `codex`）；plugin 與 claude.ai remote 的健康度走 on-demand probe，不入 cache。失準時直接 `echo '{"version":1,"servers":{}}' > ~/.claude/mcp-health-cache.json` reset。
+
+**`claude mcp list` 不等於「目前 session 實際啟用狀態」**：這個指令對「全部已設定的 server」做即時連線探測，**不檢查** `disabledMcpServers`。若手動停用某個 server（例如 claude.ai remote connector），只要該服務帳號層仍可連通，`claude mcp list` 依然會顯示 `✔ Connected`——這不代表停用失效，只代表這個指令衡量的是「可連線」而非「本專案是否載入其工具」。要驗證真實停用狀態：
+
+```bash
+jq -r '.projects["/home/paul/projects/zdpos-217"].disabledMcpServers' ~/.claude.json   # 真實停用清單
+```
+
+或在 session 內開 `` `/mcp` `` 面板——面板會正確反映停用狀態並停止載入該 server 的工具；`claude mcp list` 不會。
 
 ### 多版本 cache 漂移
 
