@@ -2,7 +2,7 @@
 
 ## Scope
 
-zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。session 中可見的 MCP namespace **全部由 user-level plugins 注入**，跨專案共用。本文件列出每個 namespace 的來源 plugin、用途、與 zdpos 工作流的對應入口。
+zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。session 中可見的 MCP namespace **多數由 user-level plugins 或 `~/.claude.json` user-level `mcpServers` 注入（跨專案共用）**，另有兩個 **project-scoped** MCP server（`mysql-dev-ro` / `mysql-dev-remote`，唯讀；見下方 Active 清單與 line 7 備註）僅在本專案路徑下生效、不跨專案。本文件列出每個 namespace 的來源、用途、與 zdpos 工作流的對應入口。
 
 > **已知風險（另案追蹤，本文件不重述細節）**：本專案 `mysql-dev-ro` / `mysql-dev-remote` 兩個 project-scoped MCP server（見 `~/.claude.json` `projects["/home/paul/projects/zdpos-217"].mcpServers`）的資料庫密碼為明文儲存，已於 2026-07-03 確認排除在本 harness-doc change 外、獨立追蹤處理。
 
@@ -18,6 +18,8 @@ zdpos_dev 沒有 `.mcp.json`、`.claude/settings.json` 也沒有 `mcp` 區段。
 | `mcp__codex__codex`, `codex-reply` | codex@openai-codex (user scope v1.0.5) | Codex MCP delegation: review / architect / implement | `.claude/skills/codex-*`、agent `codex-rescue` |
 | `mcp__plugin_claude-mem_mcp-search__*` | claude-mem@thedotmack v13.9.2 | Cross-session memory: smart_search / search / get_observations / timeline | skill `claude-mem:mem-search`、SessionStart hook auto-context |
 | `mcp__plugin_context7_context7__*` | context7@claude-plugins-official (npm `@upstash/context7-mcp`) | Library / framework / API docs lookup（local fallback） | skill `docs-lookup`、agent `docs-lookup` |
+| `mcp__mysql-dev-ro__*` | project-scoped `~/.claude.json` `projects["/home/paul/projects/zdpos-217"].mcpServers` | 本地 dev MySQL 查詢（**RO**：唯讀） | skill `zdpos-environment` references/mysql.md ### Read-only MCP |
+| `mcp__mysql-dev-remote__*` | project-scoped `~/.claude.json` `projects["/home/paul/projects/zdpos-217"].mcpServers` | 遠端 dev MySQL 查詢（**RO**：唯讀） | skill `zdpos-environment` references/mysql.md ### Read-only MCP |
 
 ### claude.ai Built-in Remote MCP
 
@@ -66,7 +68,16 @@ zdpos_dev 本身 **沒有** `.claude/plugins/` 目錄、也沒有 plugin manifes
 
 ## Why No `.mcp.json`
 
-MCP servers 由 plugins 自動注入時，**不需要**在專案再寫一份 `.mcp.json`。重複定義反而會產生衝突。若日後需要 zdpos 專屬的 MCP server（例如本地 dev MySQL 的 SQL inspector），才用 `.mcp.json` 宣告。
+本專案沒有 `.mcp.json`、也沒有 `.claude/mcp.json`。MCP servers 由 plugins 自動注入時，**不需要**在專案再寫一份 `.mcp.json`；重複定義反而會產生衝突。zdpos 專屬的 MCP server（例如本地 / 遠端 dev MySQL 唯讀查詢：`mysql-dev-ro`、`mysql-dev-remote`）已改用 **project-scoped `~/.claude.json`**（`projects["/home/paul/projects/zdpos-217"].mcpServers`）宣告，取代原本設想的 `.mcp.json` 路線。
+
+## MCP Configuration Storage
+
+MCP 設定依來源分兩處存放，勿混淆：
+
+| 來源 | 儲存位置 | 範例 |
+|---|---|---|
+| Plugin-bundled MCP server | `~/.claude/settings.json` 的 `enabledPlugins` | `gitnexus`、`context7`、`claude-mem` 等隨 plugin 啟用自動注入 |
+| Global / project-layer MCP server | `~/.claude.json`（user-level 或 `projects["<path>"].mcpServers`） | `codex`、`mysql-dev-ro`、`mysql-dev-remote` |
 
 ## Pruning Considerations
 

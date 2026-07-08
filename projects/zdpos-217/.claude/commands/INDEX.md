@@ -20,4 +20,4 @@ External OpenSpec plugin provides `/opsx:*` (apply / archive / continue / explor
 
 Provided by dhpk plugin under `dhpk:` namespace. Use `/dhpk:INDEX` to browse the full catalog, or invoke any of the ~70 commands via `/dhpk:<command-name>`.
 
-Recent migration: as of 2026-05-27, zdpos removed 67 duplicate command files in favour of the dhpk-shipped equivalents (Phase A diff: 60 byte-identical, 5 dhpk-more-complete, 2 ported-to-dhpk). See `.claude/artifacts/dhpk-tidy/phase-a-verdicts.md` for the per-pair audit trail.
+Recent migration: as of 2026-05-27, zdpos removed 67 duplicate command files in favour of the dhpk-shipped equivalents (Phase A diff: 60 byte-identical, 5 dhpk-more-complete, 2 ported-to-dhpk).
