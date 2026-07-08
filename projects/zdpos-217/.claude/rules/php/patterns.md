@@ -21,6 +21,14 @@ Inject `IXxxRepository` into Domain Service (not AR model directly). Service Lay
 
 Toolkit prerequisite (unfamiliarity is not a fallback reason): read `docs/guides/query-toolkit-cookbook.md` + `docs/guides/query-toolkit-migration-guide.md`. Date helpers (`BuildsDateWheres` trait): `->whereDate('col', '>=|<=', 'YYYY-MM-DD')`. Spec: `infrastructure/CLAUDE.md` "Database Query Toolkit".
 
+## Batch Mark-Processed Race (snapshot-then-blanket-UPDATE)
+
+> Triggers `blanket UPDATE / snapshot range / mark processed / auto-printer race / re-print race` — self-contained, no external destination (pattern is fully stated below).
+
+**Hard rule**: when marking rows as processed after a SELECT snapshot, the UPDATE's `WHERE` MUST target the exact key set captured at snapshot time (`WHERE seq IN (:snapshot_seqs)`), never a coarser condition re-evaluated at UPDATE time. A coarser condition re-matches rows inserted between snapshot and UPDATE — those rows get marked "done" without ever being processed, and normally-self-healing retry logic (`WHERE processed=0`) can no longer pick them up.
+
+Real incident: `StickerController::actionAutoPrinterSalesTempSticker` snapshotted unprinted rows, printed them, then marked done via `UPDATE ... SET sticker_print=1 WHERE store_no AND sales_no` (no `seq` filter). Rows inserted between the snapshot SELECT and the blanket UPDATE were marked printed but never rendered — permanent silent loss, no retry path. Fix: snapshot the row `seq`s, mark via `whereIn('seq', $seqs)->update([...])` (guard empty set → no-op), extracted as a Repository seam (`findXxxAutoPrintItems` / `markXxxProcessedBySeqs`) per DB Query Layering above.
+
 ## Repository Discovery Gate
 
 Before designing any new DB query:
