@@ -33,6 +33,14 @@
           "composer.json:docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php composer update --lock"
         ],
         "php_bin": "php",
+        "hot_tables": [
+          "records",
+          "orders",
+          "stock",
+          "inventory",
+          "pay_actions"
+        ],
+        "reap_stale_mcp_processes": true,
         "completion_evidence_enabled": true,
         "agent_warmstart_enabled": true,
         "graduation_scan_enabled": true,
