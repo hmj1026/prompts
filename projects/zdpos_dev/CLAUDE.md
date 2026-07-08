@@ -4,7 +4,7 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 ## Dependencies
 
-- **dhpk plugin v0.27.x** (required; verified range pin：zdpos-217 用 `.claude/dhpk-versions.json`（plugin 內建 check-plugin-version.sh 於 session-start 比對）；zdpos_dev 沿用舊制 `.claude/artifacts/dhpk-tidy/verified-versions.json` + 本地 check-dhpk-version.sh) — provides ~70 commands + 16 role agents + 17 modules of stack guidance + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk@v0.27.0`. 2026-06-12 起 zdpos-217 已撤本地 fork hooks，sentinel 路由 / guard / lint 全由 plugin hooks.json 自動接線（7 槽含 migration），專案僅留 pre-bash-guard（cs-fixer v2 + opcache 提醒）、session-start、post-edit-skill-index 與 statusline。 Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
+- **dhpk plugin** (required; version requirements governed by `.claude/dhpk-versions.json` verified ranges — plugin 內建 check-plugin-version.sh 於 session-start 比對；zdpos_dev 沿用舊制 `.claude/artifacts/dhpk-tidy/verified-versions.json` + 本地 check-dhpk-version.sh) — provides ~70 commands + role agents (數量見 `agents/INDEX.md`) + stack-guidance modules (數量見 module 目錄) + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk`（版本由 `.claude/dhpk-versions.json` 驗證範圍決定，勿手動釘版）. 2026-06-12 起 zdpos-217 已撤本地 fork hooks，sentinel 路由 / guard / lint 全由 plugin hooks.json 自動接線（含 migration），專案僅留 pre-bash-guard（cs-fixer v2 + opcache 提醒）、session-start、post-edit-skill-index、`reap-stale-sentinels.sh` 與 statusline。 Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
 - **OpenSpec plugin** (required) — provides `/opsx:*` commands. Install separately per OpenSpec docs.
 
 ## Rule priority
@@ -32,13 +32,13 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 | Topic | File |
 |---|---|
-| Execution strategy + sentinel chain | `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` (canonical) + `.claude/rules/execution-policy.md` (zdpos overrides: 6th sentinel slot, hot tables) |
+| Execution strategy + sentinel chain | `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` (canonical) + `.claude/rules/execution-policy.md` (zdpos overrides: sentinel slot count, hot tables) |
 | Tool routing (cx / gitnexus / claude-mem) | `${CLAUDE_PLUGIN_ROOT}/rules/tool-routing.md` + `.claude/rules/tool-routing.md` (zdpos additions) |
 | Anti-rationalization patterns | `${CLAUDE_PLUGIN_ROOT}/rules/anti-rationalization.md` + `.claude/rules/anti-rationalization.md` |
 | Sub-agent prompt boilerplate (cx + DB) | `.claude/docs/subagent-prompt-template.md` |
-| Agent roster | `${CLAUDE_PLUGIN_ROOT}/agents/INDEX.md` (canonical 16 dhpk agents) + `.claude/agents/INDEX.md` (zdpos chain mapping incl. 6th-slot migration-reviewer) |
+| Agent roster | `${CLAUDE_PLUGIN_ROOT}/agents/INDEX.md` (canonical dhpk agents — 數量見該檔) + `.claude/agents/INDEX.md` (zdpos chain mapping incl. migration-reviewer) |
 | Commands catalog | `${CLAUDE_PLUGIN_ROOT}/commands/INDEX.md` (canonical ~70 dhpk commands under `dhpk:` namespace) + `.claude/commands/INDEX.md` (zdpos local: `/update-codemaps`; `/create-dev` is now the dhpk plugin command `/dhpk:create-dev`) |
-| MCP server inventory (gitnexus / context7 / codex / claude-mem / chrome-devtools) | `.claude/docs/mcp-servers.md` |
+| MCP server inventory (gitnexus / context7 / codex / claude-mem) | `.claude/docs/mcp-servers.md` |
 | PHP / Yii / DDD patterns | `.claude/rules/php/{yii-framework,patterns,coding-style,testing,security}.md` |
 | Frontend (AJAX, JS) | `.claude/rules/frontend.md` |
 | 5 deploy environments / SSH / cron / MySQL | skill `zdpos-environment` (load on demand) |
@@ -52,7 +52,7 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 - `.claude/settings.json` — team-shared, committed.
 - `.claude/settings.local.json` — personal SSH / curl / cx perms, gitignored.
-- `.claude/.harness-profile` — optional one-line profile (`minimal` / `standard` / `strict`), gitignored. Env `$ZDPOS_HOOK_PROFILE` overrides; falls back to `standard`. `minimal` suppresses Stop-hook reminders.
+- `.claude/.harness-profile` — optional one-line profile (`minimal` / `standard` / `strict`), gitignored; scope is limited to local mirror hooks (statusline / session-start read-outs) that read this file directly. Env `$ZDPOS_HOOK_PROFILE` overrides; falls back to `standard`. Silencing the plugin-owned Stop-hook reminder requires setting `pluginConfigs."dhpk@dhpk".options.hook_profile` (e.g. in `settings.local.json`) — the local `.harness-profile` file alone does not affect dhpk plugin hooks.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
