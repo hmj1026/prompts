@@ -7,8 +7,8 @@
 # 設計來源：vexjoy-agent hooks/posttooluse-sync-skill-index.py（zdpos 改為
 # bash + python3，與 zdpos 既有 hook 風格一致）。
 #
-# Wire：settings.json PostToolUse Write|Edit；async（與 post-write-crlf-fix.sh
-# 等同列）。設 async 是因為 regenerate 約 <500ms，不應阻擋 model 後續工具呼叫。
+# Wire：settings.json PostToolUse Write|Edit；async。設 async 是因為 regenerate
+# 約 <500ms，不應阻擋 model 後續工具呼叫。
 #
 # 觸發路徑：
 #   *.claude/skills/*/SKILL.md（不論 absolute / relative）
@@ -25,7 +25,7 @@ ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 PAYLOAD="$(cat 2>/dev/null || true)"
 FILE_PATH="$(extract_tool_input file_path "$PAYLOAD")"
 # Write 工具用 camelCase filePath；缺 file_path 時 fallback，否則經 Write 寫
-# SKILL.md 會 silent skip、INDEX.md 不重生（對齊 post-edit-remind / js-lint）。
+# SKILL.md 會 silent skip、INDEX.md 不重生（對齊 post-edit-remind）。
 [ -z "$FILE_PATH" ] && FILE_PATH="$(extract_tool_input filePath "$PAYLOAD")"
 [ -z "$FILE_PATH" ] && exit 0
 

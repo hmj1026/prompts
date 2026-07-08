@@ -7,6 +7,7 @@
 # modules/js pre-commit hook 接手。本檔僅保留 dhpk 不該收的 zdpos 在地陷阱：
 #   Pattern 1: vendor/bin/php-cs-fixer（本地 vendor v2 vs CI v3 雙版本陷阱）
 #   Pattern 7: playwright E2E → dev4 opcache reset 提醒（advisory）
+#   Pattern 8: 容器內舊 workdir zdpos_dev 路徑提醒（advisory）
 set -o pipefail
 
 . "$(dirname "$0")/_lib/payload.sh"
@@ -55,6 +56,15 @@ if printf '%s' "$CMD_STRIPPED" | grep -Eq '(^|[[:space:]])(npx[[:space:]]+playwr
 JSON
     exit 0
   fi
+fi
+
+# Pattern 8: 舊 codebase 容器路徑 www.posdev/zdpos_dev 提醒（advisory，不阻擋）。
+# 容器內正確 workdir 已改為 www.posdev/zdpos-217；沿用舊路徑的指令仍可能執行但
+# 對應到錯誤/不存在目錄，故僅提醒不 exit 2。
+if printf '%s' "$CMD_STRIPPED" | grep -Fq 'www.posdev/zdpos_dev'; then
+  cat <<'EOF' >&2
+[guard] 提醒：偵測到舊 workdir 路徑 www.posdev/zdpos_dev；目前正確路徑為 www.posdev/zdpos-217，請確認指令是否需要更新。
+EOF
 fi
 
 exit 0

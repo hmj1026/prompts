@@ -4,9 +4,9 @@
 # slots (incl. migration-reviewer + polyfill-reviewer) ship natively in dhpk 0.17.0+;
 # local mirror retained for statusline / session-start read-outs only.
 # Source-only — do not execute directly.
-# Sourced by pre-bash-guard.sh / pre-edit-guard.sh / post-edit-remind.sh /
-# stop-review-reminder.sh / statusline.sh. Constants-only export + one
-# extractor — safe to source from any hook (no side effects).
+# Sourced by pre-bash-guard.sh / post-edit-skill-index.sh / reap-stale-sentinels.sh /
+# session-start.sh. Constants-only export + one extractor — safe to source
+# from any hook (no side effects).
 
 # 從 PreToolUse/PostToolUse JSON payload 取出 tool_input.<field>。
 # 優先 jq；缺 jq 時改用 python3，確保無 jq 環境下 hook 仍可運作。

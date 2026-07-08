@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # session-start.sh — SessionStart hook
-# - Verify docker containers (pos_php / pos_mysql) availability.
 # - Pre-create .claude/artifacts/ directory tree.
-# - Write sessions/latest.md for statusline and agent reference.
+# - Write sessions/latest.md as an agent reference only (nothing reads it as a status display).
 # - Profile resolved by get_hook_profile() — env $ZDPOS_HOOK_PROFILE >
 #   .claude/.harness-profile > "standard".
 set -o pipefail
@@ -70,58 +69,21 @@ fi
 unset _broken _f
 
 # 2. Collect status
+# 註：branch / docker 狀態已由 dhpk plugin 自身 session-start 印出
+# （pluginConfig docker_containers/modules 驅動），本檔不再重複探測，
+# 避免與 plugin 輸出的 `[session-start] branch=... docker=...` 重複。
 TS="$(date +'%Y-%m-%d %H:%M:%S %Z')"
-BRANCH="$(git -C "$ROOT" branch --show-current 2>/dev/null || echo '(detached)')"
 STAGED="$(git -C "$ROOT" diff --cached --name-only 2>/dev/null | wc -l | tr -d ' ')"
 MODIFIED="$(git -C "$ROOT" diff --name-only 2>/dev/null | wc -l | tr -d ' ')"
 UNTRACKED="$(git -C "$ROOT" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')"
 
-DOCKER_PHP="unknown"
-DOCKER_MYSQL="unknown"
-if command -v docker >/dev/null 2>&1; then
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^pos_php$'; then
-        DOCKER_PHP="running"
-    else
-        DOCKER_PHP="STOPPED"
-    fi
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^pos_mysql$'; then
-        DOCKER_MYSQL="running"
-    else
-        DOCKER_MYSQL="STOPPED"
-    fi
-else
-    DOCKER_PHP="(docker cli missing)"
-    DOCKER_MYSQL="(docker cli missing)"
-fi
-
-# 3. strict profile extra checks
-STRICT_NOTES=""
-if [[ "$PROFILE" == "strict" ]]; then
-    if [[ "$DOCKER_PHP" != "running" ]]; then
-        STRICT_NOTES+=$'\n- [WARN] pos_php not running: `docker compose up -d`'
-    fi
-    if [[ "$DOCKER_MYSQL" != "running" ]]; then
-        STRICT_NOTES+=$'\n- [WARN] pos_mysql not running: `docker compose up -d`'
-    fi
-fi
-
-# 4. Write sessions/latest.md
+# 3. Write sessions/latest.md
 cat > "$SESSION_FILE" <<EOF
 # Session Snapshot
 
 - generated_at: $TS
-- branch: $BRANCH
 - staged: $STAGED / modified: $MODIFIED / untracked: $UNTRACKED
-- pos_php: $DOCKER_PHP
-- pos_mysql: $DOCKER_MYSQL
 - hook_profile: $PROFILE
-$STRICT_NOTES
 EOF
-
-# 5. stdout summary (enters chat)
-echo "[session-start] branch=$BRANCH docker=$DOCKER_PHP/$DOCKER_MYSQL profile=$PROFILE"
-if [[ -n "$STRICT_NOTES" ]]; then
-    echo "[session-start] strict profile warnings:$STRICT_NOTES"
-fi
 
 exit 0

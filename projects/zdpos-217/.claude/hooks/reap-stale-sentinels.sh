@@ -2,14 +2,14 @@
 # reap-stale-sentinels.sh — sentinel age inspector / purger (zdpos_dev SSOT).
 #
 # 雙模式：
-#   default (Stop hook):     掃描，>=THRESHOLD_HOURS 過期警告，**不刪**
+#   default:                 掃描，>=THRESHOLD_HOURS 過期警告，**不刪**
 #   --purge (SessionStart):  過期 sentinel 直接刪除（保守閾值，預設 24h；
 #                            SessionStart 通常傳 14 天 = 336h 避免誤刪 in-progress review）
 #
-# 設計：stat / age 邏輯 SSOT；Stop hook 行為不變；SessionStart 對長期殘骸動手，
-# 避免 review agent crash 後殘留 sentinel 持續擋 git push（pre-bash-guard.sh）。
+# 設計：stat / age 邏輯 SSOT；SessionStart 對長期殘骸動手，避免 review agent
+# crash 後殘留 sentinel 持續擋 git push（pre-bash-guard.sh）。
 #
-# 觸發時機：Stop（每次 session 結束）+ SessionStart（每次 session 開始，--purge）。
+# 觸發時機：SessionStart（每次 session 開始，--purge）。
 # Cost：純檔案 stat，<50ms。
 
 set -o pipefail
@@ -60,17 +60,11 @@ for name in "${SENTINEL_NAMES[@]}"; do
         mtime="$(stat -c %Y "$sentinel" 2>/dev/null || echo 0)"
     fi
     age=$((now - mtime))
-    if [ "$age" -gt "$threshold" ]; then
+    if [ "$age" -gt "$threshold" ] && [ "$PURGE" -eq 1 ]; then
         hours=$((age / 3600))
-        if [ "$PURGE" -eq 1 ]; then
-            rm -f "$sentinel"
-            echo "[reap-sentinels] PURGED: $name (age ${hours}h, threshold ${THRESHOLD_HOURS}h)" >&2
-            purged=$((purged + 1))
-        else
-            echo "[reap-sentinels] STALE: $name (age ${hours}h, threshold ${THRESHOLD_HOURS}h)" >&2
-            echo "[reap-sentinels]   Likely cause: review agent crash or interrupted session." >&2
-            echo "[reap-sentinels]   To clear manually: rm -f \"$sentinel\"" >&2
-        fi
+        rm -f "$sentinel"
+        echo "[reap-sentinels] PURGED: $name (age ${hours}h, threshold ${THRESHOLD_HOURS}h)" >&2
+        purged=$((purged + 1))
     fi
 done
 
@@ -78,5 +72,5 @@ if [ "$PURGE" -eq 1 ] && [ "$purged" -gt 0 ]; then
     echo "[reap-sentinels] auto-purged $purged stale sentinel(s) at SessionStart (>${THRESHOLD_HOURS}h)" >&2
 fi
 
-# Stop / SessionStart 都不應 block；任何情況都 exit 0。
+# SessionStart 不應 block；任何情況都 exit 0。
 exit 0

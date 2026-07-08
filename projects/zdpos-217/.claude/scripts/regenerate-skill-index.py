@@ -66,29 +66,39 @@ def parse_frontmatter(text):
 
 
 def collect_skills():
-    """回傳 [(name, description, is_symlink), ...]，依 name asc。"""
+    """回傳 [(name, description, is_symlink), ...]，依 name asc。
+
+    遞迴掃描（rglob），涵蓋巢狀 skill family（如 `gitnexus/*/SKILL.md`
+    兩層結構），非僅單層 `.claude/skills/*/SKILL.md`。巢狀 skill 的 name
+    加上子目錄前綴（如 `gitnexus/gitnexus-exploring`）。
+    """
     skills = []
     if not SKILLS_DIR.exists():
         return skills
-    for entry in sorted(SKILLS_DIR.iterdir(), key=lambda p: p.name.lower()):
-        # symlink 可能指向 ../../.agents/skills/* 或外部位置
-        if not (entry.is_dir() or entry.is_symlink()):
-            continue
-        skill_md = entry / "SKILL.md"
+    skill_mds = sorted(
+        SKILLS_DIR.rglob("SKILL.md"),
+        key=lambda p: str(p.relative_to(SKILLS_DIR)).lower(),
+    )
+    for skill_md in skill_mds:
+        rel_dir = skill_md.parent.relative_to(SKILLS_DIR)
+        # symlink 可能指向 ../../.agents/skills/* 或外部位置；以頂層目錄判斷
+        top_dir = SKILLS_DIR / rel_dir.parts[0]
         try:
-            if not skill_md.exists():
-                continue
             text = skill_md.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
         fm = parse_frontmatter(text)
-        name = fm.get("name") or entry.name
+        base_name = fm.get("name") or rel_dir.parts[-1]
+        if len(rel_dir.parts) > 1:
+            name = "/".join(rel_dir.parts[:-1]) + "/" + base_name
+        else:
+            name = base_name
         desc = fm.get("description") or "(no description)"
         # 壓平多行 + 截長
         desc = re.sub(r"\s+", " ", desc).strip()
         if len(desc) > MAX_DESC_LEN:
             desc = desc[: MAX_DESC_LEN - 3] + "..."
-        skills.append((name, desc, entry.is_symlink()))
+        skills.append((name, desc, top_dir.is_symlink()))
     return skills
 
 
