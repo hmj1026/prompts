@@ -22,6 +22,8 @@
       "mcp__plugin_claude-mem_mcp-search__smart_search",
       "mcp__plugin_claude-mem_mcp-search__smart_unfold",
       "mcp__plugin_claude-mem_mcp-search__timeline",
+      "mcp__mysql-dev-ro__mysql_query",
+      "mcp__gitnexus__impact",
       "Bash(git:*)",
       "Bash(gh pr:*)",
       "Bash(docker --version)",
