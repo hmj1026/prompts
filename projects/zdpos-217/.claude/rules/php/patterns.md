@@ -111,6 +111,44 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 `assertValidTableName()` SSOT lives in `EntityRepository` (`protected`). Legacy `private` copies in `SystemRepository` / `CiwebRepository` are debt — when a new Repo needs it, declare `protected` (pending unification).
 
+## Policy 類落點與形狀
+
+> Triggers `Policy / 決策類 / gate / 授權判定 / shouldHide / passes / decide` → 新增 policy 前先讀本節。
+
+**落點（hard rule）**：Domain 層 policy 一律放 `domain/Policies/`，namespace `Domain\Policies`——**不**依模組再切子目錄（`Domain\Documents\Sticker\Policies` 之類一律不開）。policy 常跨模組被重用（欄位遮蔽被 Stock + ColumnUtility 共用即為例），依模組切分會讓「這條規則歸誰」變成偽問題。
+
+| 類型 | 落點 | 現況 |
+|---|---|---|
+| Domain 決策規則 | `domain/Policies/` · `Domain\Policies` | `StickerOrderTypePolicy`、`ColumnLevelMaskPolicy` |
+| Yii component 層（全域 namespace、需 `Yii::app()` / 全域類別） | `protected/components/` | `MenuAccessPolicy`、`DebugControllerPolicy`（legacy，**不**追溯搬遷；新寫的一律走 Domain 層） |
+
+**形狀（新 policy MUST；為日後抽抽象類／介面的前置）**：
+
+```php
+namespace Domain\Policies;
+
+class XxxPolicy
+{
+    // 建構吃「設定 + 環境」——同一次 request 內固定不變者一律入 constructor
+    public function __construct(array $config, $environment) { ... }
+
+    // 決策只吃「被判定的標的」，回 bool，true = 放行
+    public function passes($subject, array $context) { ... }
+}
+```
+
+- **決策動詞一律 `passes()`**，語意固定為 **true = 放行**。
+- **環境參數不進決策方法**：目前 DB 名稱、`$use_name`、使用者等級這類「一次 request 內固定」的值放 constructor。決策方法的引數只留被判定的標的——各 policy 的方法簽名才對得齊，日後才抽得出共同介面。
+- **instance-based，不寫 static**：static 無法實作介面，等於預先封死抽象化。
+
+**既有偏離（債務清單，勿當範本仿寫）**：
+
+| 類別 | 偏離 | 說明 |
+|---|---|---|
+| `ColumnLevelMaskPolicy::shouldHide()` | static + 極性相反（true = 遮蔽） | caller 需自行 `!shouldHide(...)`；抽介面時要一併轉成 instance + `passes()` |
+| `MenuAccessPolicy::decide()` | static + 全域 namespace + 動詞不同 | Yii component 層 legacy |
+| `DebugControllerPolicy::isAllowedForCurrentEnv()` | static + 讀 `$GLOBALS` | 同上 |
+
 ## Repository Class Constants
 
 Detail → `php/coding-style.md` "Magic Values". Single-value enums need no `AbstractEnum` subclass.
