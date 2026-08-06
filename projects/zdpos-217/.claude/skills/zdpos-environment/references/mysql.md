@@ -14,7 +14,7 @@
 三個唯讀 MCP（套件 `@benborla29/mcp-server-mysql`，`claude mcp add --scope local` → 只進個人 `~/.claude.json`，**不**進 repo——因 `.claude/` symlink 進 prompts repo，server-scope 會擴散到團隊/zdpos_dev）：
 - `mysql-dev-ro` → local `pos_mysql` MySQL 5.7，帳號 `claude_ro`，`GRANT SELECT, SHOW VIEW` 給 6 個本地商家庫（含 `zdpos_dev_2`；**無** phpunit 的 `zdpos_dev`）。
 - `mysql-dev-remote` → DEV `192.168.2.254` MariaDB 10.1.37（內網直連、不需 ssh tunnel），只 GRANT 11 個 dev/test/demo 庫。
-- `mysql-uat-remote` → UAT `192.168.2.247:5058`（Cloud SQL Proxy，2026-07-17 建；**與 PROD CPOS217 共用同一 Cloud SQL 實例**，`SHOW DATABASES` 可見 280+ 個真實商家正式營運庫），帳號 `claude_ro`，**只 GRANT `zdpos_demo218` 這一個庫**（注意：`SKILL.md` 的部署表寫的 `zdpos_218` 是 UAT **codebase / deploy 目錄名**〔`/var/www/zdpos_218/`〕，跟這裡的 **DB schema 名**`zdpos_demo218` 不是同一個字串，查詢下 schema 前綴時勿混用）。⚠️ 此帳號**禁止**再補 `*.*` 或任何其他商家庫的 GRANT——擴權限前務必先問過本檔這段風險說明。
+- `mysql-uat-remote` → UAT `192.168.2.254:5058`（Cloud SQL Proxy，2026-07-17 建；**2026-08-04：host 由 `192.168.2.247` 改為 `192.168.2.254`——247 站點已消滅，舊座標回 `EHOSTUNREACH`（不是 proxy 沒起，別去嘗試重啟 proxy）；與 `:3306` 的 DEV MariaDB 是同主機不同 port 的兩套服務。個人 `~/.claude.json` 的 `MYSQL_HOST` 需同步改，改完須重啟 session 才掛載**；**與 PROD CPOS217 共用同一 Cloud SQL 實例**，`SHOW DATABASES` 可見 280+ 個真實商家正式營運庫），帳號 `claude_ro`，**只 GRANT `zdpos_demo218` 這一個庫**（注意：`SKILL.md` 的部署表寫的 `zdpos_218` 是 UAT **codebase / deploy 目錄名**〔`/var/www/zdpos_218/`〕，跟這裡的 **DB schema 名**`zdpos_demo218` 不是同一個字串，查詢下 schema 前綴時勿混用）。⚠️ 此帳號**禁止**再補 `*.*` 或任何其他商家庫的 GRANT——擴權限前務必先問過本檔這段風險說明。
 - ⚠️ DEV 主機**非乾淨 sandbox**（600+ 庫含真實商家 PII）→ **永遠不要 `*.*` grant、不要省略 `MYSQL_DB` 開全庫**；擴範圍只補對應 GRANT。UAT/PROD 共用實例風險更高，同一原則加倍適用。
 - multi-DB 模式下 `DATABASE()` 為 null → 查詢**必帶 schema 前綴**（`zdpos_dev_2.<table>` / `zdpos_demo218.<table>`），否則報 no database selected。
 - 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。
@@ -39,10 +39,33 @@ docker exec -i pos_mysql mysql -u root -D zdpos_dev_2 -e \
 
 ### PROD / UAT（2026-05-28 verified by user via SSH）
 
-| Env | sql_mode | 與 local 差異 |
-|---|---|---|
-| PROD CPOS (CPOS217) + UAT (zdpos_218) | `ALLOW_INVALID_DATES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION` | 多 `ALLOW_INVALID_DATES`（明確允許 `0000-00-00` / `2026-02-30` 之類無效日期；比 local 更寬鬆，永不可能命中 NO_ZERO_DATE 行為）。**UAT 與 PROD CPOS 共用同一 Cloud SQL 實例 / DB，sql_mode 必然相同；不需另跑 UAT 驗證。** |
-| PROD POS (ZCPOS217) | `NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION` | 少 `ERROR_FOR_DIVISION_BY_ZERO`（除零回 NULL 不發 warning）；多 `NO_AUTO_CREATE_USER`（GRANT-only，與 listener 寫入無關） |
+| Env | 版本（2026-08-04 驗證） | sql_mode | 與 local 差異 |
+|---|---|---|---|
+| PROD CPOS (CPOS217) + UAT (DB schema `zdpos_demo218`) | **MySQL 8.0.31-google** | `ALLOW_INVALID_DATES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION` | 多 `ALLOW_INVALID_DATES`（明確允許 `0000-00-00` / `2026-02-30` 之類無效日期；比 local 更寬鬆，永不可能命中 NO_ZERO_DATE 行為）。**UAT 與 PROD CPOS 共用同一 Cloud SQL 實例 / DB，sql_mode 必然相同；不需另跑 UAT 驗證。** |
+| PROD POS (ZCPOS217) | **MariaDB 10.1.38** | `NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION` | 少 `ERROR_FOR_DIVISION_BY_ZERO`（除零回 NULL 不發 warning）；多 `NO_AUTO_CREATE_USER`（GRANT-only，與 listener 寫入無關） |
+
+> ### ⚠️ PROD 是異質的 — 跨 PROD 的 SQL 以 MariaDB 10.1 為最低共同分母
+>
+> 兩個 PROD 跑同一份碼基、同一份部署 SOP，但引擎不同代：
+>
+> | 能力 | CPOS217 / UAT (MySQL 8.0.31) | ZCPOS217 (MariaDB 10.1.38) |
+> |---|---|---|
+> | `JSON_TABLE`（MySQL 8.0.4+ / MariaDB 10.6+） | ✓ | **✗** |
+> | `JSON_EXTRACT` 等 JSON 函式族（MariaDB 10.2+） | ✓ | **✗** |
+> | 原生 `JSON` 型別（MariaDB 10.2 起才是 LONGTEXT 別名） | ✓ | **✗** |
+>
+> 推論：
+> 1. **新表要存 JSON 一律用 `TEXT`/`LONGTEXT` 欄存 `json_encode` 字串**，不要用原生 `JSON` 型別。
+>    既有先例＝拆帳 `split_bill_session.summary`(LONGTEXT) / `sales_relation.payload`(TEXT)，
+>    選型理由已寫在 migration `m260723_100010_..._SplitBillSession.php:12-13`。
+> 2. **需要解析 JSON 欄的批次稽核，唯一可攜形式＝應用層迭代**（撈回 → `json_decode` → PHP 端比對）。
+>    既有樣板：`protected/commands/PointConsistencyCheckCommand.php`
+>    （`actionReport` 唯讀 / `actionFix` 分離 / `prepareEnvironment($config,...)` 逐商家 config /
+>    `currentDatabase()` 接縫）。
+> 3. 寫 SOP 時若真要給 `JSON_TABLE` 快捷版，**必須標明「僅 CPOS217/UAT 可用」並保留應用層版本為主路徑**，
+>    否則 ZCPOS217 部署當下無 SOP 可用。
+>
+> local 5.7.44 / DEV MariaDB 10.1.37 同樣皆無 `JSON_TABLE`，故 5 個環境中只有 2 個支援。
 
 ✅ 兩個 PROD 環境（含 UAT 共用 CPOS DB）皆無 `STRICT_TRANS_TABLES` / `STRICT_ALL_TABLES` / `NO_ZERO_DATE` / `NO_ZERO_IN_DATE`，event-dispatcher listener 切到 production-switch 不會被 strict mode 擋；下方 MEDIUM (varchar 截斷) 與 LOW (datetime 空字串) 風險今日仍為 silent，需待 DBA 主動啟用 STRICT 才會浮現。
 
