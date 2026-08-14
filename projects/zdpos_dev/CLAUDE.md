@@ -4,7 +4,7 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 ## Dependencies
 
-- **dhpk plugin** (required; version requirements governed by `.claude/dhpk-versions.json` verified ranges — plugin 內建 check-plugin-version.sh 於 session-start 比對；zdpos_dev 沿用舊制 `.claude/artifacts/dhpk-tidy/verified-versions.json` + 本地 check-dhpk-version.sh) — provides ~70 commands + role agents (數量見 `agents/INDEX.md`) + stack-guidance modules (數量見 module 目錄) + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk`（版本由 `.claude/dhpk-versions.json` 驗證範圍決定，勿手動釘版）. 2026-06-12 起 zdpos-217 已撤本地 fork hooks，sentinel 路由 / guard / lint 全由 plugin hooks.json 自動接線（含 migration），專案僅留 pre-bash-guard（cs-fixer v2 + opcache 提醒）、session-start、post-edit-skill-index、`reap-stale-sentinels.sh` 與 statusline。 Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
+- **dhpk plugin** (required; version requirements governed by `.claude/dhpk-versions.json` verified ranges — plugin 內建 check-plugin-version.sh 於 session-start 比對；2026-06-12 起舊制 `.claude/artifacts/dhpk-tidy/verified-versions.json` + 本地 check-dhpk-version.sh 已被 `dhpk-versions.json` 取代並移除，該路徑已不存在，勿再引用) — provides ~70 commands + role agents (數量見 `agents/INDEX.md`) + stack-guidance modules (數量見 module 目錄) + `rules/` resource layer. Install: `claude plugin marketplace add hmj1026/dhpk && claude plugin install dhpk@dhpk`（版本由 `.claude/dhpk-versions.json` 驗證範圍決定，勿手動釘版）. 2026-06-12 起 zdpos-217 已撤本地 fork hooks，sentinel 路由 / guard / lint 全由 plugin hooks.json 自動接線（含 migration），專案僅留 pre-bash-guard（cs-fixer v2 + opcache 提醒）、session-start、post-edit-skill-index、`reap-stale-sentinels.sh` 與 statusline。 Recommended modules for zdpos: `php-5.6, yii-1.1, phpunit-5.7, js`. Most generic dev workflows are now `/dhpk:<command>`; project-local commands documented in `.claude/commands/INDEX.md`. Note on `${CLAUDE_PLUGIN_ROOT}` paths below: Claude Code resolves this at runtime to `~/.claude/plugins/cache/dhpk/dhpk/<version>/` (the on-disk install path); to navigate manually from a terminal, substitute that path or run `ls ~/.claude/plugins/cache/dhpk/dhpk/` to confirm the active version.
 - **OpenSpec plugin** (required) — provides `/opsx:*` commands. Install separately per OpenSpec docs.
 
 ## Rule priority
@@ -50,14 +50,14 @@ PHP 5.6 + Yii 1.1 legacy POS. Always-on rules for all AI.
 
 ## Settings split
 
-- `.claude/settings.json` — team-shared, committed.
-- `.claude/settings.local.json` — personal SSH / curl / cx perms, gitignored.
-- `.claude/.harness-profile` — optional one-line profile (`minimal` / `standard` / `strict`), gitignored; scope is limited to local mirror hooks (statusline / session-start read-outs) that read this file directly. Env `$ZDPOS_HOOK_PROFILE` overrides; falls back to `standard`. Silencing the plugin-owned Stop-hook reminder requires setting `pluginConfigs."dhpk@dhpk".options.hook_profile` (e.g. in `settings.local.json`) — the local `.harness-profile` file alone does not affect dhpk plugin hooks.
+- `.claude/settings.json` — team-shared；**僅在 prompts monorepo 的 `projects/zdpos-217/.claude/settings.json`（非本檔所在的 `zdpos_dev/` 資料夾）內被 git 追蹤並 commit**——zdpos-217 working copy 本身的 `.gitignore` 排除整個 `.claude/`，該檔在 zdpos-217 repo 內不成立「committed」，勿嘗試在 zdpos-217 內 `git add`/`git commit` 此檔。
+- `.claude/settings.local.json` — personal SSH / curl / cx perms；在 zdpos-217 working copy 內 gitignored（僅 `settings.local.json.example` 被追蹤）。注意 prompts monorepo 的 `projects/zdpos_dev/.claude/settings.local.json` 是被 git 追蹤的殘留舊檔，與 zdpos-217 working copy 的「gitignored」現況不一致，屬 legacy cruft（2026-08-13 稽核發現，未決定是否清除）。
+- `.claude/.harness-profile` — optional one-line profile (`minimal` / `standard` / `strict`), gitignored; scope is limited to local mirror hooks (statusline / session-start read-outs) that read this file directly. Env `$ZDPOS_HOOK_PROFILE` overrides; falls back to `standard`. **此覆寫機制目前實際上已失效**：`.claude/settings.json` 的 `env` 區塊目前無條件寫死 `ZDPOS_HOOK_PROFILE=standard`，故 `.harness-profile` 檔案即使建立，讀取該環境變數的 hook 也永遠只會看到 `standard`（2026-08-13 稽核發現，尚未決定修復方向）。Silencing the plugin-owned Stop-hook reminder requires setting `pluginConfigs."dhpk@dhpk".options.hook_profile` (e.g. in `settings.local.json`) — the local `.harness-profile` file alone does not affect dhpk plugin hooks.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **zdpos-217** (84534 symbols, 211273 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **zdpos-217** (87633 symbols, 222072 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
