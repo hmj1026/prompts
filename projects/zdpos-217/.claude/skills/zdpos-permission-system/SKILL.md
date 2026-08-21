@@ -1,12 +1,10 @@
 ---
 name: zdpos-permission-system
-description: zdpos 後台選單權限（menu permission）領域模型與 enforcement SSOT — 群組 vs 個別模式、`*individual` + `@controller/action` token 格式、`zdn_menu.permission` 共用 key「連動」、雙 level 制度（`=== 1` 管理員精確值 vs DataTable `>= getLevel()` 連續制、888 依商家庫）、level-1 救援以 per-item token 判定、ZadminController 拋棄式實例驗權、後台 JS `for...in` array 陷阱。Use when 改 / 查 system/permission · maintain/permission · 選單權限 · employee_permission · checkPermission · filterCheckPermission · getNowMenuPermissionV2 · MenuAccessPolicy · Menu::getMenu / isItemVisible · 個別/群組模式 · 權限繞過 / 看得到進得去 · 員工權限等級 level。Not for：純業務邏輯 / 非權限的 Controller·Model·View 編輯、前台 POS 結帳、報表計算（即使句中出現 controller/action/level 等字）。
+description: permission 選單權限：群組 vs 個別、item token、雙 level 閘。Use when 改 checkPermission、選單可見性、employee_permission 或 level 閘。Not for 前台 POS 結帳。
 allowed-tools: Read, Grep, Glob, Bash(cx *)
 ---
 
 # zdpos 選單權限系統（menu permission）
-
-> 後台「選單權限」(`system/permission`) 的領域模型 + enforcement 匯流點 SSOT。改任何權限驗證 / 選單可見性前先讀本檔，避免重蹈散落 memory trap 的坑。
 
 ## 資料模型
 
@@ -73,9 +71,12 @@ allowed-tools: Read, Grep, Glob, Bash(cx *)
 | 設定頁（save/reset，gate `===1`） | `protected/controllers/SystemController.php::actionPermission` + `protected/views/system/permission.php` + `js/permission.js` |
 | 測試 | `protected/tests/unit/Permission/` + `protected/tests/integration/Permission/`（含 `PermissionConstantsTest` token parity） |
 
-## 改動前 checklist
+## 改動完成條件
 
-1. 動 `decide` / `checkPermission` / `filterCheckPermission` / `isItemVisible` → 確認可見性與存取**同源**，群組模式維持 byte-identical（零回歸）。
-2. 任何 level 判斷 → 先確認用哪套閘（`===1` vs `>=`）。
-3. 新增「救援 / 例外放行」→ 以 per-item token（唯一 controller/action）判定，**勿用共用整組 key**（會外洩到同 key 項目）。
-4. 改完跑 `protected/tests/{unit,integration}/Permission/` + code-reviewer + security-reviewer（權限=auth）。
+每項改動結束時全部成立：
+
+- 可見性（`isItemVisible`）與存取（`checkPermission` / `filterCheckPermission`）仍同源 `MenuAccessPolicy::decide`
+- 群組模式維持既有 CSV membership（不引入 churn）
+- 每個 level 判斷旁註明用哪套閘：`getLevel() === 1` 或 DataTable `column->edit >= getLevel()`
+- 新增救援／例外放行以 per-item token 判定，不用共用整組 key
+- `protected/tests/{unit,integration}/Permission/` 綠；權限改動走 code-reviewer + security-reviewer

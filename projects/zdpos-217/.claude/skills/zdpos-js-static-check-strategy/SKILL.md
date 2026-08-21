@@ -1,91 +1,67 @@
 ---
 name: zdpos-js-static-check-strategy
-description: zdpos `// @ts-check` per-leaf 漸進清理的執行 playbook（capability `zpos-static-check-gate`）— 寫單支 leaf 的 @ts-check cleanup PR、三檔同步程序 (eslint.config.js / js/zpos/zdpos-ambient.d.ts / jsdoc-globals.js)、19 leaf 過渡分類、tsconfig exclude vs 翻回 strict 的判斷、line-anchored 進度量測與 Phase 2 exit gate 驗收。Use when 你正在做或驗收一支 per-leaf cleanup PR、判讀 @ts-check / `npm run typecheck` 進度、決定某 leaf 該 strict 還是 @ts-nocheck。Not for：ESLint tier 結構 / AST selector / 白名單分類等 config 設定（→ skill `zdpos-js-lint-config`）、把巨檔抽成 leaf module（→ skill `zdpos-legacy-js-refactor`）、一般 lint 規則查詢（→ `.claude/rules/js/static-checks.md`）。
+description: "@ts-check：單支 leaf 的 cleanup playbook。Use when 寫或驗收 per-leaf @ts-check PR，或判斷該檔走 strict 還是 tsconfig exclude。Not for eslint tier（zdpos-js-lint-config）或巨檔抽出（zdpos-legacy-js-refactor）。"
 ---
 
 # zdpos-js-static-check-strategy
 
-> Capability：`zpos-static-check-gate`（OpenSpec change `modernize-zpos-js-static-checks` Phase 2）
-> SSOT rule：[`.claude/rules/js/static-checks.md`](../../rules/js/static-checks.md)
+> Capability：`zpos-static-check-gate`。SSOT rule：[`.claude/rules/js/static-checks.md`](../../rules/js/static-checks.md)
 
-本 skill 承載 rule 中過長的執行細節，避免 always-loaded rule 過胖。
+## 1. 先分類再動手
 
-## 全域白名單三處同步（`zdposLegacyGlobals`）
+完成條件：能指出該檔走哪一條 exit path，再開始改。
 
-新增 leaf 引入新全域時，**MUST** 三處同步更新（漂移風險來源 — 三份清單獨立維護，無自動 derivation）：
+| 判準 | Exit path |
+|---|---|
+| 檔在 `tsconfig.json` `exclude`（現況：`list.js`、`pos-init-helpers.js`、`pos-runtime-helpers.js`；以實檔為準） | 永久 exclude，不是 cleanup PR |
+| 檔首已是恰好一行 `// @ts-check` | 本 skill 不適用；改業務邏輯走 `.claude/rules/frontend.md` |
+| 其餘 `js/zpos/**/*.js`（含 `features/`） | per-leaf cleanup，目標檔首恰好 `// @ts-check` |
 
-1. **`eslint.config.js`** 的 `zdposLegacyGlobals` 常數（lint 端 `readonly` / `writable` 標註）— SSOT for `no-undef`
-2. **`js/zpos/zdpos-ambient.d.ts`** 的 `declare var X: any` 段（TS 端 bare identifier resolution）— SSOT for `tsc --noEmit`
-3. **`js/zpos/jsdoc-globals.js`** 的 `@typedef`（**僅當該全域型別非 `any` 需要精煉時**；ambient `.d.ts` 已兜底）— optional refinement
+`exclude` 內的 helpers 是跨 leaf late-init 根源，typedef 拓寬解決不了；`list.js` 走抽出小檔（抽出檔受 Tier 1），不是翻回 strict。
 
-per-leaf cleanup PR 漏更新任一處 → 後續 PR 會 surface 為 `no-undef` 或 TS2304；CI 會擋住 merge，但 reviewer 需主動檢查三檔同步。
+## 2. 三檔同步（新全域）
 
-## `// @ts-check` 漸進策略（Phase 2）
+新增 leaf 引入新全域時，三處一起改（無自動 derivation）：
 
-- 每個 leaf 一個 PR：加 `// @ts-check` + 修齊 JSDoc + 跑 Jest contract 確認無 regression
-- 沿用 Stage A-D 的 mechanical extraction 節奏
-- 卡住的 leaf 可用 `// @ts-nocheck` 暫時跳過並加 TODO
+1. `eslint.config.js` 的 `zdposLegacyGlobals`（lint 端 `readonly` / `writable`）
+2. `js/zpos/zdpos-ambient.d.ts` 的 `declare var X: any`（TS 端 bare identifier）
+3. `js/zpos/jsdoc-globals.js` 的 `@typedef` — **僅當**該全域型別不是 `any` 需要精煉；ambient `.d.ts` 已兜底
 
-進度衡量（二步驗證，line-anchored 避免被註解內 token 欺騙）：
+完成條件：該識別名在 (1)(2) 都出現；若跳過 (3)，理由是型別為 `any`。`npm run lint` 與 `npm run typecheck` 不因該全域報 `no-undef` / TS2304。
+
+## 3. per-leaf cleanup PR
+
+每個 leaf 一個 PR：檔首改為 `// @ts-check` + 修齊 JSDoc + 跑該 leaf 的 Jest contract。
+
+卡住時可暫用 `// @ts-nocheck` 並加 TODO，但 TODO 內的 `@ts-check` token **不算**已啟用。
+
+進度用行首 anchor，避免註解內 token 偽綠：
 
 ```bash
-# Step 1：所有 leaf 已啟用 strict `// @ts-check`（line-anchored，攔截 `// @ts-nocheck`）
-#   弱版本 `grep -L '@ts-check'` 會接受 `// @ts-nocheck` + TODO 註解內含 token 的 false-green；
-#   嚴格版本以行首為 anchor，註解內 token 不匹配
-find js/zpos -maxdepth 1 -name '*.js' -exec grep -L '^\s*//\s*@ts-check\s*$' {} \;   # MUST empty
+# 未啟用 strict 的 leaf（對照 §1 exclude 後，其餘即 cleanup 佇列）
+find js/zpos -name '*.js' -exec grep -L '^\s*//\s*@ts-check\s*$' {} \;
 
-# Step 2：尚在 `// @ts-nocheck` 過渡（per-leaf cleanup PR 收斂指標）
-find js/zpos -maxdepth 1 -name '*.js' -exec grep -l '^\s*//\s*@ts-nocheck' {} \;     # 觀察數量遞減
+# 仍 @ts-nocheck 過渡（應只剩 exclude 內的檔）
+find js/zpos -name '*.js' -exec grep -l '^\s*//\s*@ts-nocheck' {} \;
 ```
 
-全檔型別錯誤（非 opt-in 分佈）另跑 `npm run typecheck`。
+單支 PR 完成條件：
 
-Phase 2 exit gate = Step 1 輸出為空。Step 2 為 governance 指標。
+- 該 leaf 檔首為 `// @ts-check`
+- 若引入新全域：§2 三檔同步完成
+- `npm run typecheck` 與該 leaf 的 Jest contract 綠
 
-### 19 leaf 過渡分類（2026-05-21 baseline）
+Campaign 完成條件：第一條 find 在扣掉 `tsconfig.json` `exclude` 之後為空；第二條 find 只列出 exclude 內的檔。全檔型別錯誤另跑 `npm run typecheck`。
 
-分兩類 exit path：
+弱 `grep -L '@ts-check'` 會把 `// @ts-nocheck` + TODO 內的 token 當成已啟用。MUST 用 `^\s*//\s*@ts-check\s*$`。
 
-- **17 個 regular leaf**（含 `Paytype` / `Item` / `Customer` / `Booking` / `Display` / `Thread` / `Remark` / `ItemPanel` / `TableSeats` / `VirtualKey` / `Zprinter` / `Control` / `ProcessControlSwitch` / `Book` / `SelectionPackage` / `new-alert` / `pos.js`）
-  - blocker：jsdoc-globals.js narrow `@typedef` 與 constructor pattern inference 衝突
-  - exit path：per-leaf cleanup PR 拓寬 typedef 或精煉 JSDoc 後翻回 strict `// @ts-check`
-- **2 個 Tier 1.5 core-adjacent helper**（`pos-init-helpers.js` / `pos-runtime-helpers.js`）
-  - blocker：跨 leaf 全域 late-init state（與 `js/zpos.js` / `js/zpos.v2.js` 共享 polyfill / runtime global），typedef 拓寬解決不了
-  - exit path：**`tsconfig.json` 的 `exclude` 永久排除**（與 `js/zpos/list.js` 同類處理），而非翻回 strict。預期長期維持 `// @ts-nocheck`
+## 4. tsconfig / JSDoc
 
-per-leaf cleanup PR 動態時 MUST 先看 leaf 屬於哪一類；若 misjudge 把 Tier 1.5 helper 算進「典型 leaf cleanup」會浪費 effort。
+實檔請讀 repo root `tsconfig.json`。`checkJs` 維持 `false`（per-leaf opt-in）；非 exclude leaf 都加上 `// @ts-check` 之後才改 `true`。
 
-### 歷史教訓：grep gameable
+Ambient typedef 在 `js/zpos/jsdoc-globals.js`。leaf 用 JSDoc `@type` / `@param` / `@returns` 接上。
 
-⚠️ 原 `grep -L '@ts-check'` 為 substring 比對 — 過渡時期若以 `// @ts-nocheck` 為主指令、TODO 註解內提及 `@ts-check`（如「TODO: enable @ts-check after typedef widening」），會被 grep 視為「該檔已含 @ts-check」而 false-green。MUST 用 `^\s*//\s*@ts-check\s*$` 嚴格行首 anchor 才能反映真實 strict opt-in 狀態。詳見 memory `trap_tscheck_grep_gameable.md`。
+## 相關
 
-## `tsconfig.json` 配置（Phase 2）
-
-> 實檔請直接讀 repo root `tsconfig.json`（本處不複製全文，避免漂移）。關鍵欄位：`allowJs:true` / `noEmit:true` / `strict:false` / `target:ES2017` / `module:CommonJS`；`include` 只收 `js/zpos/**`；`exclude` 排除 core 巨檔（`js/zpos.js` / `zpos.v2.js` / `mpos.js` / `pos_core.js` / `main.js`）、`list.js`、兩支 Tier 1.5 helper、`node_modules`、`build`。
-
-**`checkJs` 設計選擇**：spec D4 文字寫 `checkJs: true`，但 D3「per-leaf opt-in」要求每個 leaf PR 加 `// @ts-check` 後才檢查。兩者邏輯衝突；以 D3 per-leaf 為準採 `checkJs: false`。全 37 leaf 加完 `// @ts-check` 後才翻回 `true`（spec task 5.8 exit gate）。
-
-## `jsdoc-globals.js` ambient typedef 標準（Phase 2）
-
-集中於 `js/zpos/jsdoc-globals.js`：
-
-- `@typedef` for `POS`、`POS.list`、`POS.list.ajaxPromise`、`POS.post`、`POS.postData`
-- `@typedef` for 主要模組 `Thread`、`Display`、`Customer`、`Booking`、`Item`
-
-Phase 2 leaf PR 時透過 JSDoc `@type` / `@param` / `@returns` 標註，TS 透過 ambient typedef 解析跨 leaf 類型。
-
-## 後續清理 / 規則演進
-
-| 工作 | 觸發時機 |
-|---|---|
-| pos-init-helpers.js / pos-runtime-helpers.js 內 $.ajax 改 POS wrapper | per-PR 後從 Tier 1.5 移出回 Tier 1 |
-| Tier 1.7 deferred-migration 檔案內 $.ajax / axios 改 wrapper | per-PR 後從 Tier 1.7 移出回 Tier 1 |
-| list.js 14.7K 行分多 PR 拆 section | 抽出的小檔不在 ignores 內，受 Tier 1 約束 |
-| 89 view inline `<script>` 納入 lint | Phase 2 task 6.5（前 20 個含 `pageConfigs` SSOT 的 view 優先） |
-
-## 相關規範
-
-- SSOT rule：`.claude/rules/js/static-checks.md`（工具鏈 + enforce 點 + skill 路標）
-- 姊妹 skill：`zdpos-js-lint-config`（ESLint tier 結構 / AST selector / `zdposLegacyGlobals` 分類清單）
-- Capability `zpos-static-check-gate`：OpenSpec change `modernize-zpos-js-static-checks` 已落地（Phase 1 ESLint + Phase 2 TS noEmit），change dir 已隨歸檔移除；現況防線以上述 SSOT rule 為準。
-- 未來路徑：modular 穩定後一次性全 ESM 重構（屆時開獨立 OpenSpec change，本 capability 範圍外）
+- SSOT rule：`.claude/rules/js/static-checks.md`
+- eslint tier 為何這樣分：skill `zdpos-js-lint-config`

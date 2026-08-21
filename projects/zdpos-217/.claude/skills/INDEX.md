@@ -4,7 +4,7 @@
 
 ## zdpos local + bundled-plugin skills
 
-下方 AUTO-GENERATED 區段由 `.claude/scripts/regenerate-skill-index.py` 在每次 `SKILL.md` 寫入後自動重生（PostToolUse hook `post-edit-skill-index.sh`）。**不要手動編輯 START/END 之間的內容**；若需新增說明請放本段之外。
+下方 AUTO-GENERATED 區段由 `.claude/scripts/regenerate-skill-index.py` 在每次 `SKILL.md` 寫入後自動重生（PostToolUse hook `.claude/hooks/post-edit-skill-index.sh`）。**不要手動編輯 START/END 之間的內容**；若需新增說明請放本段之外。
 
 可手動重生：
 
@@ -23,14 +23,14 @@ Total: **25** skills (8 zdpos-* / 10 openspec-* / 7 other)
 
 | Skill | Description |
 |---|---|
-| `zdpos-environment` | zdpos 5 部署環境 (CPOS217 / ZCPOS217 / UAT / DEV / local Docker) 的路徑、SSH 主機 (vm1/vm2/dev)、cron owner、MySQL 連線 / sql_mode / strict-mode listener prerequisites、application.log、POS 登入測試帳號 (local/dev/cpos2... |
-| `zdpos-exception-logging` | zdpos catch 區塊統一規範：所有 `catch (\Exception $e)` 必須同時呼叫 ExceptionLogHelper::logCaughtExceptionToApplication() 寫 application.log + 領域 logger（如 SalesWeatherLogger）。使用時機：寫 try / catch、處理 CDbException、Exc... |
-| `zdpos-git-worktree` | zdpos 專案 `.claude/worktrees/<name>/` 跑 phpunit.xml 完整套件或 Playwright E2E 必跑的五件套 setup（yii_framework symlink / protected/config cp / protected/runtime mkdir+755 / `npm i @playwright/test` 後還原 lock / ... |
-| `zdpos-in-queries` | zdpos IN / NOT IN 查詢安全寫法：用 CDbCriteria::addInCondition() / addNotInCondition()，禁止字串內插（`IN ({$str})`），且必須 array_values($ids) 避免非連續 key bug，addNotInCondition 需 guard 空陣列。使用時機：寫 SQL IN / NOT IN 條件、處理多... |
-| `zdpos-js-lint-config` | zdpos JS 靜態檢查的 config 結構 SSOT 對映 — ESLint 9 flat config tier 結構 (Tier 1 / 1A / 1.5 / 1.6 / 1.7 / 2 + Global ignores)、自定 `restrictedAjaxSyntax` AST selector、`zdposLegacyGlobals` 白名單分類、tsconfig noEmi... |
-| `zdpos-js-static-check-strategy` | zdpos `// @ts-check` per-leaf 漸進清理的執行 playbook（capability `zpos-static-check-gate`）— 寫單支 leaf 的 @ts-check cleanup PR、三檔同步程序 (eslint.config.js / js/zpos/zdpos-ambient.d.ts / jsdoc-globals.js)、19 lea... |
-| `zdpos-legacy-js-refactor` | zdpos legacy POS JS 巨檔抽出 / leaf module 拆解的共通契約 — 原始檔鎖死、IIFE + `window.X` re-export 模板（不改 ES6 class）、audit-grep-first design.md、Mechanical extraction 800 LOC closure 例外、leaf 切分後三段驗證 (golden fixture ... |
-| `zdpos-permission-system` | zdpos 後台選單權限（menu permission）領域模型與 enforcement SSOT — 群組 vs 個別模式、`*individual` + `@controller/action` token 格式、`zdn_menu.permission` 共用 key「連動」、雙 level 制度（`=== 1` 管理員精確值 vs DataTable `>= getLevel()... |
+| `zdpos-environment` | environment 座標：哪台主機、哪份碼基、哪個帳號、哪條 MySQL。Use when 答案需要環境座標而不是程式邏輯。Not for 純程式／UI／欄位邏輯。 |
+| `zdpos-exception-logging` | catch 區塊：同時寫 ExceptionLogHelper 與領域 logger。Use when 寫 try/catch，或決定 side-effect 失敗要 degrade 還是 re-throw。 |
+| `zdpos-git-worktree` | worktree 測試 setup：`.claude/worktrees/<name>/` 跑 phpunit 或 Playwright 前的五件套。Use when 進 worktree 跑測試，或出現 yii_framework not found、TracyBootstrap redeclare、@playwright/test missing。主 checkout 不需要。 |
+| `zdpos-in-queries` | IN / NOT IN：用 addInCondition / addNotInCondition，傳入前 array_values，空陣列先 guard。Use when 寫多 ID 查詢或合併 LIKE+IN。一般 WHERE = / LIKE 不需要。 |
+| `zdpos-js-lint-config` | eslint tier：為何有 Tier 1 / 1.5 / 1.6 / 1.7，新檔或新全域該落哪一層。Use when 改 eslint.config.js 或 tsconfig.json，或判斷新路徑的 tier。Not for per-leaf @ts-check（zdpos-js-static-check-strategy）或巨檔抽出（zdpos-legacy-js-refactor）。 |
+| `zdpos-js-static-check-strategy` | @ts-check：單支 leaf 的 cleanup playbook。Use when 寫或驗收 per-leaf @ts-check PR，或判斷該檔走 strict 還是 tsconfig exclude。Not for eslint tier（zdpos-js-lint-config）或巨檔抽出（zdpos-legacy-js-refactor）。 |
+| `zdpos-legacy-js-refactor` | extraction：把 js/zpos、pos_core、mpos、main、jqPlug 巨檔拆成 leaf。Use when 規劃抽出或寫 design.md 邊界清單。Not for 已抽出 leaf 的 @ts-check（zdpos-js-static-check-strategy）或改 eslint tier（zdpos-js-lint-config）。 |
+| `zdpos-permission-system` | permission 選單權限：群組 vs 個別、item token、雙 level 閘。Use when 改 checkPermission、選單可見性、employee_permission 或 level 閘。Not for 前台 POS 結帳。 |
 
 ### OpenSpec plugin
 

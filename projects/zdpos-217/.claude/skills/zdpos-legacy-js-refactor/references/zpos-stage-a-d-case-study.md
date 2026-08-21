@@ -18,7 +18,7 @@
 
 ## Partial SSOT 實體
 
-- `protected/views/layouts/_pos_modular_assets.php` 內 `$modularScripts` 陣列為唯一載入順序來源
+- `protected/views/layouts/partials/_pos_modular_assets.php` 內 `$modularScripts` 陣列為唯一載入順序來源
 - `js/zpos/pos.js` facade 為陣列最後一個 leaf URL
 
 ## 800 LOC 例外條款命中
