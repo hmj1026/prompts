@@ -16,6 +16,7 @@ Legacy POS, **no build step**; direct DOM + `POS.*` global.
 - **ES6-native over jQuery（範圍：僅新檔案 / 新抽出的 leaf module）**：新建立的 JS 檔 / 模組，其 **DOM 查詢 / 事件 / 語法** 用原生 ES6（`querySelector` / `querySelectorAll` / `addEventListener` / `const` / `let` / 箭頭函式）而非 jQuery（`$()` / `.on()` / `.click()` / `var`）。例外：
   - **transport 例外**：AJAX 仍走上述 `POS.*` wrapper（**不可**為了「原生」改用 raw `fetch`）— 此條與 AJAX hard limit 不衝突，只規範 DOM/事件/語法。
   - **legacy 例外**：修改既有 jQuery-locked 檔（`pos/index` 鎖 jQuery 1.9.1、現有 monolith leaf、`js/permission.js` 等）跟隨原檔風格，**不強制改寫**（範圍規則，避免擴張 blast radius）。
+  - **mechanical extraction 例外**：從巨檔純位移抽出的 leaf 走 skill `zdpos-legacy-js-refactor`（IIFE + `var`，不改 ES6）。本檔 ES6 hard limit 不適用於該 skill 的 extraction PR。新寫、非抽出的檔仍走 ES6。
 - **Lint enforcement**：上列 hard limit 由 `npm run lint` (ESLint 9 flat config) 強制；config 結構 / tier 設計 / 自定 selector / 全域白名單 SSOT 詳見 [`.claude/rules/js/static-checks.md`](js/static-checks.md)
 
 ## Existing AJAX Wrappers
@@ -60,9 +61,9 @@ const { page, searchConfig } = recordPageConfig;
 
 | 場景 | Skill / Reference |
 |---|---|
-| 規劃任何 legacy POS JS 抽出（zpos / pos_core / mpos / main / jqPlug）、改 `js/zpos/*.js` leaf | skill `zdpos-legacy-js-refactor` (共通契約、Mechanical extraction 例外、audit grep 範本、zpos Stage A-D 完成案例) |
-| 寫 / review `js/tests/e2e/*.spec.js` | skill `zdpos-legacy-js-refactor` → references/e2e-antipatterns.md (probe-and-pass 禁則、行為-渲染雙斷言、條件斷言禁則) |
-| Worktree 跑 E2E 前置 setup | skill `zdpos-git-worktree` (五件套 trap：yii_framework / config / runtime / node_modules / accounts) |
+| extraction（巨檔拆 leaf） | skill `zdpos-legacy-js-refactor` |
+| 寫 / review `js/tests/e2e/*.spec.js` | skill `zdpos-legacy-js-refactor` → references/e2e-antipatterns.md |
+| worktree 跑測試 | skill `zdpos-git-worktree` |
 
 ## Refs
 

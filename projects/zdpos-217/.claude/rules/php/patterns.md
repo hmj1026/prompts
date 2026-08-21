@@ -47,7 +47,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 ## Exception Logging (catch convention)
 
-> Triggers `catch / ExceptionLogHelper / SalesWeatherLogger / EILogger / application.log` → skill `zdpos-exception-logging` (rules, examples, anti-patterns).
+> catch → skill `zdpos-exception-logging`
 
 **Hard rule**: every `catch (\Exception $e)` SHALL call both `ExceptionLogHelper::logCaughtExceptionToApplication()` and a domain logger; never empty / `// ignore`.
 
@@ -86,7 +86,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 ## IN / NOT IN Queries
 
-> Triggers `addInCondition / addNotInCondition / IN clause / array_values` → skill `zdpos-in-queries` (compound LIKE+IN, empty-array guard, anti-patterns).
+> IN → skill `zdpos-in-queries`
 
 **Hard rule**: use `CDbCriteria::addInCondition()` / `addNotInCondition()`; never string interpolation; always `array_values($ids)`; guard empty arrays before `addNotInCondition`.
 

@@ -29,9 +29,9 @@ SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_
 
 | 場景 | Skill |
 |---|---|
-| ESLint config tier 結構 / AST selector / `zdposLegacyGlobals` 白名單 / 進度衡量 grep | skill `zdpos-js-lint-config` |
-| 規劃 per-leaf cleanup / 19 leaf 過渡分類 / grep gameable trap / Phase 2 exit gate 驗收 | skill `zdpos-js-static-check-strategy` |
-| 改 leaf 業務邏輯（POS.* SSOT、AJAX wrapper、View-layer PHP→JS） | rule `.claude/rules/frontend.md` |
+| eslint tier／新檔落哪一層 | skill `zdpos-js-lint-config` |
+| @ts-check per-leaf cleanup | skill `zdpos-js-static-check-strategy` |
+| 改 leaf 業務邏輯 | rule `.claude/rules/frontend.md` |
 
 ## 相關 spec
 
