@@ -142,7 +142,7 @@
         ],
         "review_trigger_extra_paths": [
           "db:infrastructure/Repositories/",
-          "sec:infrastructure/Config/",
+          "sec:infrastructure/Configuration/",
           "mig:protected/migrations/"
         ],
         "lockfile_sync_commands": [
