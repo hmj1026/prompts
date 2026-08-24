@@ -1,26 +1,20 @@
-# zdpos-217 — Project Context
+# AGENTS.md
 
 Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered architecture (`domain/`, `infrastructure/`, `protected/`).
 
-## Rule priority
+## Package Manager & Toolchain
 
-1. System / platform constraints
-2. Current user request
-3. This file (CLAUDE.md)
-4. `.claude/rules/*.md` (local overrides) + `${CLAUDE_PLUGIN_ROOT}/rules/*.md` (dhpk canonical)
-5. Modular docs (load on demand)
+- **PHP (Backend)**: Composer (`vendor/bin/phpunit -c phpunit.xml`, `php -l <file>`)
+- **JS (Frontend)**: npm (`npm run lint`, `npm run typecheck` — no build step)
 
-## Communication
+## Core Working Principles
 
-- Reply in **Traditional Chinese**; write code comments in Traditional Chinese.
-- Keep domain and technical terms in English (Controller, Model, View, Action, Service).
-
-## Core rules
-
-- **SSOT** — extend existing logic, never duplicate.
-- **Read-before-write** — `cx` for definition/overview; `gitnexus_impact` before editing; `gitnexus_query` for execution flows. Full decision tree → [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md).
-- **No auto-commit** — invoke `/dhpk:smart-commit` or `/dhpk:precommit`; never auto `git add/commit/push/stash`. See [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md).
-- **PHP 5.6 syntax constraints** → [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md).
+- **Language**: Reply and write code comments in **Traditional Chinese (正體中文)**; preserve technical terms in English.
+- **Safety & Read-before-Write**:
+  - Symbol definition/overview $\rightarrow$ `cx`
+  - Blast radius & execution flow $\rightarrow$ `GitNexus` (impact analysis required before editing)
+  - Code changes $\rightarrow$ Extend existing logic (SSOT), never duplicate.
+- **Git Discipline**: No automatic commits (`/dhpk:smart-commit` or `/dhpk:precommit` required).
 
 ## 3-Tier Model Routing
 
@@ -39,12 +33,12 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 - **Structured Changes & Specs**: Managed via `openspec/` and lifecycle requests.
 - **Domain Context**: See `docs/agents/domain.md`.
 
-## Key Modular References
+## Modular References
 
-- **PHP 5.6 & Yii Conventions**: [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)
+- **PHP 5.6 & Yii Architecture**: [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)
 - **Frontend & JS Conventions**: [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
-- **Execution Policy & Gates**: [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)
-- **Tool Routing**: [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md)
+- **Execution Policy & Review Gates**: [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)
+- **Tool Routing Decision Tree**: [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md)
 - **Model Routing Details**: [`docs/workflow/model-routing.md`](docs/workflow/model-routing.md)
 
 ## Subdirectory Indices
