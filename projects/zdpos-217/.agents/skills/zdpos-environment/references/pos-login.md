@@ -28,6 +28,11 @@ EOF
 
 > `npx playwright test`（committed E2E）走 `playwright.config.js` 內 `use.ignoreHTTPSErrors: true`，**不**需要 `.playwright/cli.config.json` — 兩條路徑各自管自己。`.playwright/` 已在 `.gitignore`。
 
+> linked worktree 不會自動繼承 main checkout 的 `.playwright/cli.config.json`。使用 `playwright-cli`
+> 時，若 target worktree 沒有自己的 ignored config，必須明確傳入已核對的 main config 絕對路徑（或
+> 由 setup lease 建立 target-local config）；`open` 成功前先保留 `ignoreHTTPSErrors=true` 的設定來源，
+> 不要把 `ERR_CERT_AUTHORITY_INVALID` 當成產品 journey 結果。
+
 ### Step 1 — 取得帳號
 
 帳號明文 **不** 寫在本 skill；改放未追蹤檔：

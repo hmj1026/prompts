@@ -18,6 +18,7 @@
 - ⚠️ DEV 主機**非乾淨 sandbox**（600+ 庫含真實商家 PII）→ **永遠不要 `*.*` grant、不要省略 `MYSQL_DB` 開全庫**；擴範圍只補對應 GRANT。UAT/PROD 共用實例風險更高，同一原則加倍適用。
 - multi-DB 模式下 `DATABASE()` 為 null → 查詢**必帶 schema 前綴**（`zdpos_dev_2.<table>` / `zdpos_demo218.<table>`），否則報 no database selected。
 - 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。
+- 📝 線上問題與 Bug 調查的唯讀權限調製 SOP，請見 [Playbook：MCP 資料庫唯讀權限調製與線上問題排查 SOP](../../../../docs/operations/playbooks/mcp-database-investigation-grant.md)。
 
 ## MySQL sql_mode（event-dispatcher listener prerequisites）
 

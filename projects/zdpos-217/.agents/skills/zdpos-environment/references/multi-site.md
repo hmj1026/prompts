@@ -34,9 +34,13 @@ $yii    = '<相對路徑>/yii_framework/yii.php';
 | **PROD** `cpos.zdpos.tw/oklao3` | VM1 `development/zdpos_oklao_test` | `oklao3.php` | `zdpos_oklao3` |
 | **PROD** `cpos.zdpos.tw/oklao2` | VM1 `development/zdpos_oklao` | `oklao2.php` | `zdpos_oklao2` |
 | **DEV** `www.zdpos.tw/dev` | DEV `zdpos_develop` | `dev.php` | `zdpos_dev` |
-| **LOCAL** `www.posdev.test/dev4` | local `zdpos-217`（本 working tree，編輯即生效，詳 `environments.md` ### Local dev4 entry） | `dev4.php` | `zdpos_dev_2` |
+| **LOCAL** `www.posdev.test/dev4` | local main checkout `zdpos-217`（薄入口預設指向此樹；linked worktree 必須另做 codebase identity guard，詳 `environments.md` `### Local dev4 entry`） | `dev4.php` | `zdpos_dev_2` |
 
 **DB**：config 取 DB 名兩種來源 —— 根 `dbConnectParams.php`（`zdpos_<use_name>`，如 oklao3 → `zdpos_oklao3`）或 config 內硬寫死（`dev.php` `$db_name="zdpos_dev"`、`dev4.php` `"zdpos_dev_2"`）。Cloud SQL host `10.8.202.2` + SSL client cert `/etc/gcpencrypt/cloud-sql/*.pem`（帳密見部署機 config，勿外流）。
+
+LOCAL `/dev4` 的 URL identity 由薄入口的 `$config` 實際解析結果決定，不由 agent 的 cwd、branch
+或頁面 banner 決定。linked worktree journey 必須在 container 內核對 target config；需要暫時 overlay
+時依 `environments.md` 的 setup lease／restore／opcache contract 執行，失敗即 `INVALID_CHECKOUT`／`NOT_RUN`。
 
 ⚠️ **opcache 假象（遠端）**：改共用樹的 PHP（尤其 `domain/` 類別）後，遠端 PHP opcache 仍服務舊 bytecode →「改了沒反應」，必 reset（local Docker 的 reset 見 `environments.md` ### Local dev4 entry）。2026-06-25 oklao3 實例：`PlatformBrand::isOklao()` 加 `zdpos_oklao3` 白名單後未 reset → `isOklao()` 續回 false → 品項留在 `td5` 右下角；reset 後回 `#right_box` 右側欄。
 ⚠️ **`development/zdpos_oklao_test` 名為 test 卻是 live `cpos.zdpos.tw/oklao3` 的碼基且連 production DB**；改它＝動線上。

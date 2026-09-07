@@ -1,7 +1,7 @@
 ---
 name: zdpos-environment
 description: environment 座標：哪台主機、哪份碼基、哪個帳號、哪條 MySQL。Use when 答案需要環境座標而不是程式邏輯。Not for 純程式／UI／欄位邏輯。
-allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *)
+allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *), Bash(awk *), Bash(realpath *), Bash(dirname *), Bash(test *)
 ---
 
 # zdpos 部署環境與基礎設施
@@ -22,7 +22,7 @@ allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *)
 
 | 需求 / 觸發詞 | 讀這個子檔（含的區塊 anchor） |
 |---|---|
-| merchant config SSOT / 新增商家 / **本地 dev4 入口** / `## Command templates` (yiic·docker exec workdir) / **`## SSH`** 主機定義 / **`## Local Error Logs`** (application.log) | `references/environments.md`（`### Local dev4 entry` / `## Command templates` / `## SSH` / `## Local Error Logs`） |
+| merchant config SSOT / 新增商家 / **本地 dev4 入口、linked-worktree URL 碼基 identity、runtime/tracy 可寫性** / `## Command templates` (yiic·docker exec workdir) / **`## SSH`** 主機定義 / **`## Local Error Logs`** (application.log) | `references/environments.md`（`### Local dev4 entry` / `## Command templates` / `## SSH` / `## Local Error Logs`） |
 | 某 URL 跑哪份碼基 / thin-entry / cpos.zdpos.tw·www.zdpos.tw·www.posdev.test / oklao(2/3/dev4) / `X:Y:Z` 或 vm2 UNC `\pos`·`\logs` 直讀 / network share 掛載 / 遠端 opcache 假象 | `references/multi-site.md`（`## 多站部署架構`） |
 | MySQL 連線 / 唯讀 schema MCP (`### Read-only MCP`) / `SELECT @@sql_mode` / strict-mode listener 風險 / `XxxRecordWriterListener` / `queryBuilder()->insert` / production-switch change | `references/mysql.md`（`## MySQL 連線` / `### Read-only MCP` / `## MySQL sql_mode`） |
 | playwright-cli 登入 dev4 / dev / cpos218 / 總店(HQ)·分店(Branch) 帳號 / 機號選取 / keyboardDiv overlay / 機號重複 RepeatAction / 遠端 dev4 前台登入 | `references/pos-login.md`（`## POS UI Login (playwright-cli)`：`### Step 0` / `### Step 2.5` / `### 遠端 dev4 前台登入`） |
