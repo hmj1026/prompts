@@ -13,7 +13,7 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 - **Safety & Read-before-Write**:
   - Symbol definition/overview $\rightarrow$ `cx`
   - Blast radius & execution flow $\rightarrow$ `GitNexus` (impact analysis required before editing)
-  - Code changes $\rightarrow$ Extend existing logic (SSOT), never duplicate.
+  - Code changes $\rightarrow$ Extend existing single source of truth (SSOT), never duplicate.
 - **Git Discipline**: No automatic commits (`/dhpk:smart-commit` or `/dhpk:precommit` required).
 
 ## 3-Tier Model Routing
@@ -35,10 +35,13 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 
 ## Modular References
 
-- **PHP 5.6 & Yii Architecture**: [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)
+- **Documentation／OpenSpec governance**: When creating, moving, archiving, deleting, generating, or changing Git visibility for anything under `docs/` or `openspec/`, or when producing evidence／receipts／runtime artifacts, read [`docs/workflow/documentation-governance.md`](docs/workflow/documentation-governance.md) first. Classify the content before choosing its path; preserve untracked／ignored unique content until an owner explicitly decides its destination.
+- **Review & evidence rules**: When reviewing or changing code, tests, OpenSpec evidence, Golden assets, or harnesses, read [`CODING_STANDARDS.md`](CODING_STANDARDS.md) (見 feature 分支或本機端規範).
+- **Split Bill QA**：安排或執行拆帳驗收時，依 [`docs/qa/QA-split-bill-checkout-manual.md`](docs/qa/QA-split-bill-checkout-manual.md) 的三階段順序與完成條件；查找規格、維運或技術驗證時，從 [`docs/features/split-bill/README.md`](docs/features/split-bill/README.md) 分流。歷史 receipt 的結果只適用原測試版本與環境。
+- **PHP 5.6 & Yii Architecture**: [`.claude/rules/php/`](.claude/rules/php/)（或 feature 分支 [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)）
 - **Frontend & JS Conventions**: [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
-- **Execution Policy & Review Gates**: [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)
-- **Tool Routing Decision Tree**: [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md)
+- **Execution Policy & Review Gates**: [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md)（或 feature 分支 [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)）
+- **Tool Routing Decision Tree**: [`.claude/rules/tool-routing.md`](.claude/rules/tool-routing.md)
 - **Model Routing Details**: [`docs/workflow/model-routing.md`](docs/workflow/model-routing.md)
 
 ## Subdirectory Indices
@@ -51,7 +54,7 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **zdpos-217** (90157 symbols, 229748 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **zdpos-217** (87068 symbols, 212413 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

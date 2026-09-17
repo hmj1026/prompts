@@ -17,10 +17,10 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 
 ## Core rules
 
-- **SSOT** — extend existing logic, never duplicate.
-- **Read-before-write** — `cx` for definition/overview; `gitnexus_impact` before editing; `gitnexus_query` for execution flows. Full decision tree → [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md).
-- **No auto-commit** — invoke `/dhpk:smart-commit` or `/dhpk:precommit`; never auto `git add/commit/push/stash`. See [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md).
-- **PHP 5.6 syntax constraints** → [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md).
+- **SSOT** — extend existing single source of truth (SSOT), never duplicate.
+- **Read-before-write** — `cx` for definition/overview; `gitnexus_impact` before editing; `gitnexus_query` for execution flows. Full decision tree → [`.claude/rules/tool-routing.md`](.claude/rules/tool-routing.md).
+- **No auto-commit** — invoke `/dhpk:smart-commit` or `/dhpk:precommit`; never auto `git add/commit/push/stash`. See [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md).
+- **PHP 5.6 syntax constraints** → [`.claude/rules/php/coding-style.md`](.claude/rules/php/coding-style.md).
 
 ## 3-Tier Model Routing
 
@@ -41,10 +41,11 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 
 ## Key Modular References
 
-- **PHP 5.6 & Yii Conventions**: [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)
+- **Documentation／OpenSpec governance**: [`docs/workflow/documentation-governance.md`](docs/workflow/documentation-governance.md)
+- **PHP 5.6 & Yii Conventions**: [`.claude/rules/php/`](.claude/rules/php/)（或 feature 分支 [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)）
 - **Frontend & JS Conventions**: [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
-- **Execution Policy & Gates**: [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)
-- **Tool Routing**: [`docs/workflow/tool-routing.md`](docs/workflow/tool-routing.md)
+- **Execution Policy & Gates**: [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md)（或 feature 分支 [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)）
+- **Tool Routing**: [`.claude/rules/tool-routing.md`](.claude/rules/tool-routing.md)
 - **Model Routing Details**: [`docs/workflow/model-routing.md`](docs/workflow/model-routing.md)
 
 ## Subdirectory Indices
