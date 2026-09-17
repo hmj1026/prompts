@@ -18,15 +18,13 @@ prompts/
 │   │   ├── scripts/hooks/            # Dispatcher + 語言特定 hooks
 │   │   └── skills/                   # 全域 skills
 │   ├── .codex/                       # Codex (OpenAI) 設定
-│   └── .gemini/                      # Gemini (Google) 設定
+│   └── .gemini/                      # Antigravity (agy-cli) 全域設定與規則
 │
 ├── lib/                               # 共享資源庫
-│   ├── skills/                        # 跨專案共用 skills
-│   │   ├── openspec-*/               # 10 個 OpenSpec skills
+│   ├── skills/                        # 跨專案共用業務 skills
 │   │   ├── bug-investigation/
 │   │   ├── software-architecture/
 │   │   └── git-smart-commit/
-│   ├── commands/opsx/                 # OpenSpec commands
 │   └── rules/                         # 語言規則模板
 │       ├── php/
 │       ├── python/
@@ -34,7 +32,7 @@ prompts/
 │       └── golang/
 │
 ├── projects/                          # 專案級別
-│   ├── zdpos_dev/                     # 完全管理 (PHP/Yii 1.1)
+│   ├── zdpos-217/                     # 完全管理 (PHP/Yii 1.1)
 │   ├── ccas/                          # 自管理 (Python/TS)
 │   ├── docker_run/                    # 自管理 (Docker)
 │   └── line-bot/                      # 完全管理 (Laravel/LINE)
@@ -43,6 +41,10 @@ prompts/
     ├── deploy.sh                      # Symlink 部署腳本
     └── manifest.yaml                  # 宣告式部署清單
 ```
+
+> **注意：gemini-cli 已官方退役，全線轉移至 Antigravity CLI (`agy-cli`)**。
+> 本專案針對 **Claude Code** (`.claude/`) 與 **Antigravity** (`.agents/` + `AGENTS.md`) 提供雙軌支援。
+> OpenSpec 等工具鏈產生物件由專案本地維護，不納入本中央儲存庫。
 
 ## 快速開始
 
@@ -54,7 +56,7 @@ prompts/
 ./deploy/deploy.sh user
 
 # 部署特定專案
-./deploy/deploy.sh project zdpos_dev
+./deploy/deploy.sh project zdpos-217
 
 # 部署共享資源到自管理專案
 ./deploy/deploy.sh lib ccas

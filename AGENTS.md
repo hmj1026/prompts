@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 - `user/` contains global, model-level instructions (for example `user/.claude/CLAUDE.md` or `user/.gemini/GEMINI.md`).
 - `lib/` contains shared resources reused across projects: skills (`lib/skills/`), commands (`lib/commands/`), and language rule templates (`lib/rules/`).
-- `projects/` holds per-project context. Each subfolder should include model-specific files like `CLAUDE.md`, `GEMINI.md`, and, when needed, `AGENTS.md` (example: `projects/zdpos_dev/AGENTS.md`).
+- `projects/` holds per-project context. Each subfolder should include model-specific files like `CLAUDE.md`, `GEMINI.md`, and, when needed, `AGENTS.md` (example: `projects/zdpos-217/AGENTS.md`).
 - `deploy/` contains deployment tooling (`deploy.sh`, `manifest.yaml`) for symlink-based deployment.
 
 ## Build, Test, and Development Commands
@@ -27,7 +27,7 @@
 ## Commit & Pull Request Guidelines
 - Commit messages in history are short, one-line summaries (Chinese or English). Keep them scoped and descriptive (for example `update`).
 - Prefer one logical change per commit (single project context or workflow).
-- If using PRs, include a brief summary, affected paths (for example `projects/zdpos_dev/GEMINI.md`), and any required follow-up updates for other model files.
+- If using PRs, include a brief summary, affected paths (for example `projects/zdpos-217/GEMINI.md`), and any required follow-up updates for other model files.
 
 ## Security & Configuration Notes
 - Do not store secrets or credentials. Reference secure locations or environment variables instead.

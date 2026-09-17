@@ -9,21 +9,20 @@
 ### `user/`
 全域用戶級別設定，適用於所有專案。
 
-*   `.gemini/` — Gemini 全域指引、skills、workflows
+*   `.gemini/` — Antigravity (agy-cli) 全域指引與設定
 *   `.claude/` — Claude 全域指引、rules、hooks、commands
 *   `.codex/` — Codex 全域指引、skills
 
 ### `lib/`
 跨專案共用資源庫。
 
-*   `skills/` — 共用 skills (OpenSpec, bug-investigation, software-architecture 等)
-*   `commands/` — 共用 commands (opsx/)
+*   `skills/` — 共用業務 skills (bug-investigation, software-architecture, git-smart-commit 等)
 *   `rules/` — 語言規則模板 (php/, python/, typescript/, golang/)
 
 ### `projects/`
 專案級別設定。每個子目錄對應一個開發專案。
 
-*   `zdpos_dev/` — PHP/Yii 1.1 POS 系統 (完全管理)
+*   `zdpos-217/` — PHP/Yii 1.1 POS 系統 (完全管理)
 *   `ccas/` — Python/TypeScript 信用卡系統 (自管理)
 *   `docker_run/` — Docker 開發環境 (自管理)
 *   `line-bot/` — Laravel/LINE Bot (完全管理)
@@ -59,7 +58,7 @@ projects/      專案特定 (agents, execution-policy, project rules)
 ./deploy/deploy.sh user
 
 # 部署專案設定
-./deploy/deploy.sh project zdpos_dev
+./deploy/deploy.sh project zdpos-217
 
 # 部署共享資源到自管理專案
 ./deploy/deploy.sh lib ccas
