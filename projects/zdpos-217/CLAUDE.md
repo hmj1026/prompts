@@ -57,7 +57,7 @@ Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **zdpos-217** (142846 symbols, 374423 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **zdpos-217** (87068 symbols, 212413 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
