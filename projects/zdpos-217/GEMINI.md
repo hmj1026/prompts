@@ -1,4 +1,4 @@
-# zdpos_dev Project Mandates
+# zdpos-217 Project Mandates
 
 ## 🚨 CRITICAL: PHP 5.6 Legacy Constraints
 **ZERO TOLERANCE** for modern syntax. Any violation will cause a 500 error in the production environment (PHP 5.6.40).
@@ -42,12 +42,23 @@ This project is a hybrid of legacy Yii 1.1 MVC and modern DDD patterns.
 Always execute commands through the project's Docker container (using -i for interactive mode):
 
 ```bash
-# Running Tests
-docker exec -i -w //var/www/www.posdev/zdpos_dev pos_php phpunit [Path_to_Test]
+# Running Tests (Fast Suite ~330ms Domain+Infrastructure)
+docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php phpunit -c protected/tests/phpunit-fast.xml
+
+# Running Tests (Full Suite / Specific Test)
+docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php phpunit -c protected/tests/phpunit.xml [Path_to_Test]
 
 # Database Migrations
-docker exec -i -w //var/www/www.posdev/zdpos_dev pos_php php protected/yiic.php migrate up
+docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php php protected/yiic.php migrate up
+
+# Reset Opcache (dev4 pos_php revalidate_freq=60; 修改 view / PHP 後跑測試前必執行避免偽綠)
+docker exec -i pos_php sh -c 'kill -USR2 1'
 ```
+
+## 🛡️ Safety & Git Discipline
+- **SSOT**: Extend existing single source of truth, never duplicate.
+- **Read-before-Write**: Run `GitNexus` impact analysis before editing symbols to evaluate blast radius.
+- **No auto-commit**: Never automatically commit; use `/dhpk:smart-commit` or `/dhpk:precommit`.
 
 ## 📝 Communication
 - **Language**: Traditional Chinese (正體中文) for responses and comments.
