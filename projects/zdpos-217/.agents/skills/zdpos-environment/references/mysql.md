@@ -9,12 +9,13 @@
 | local | `docker exec -i pos_mysql mysql -u root` (empty password); DB `zdpos_dev_2` |
 | DEV/UAT/PROD | Cloud SQL Proxy (`/home/deploy/scripts/cloud-sql-proxy.sh`, started `@reboot`) |
 
-### Read-only MCP（schema introspection；2026-06-15 建）
+### Read-only MCP（schema introspection；2026-06-15 建，2026-09-14 補第四個）
 
-三個唯讀 MCP（套件 `@benborla29/mcp-server-mysql`，`claude mcp add --scope local` → 只進個人 `~/.claude.json`，**不**進 repo——因 `.claude/` symlink 進 prompts repo，server-scope 會擴散到團隊/zdpos_dev）：
+四個唯讀 MCP（套件 `@benborla29/mcp-server-mysql`，`claude mcp add --scope local` → 只進個人 `~/.claude.json`，**不**進 repo——因 `.claude/` symlink 進 prompts repo，server-scope 會擴散到團隊/zdpos_dev）：
 - `mysql-dev-ro` → local `pos_mysql` MySQL 5.7，帳號 `claude_ro`，`GRANT SELECT, SHOW VIEW` 給 6 個本地商家庫（含 `zdpos_dev_2`；**無** phpunit 的 `zdpos_dev`）。
 - `mysql-dev-remote` → DEV `192.168.2.254` MariaDB 10.1.37（內網直連、不需 ssh tunnel），只 GRANT 11 個 dev/test/demo 庫。
 - `mysql-uat-remote` → UAT `192.168.2.254:5058`（Cloud SQL Proxy，2026-07-17 建；**2026-08-04：host 由 `192.168.2.247` 改為 `192.168.2.254`——247 站點已消滅，舊座標回 `EHOSTUNREACH`（不是 proxy 沒起，別去嘗試重啟 proxy）；與 `:3306` 的 DEV MariaDB 是同主機不同 port 的兩套服務。個人 `~/.claude.json` 的 `MYSQL_HOST` 需同步改，改完須重啟 session 才掛載**；**與 PROD CPOS217 共用同一 Cloud SQL 實例**，`SHOW DATABASES` 可見 280+ 個真實商家正式營運庫），帳號 `claude_ro`，**只 GRANT `zdpos_demo218` 這一個庫**（注意：`SKILL.md` 的部署表寫的 `zdpos_218` 是 UAT **codebase / deploy 目錄名**〔`/var/www/zdpos_218/`〕，跟這裡的 **DB schema 名**`zdpos_demo218` 不是同一個字串，查詢下 schema 前綴時勿混用）。⚠️ 此帳號**禁止**再補 `*.*` 或任何其他商家庫的 GRANT——擴權限前務必先問過本檔這段風險說明。
+- `mysql-vm2-remote` → **PROD ZCPOS217**（`vm2` 104.199.182.52，見 `SKILL.md` 環境表 #2）的 Cloud SQL Proxy 通道，走同一台 gateway `192.168.2.254:5060`（2026-09-14 建；`@@version` 回 MariaDB 10.1.38、hostname 含 `zdpos-397609.internal`，與 `references/mysql.md` 上方 sql_mode 表記載的 ZCPOS217 版本一致，確認非 DEV/UAT）。帳號 `claude_ro`，**只 GRANT `zdpos_popcorn`（同名字面商家）**，MCP 設定額外加 `MYSQL_DB=zdpos_popcorn` 雙重鎖定單庫。⚠️ 這是**唯一直接對 PROD 開的唯讀 MCP**——PROD 含真實營運資料，禁止再補其他商家庫 GRANT；`SKILL.md` §30「PROD 嚴禁 AI 自動登入」講的是 playwright 登入，不涵蓋這支唯讀 DB MCP，但風險等級應比照看待，只做 SELECT 排查用途。
 - ⚠️ DEV 主機**非乾淨 sandbox**（600+ 庫含真實商家 PII）→ **永遠不要 `*.*` grant、不要省略 `MYSQL_DB` 開全庫**；擴範圍只補對應 GRANT。UAT/PROD 共用實例風險更高，同一原則加倍適用。
 - multi-DB 模式下 `DATABASE()` 為 null → 查詢**必帶 schema 前綴**（`zdpos_dev_2.<table>` / `zdpos_demo218.<table>`），否則報 no database selected。
 - 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。
