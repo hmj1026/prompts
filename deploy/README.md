@@ -12,7 +12,7 @@ Manages symlinks from this repo to target locations.
 ./deploy/deploy.sh user
 
 # Deploy a managed project
-./deploy/deploy.sh project zdpos_dev
+./deploy/deploy.sh project zdpos-217
 
 # Deploy shared lib resources to a self-managed project
 ./deploy/deploy.sh lib ccas

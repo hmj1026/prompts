@@ -21,25 +21,13 @@ user:
 lib:
   skills:
     bug-investigation:
-      targets: [zdpos_dev, ccas]
+      targets: [zdpos-217, ccas]
     software-architecture:
-      targets: [zdpos_dev, ccas]
+      targets: [zdpos-217, ccas]
     git-smart-commit:
-      targets: [zdpos_dev]
+      targets: [zdpos-217]
 
 projects:
-  zdpos_dev:
-    target: "~/projects/zdpos_dev"
-    managed: true
-    symlink:
-      - .claude/settings.local.json
-      - .claude/agents/
-      - .claude/rules/
-      - .claude/docs/
-      - .claude/skills/
-      - CLAUDE.md
-      - GEMINI.md
-      - AGENTS.md
   zdpos-217:
     target: "~/projects/zdpos-217"
     managed: true
@@ -50,13 +38,12 @@ projects:
     # local file because it holds dhpk pluginConfigs.modules + project-specific perms.
     # Personal/runtime kept local & out of this repo:
     #   settings.local.json, artifacts/, cache/, worktrees/, .harness-profile
-    # Root CLAUDE.md / GEMINI.md are pack-relative symlinks -> ../zdpos_dev/
-    # (same codebase, shared instructions; was an unmanaged manual link before
-    #  2026-06-12). AGENTS.md stays a real local file (zdpos-217-specific).
+    # Root CLAUDE.md / GEMINI.md / AGENTS.md are local files in projects/zdpos-217/.
     symlink:
       - .claude/      # all items present under projects/zdpos-217/.claude/
-      - CLAUDE.md     # -> ../zdpos_dev/CLAUDE.md (shared pack)
-      - GEMINI.md     # -> ../zdpos_dev/GEMINI.md (shared pack)
+      - .agents/      # skills and workflows for agy-cli / Antigravity / Codex
+      - CLAUDE.md
+      - GEMINI.md
   ccas:
     target: "~/projects/ccas"
     managed: self

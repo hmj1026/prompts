@@ -159,6 +159,11 @@ deploy_user() {
 
   # Skills (individual, not the whole dir)
   create_symlink "$src_base/skills/claude-health" "$dst_base/skills/claude-health"
+
+  # Antigravity (agy-cli) global rules
+  if [ -f "$REPO_ROOT/user/.gemini/GEMINI.md" ]; then
+    create_symlink "$REPO_ROOT/user/.gemini/GEMINI.md" "$(expand_path "~/.gemini/GEMINI.md")"
+  fi
 }
 
 # Check user-level sync status
@@ -183,6 +188,11 @@ check_user() {
   done
 
   check_symlink "$src_base/skills/claude-health" "$dst_base/skills/claude-health"
+
+  # Antigravity (agy-cli) global rules
+  if [ -f "$REPO_ROOT/user/.gemini/GEMINI.md" ]; then
+    check_symlink "$REPO_ROOT/user/.gemini/GEMINI.md" "$(expand_path "~/.gemini/GEMINI.md")"
+  fi
 }
 
 # Deploy lib/ skills and commands to a project
@@ -191,7 +201,6 @@ deploy_lib() {
   local project_path
 
   case "$project" in
-    zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
     zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
     ccas)       project_path="$PROJECTS_ROOT/ccas" ;;
     docker_run) project_path="$PROJECTS_ROOT/docker_run" ;;
@@ -206,14 +215,14 @@ deploy_lib() {
 
   # Shared skills (check manifest for which projects get which)
   case "$project" in
-    zdpos_dev|ccas)
+    zdpos-217|ccas)
       for skill in bug-investigation software-architecture; do
         create_symlink "$REPO_ROOT/lib/skills/$skill" "$project_path/.claude/skills/$skill"
       done
       ;;
   esac
 
-  if [ "$project" = "zdpos_dev" ]; then
+  if [ "$project" = "zdpos-217" ]; then
     create_symlink "$REPO_ROOT/lib/skills/git-smart-commit" "$project_path/.claude/skills/git-smart-commit"
   fi
 }
@@ -224,7 +233,6 @@ deploy_project() {
   local project_path
 
   case "$project" in
-    zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
     zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
     line-bot)   project_path="$PROJECTS_ROOT/line-bot" ;;
     *)
@@ -251,17 +259,55 @@ deploy_project() {
     for item in "$src_base/.claude"/*; do
       local name
       name="$(basename "$item")"
-      create_symlink "$item" "$project_path/.claude/$name"
+      if [ "$name" = "skills" ] && [ -d "$project_path/.claude/skills" ] && [ ! -L "$project_path/.claude/skills" ]; then
+        for s_item in "$item"/*; do
+          local s_name="$(basename "$s_item")"
+          [[ "$s_name" =~ ^openspec- ]] && continue
+          create_symlink "$s_item" "$project_path/.claude/skills/$s_name"
+        done
+      elif [ "$name" = "commands" ] && [ -d "$project_path/.claude/commands" ] && [ ! -L "$project_path/.claude/commands" ]; then
+        for c_item in "$item"/*; do
+          local c_name="$(basename "$c_item")"
+          [ "$c_name" = "opsx" ] && continue
+          create_symlink "$c_item" "$project_path/.claude/commands/$c_name"
+        done
+      else
+        create_symlink "$item" "$project_path/.claude/$name"
+      fi
     done
     shopt -u dotglob
   fi
 
-  # Deploy root-level files (CLAUDE.md, GEMINI.md, AGENTS.md)
-  for f in CLAUDE.md GEMINI.md AGENTS.md; do
+  # Deploy .agents/ contents (skills and workflows for agy-cli / Antigravity / Codex)
+  if [ -d "$src_base/.agents" ]; then
+    if [ -d "$src_base/.agents/skills" ]; then
+      mkdir -p "$project_path/.agents/skills"
+      for s_item in "$src_base/.agents/skills"/*; do
+        [ -e "$s_item" ] || continue
+        local s_name="$(basename "$s_item")"
+        [[ "$s_name" =~ ^openspec- ]] && continue
+        create_symlink "$s_item" "$project_path/.agents/skills/$s_name"
+      done
+    fi
+    if [ -d "$src_base/.agents/workflows" ]; then
+      mkdir -p "$project_path/.agents/workflows"
+      for w_item in "$src_base/.agents/workflows"/*; do
+        [ -e "$w_item" ] || continue
+        local w_name="$(basename "$w_item")"
+        create_symlink "$w_item" "$project_path/.agents/workflows/$w_name"
+      done
+    fi
+  fi
+
+  # Deploy root-level files (CLAUDE.md, GEMINI.md; AGENTS.md only for other projects)
+  for f in CLAUDE.md GEMINI.md; do
     if [ -f "$src_base/$f" ]; then
       create_symlink "$src_base/$f" "$project_path/$f"
     fi
   done
+  if [ "$project" != "zdpos-217" ] && [ -f "$src_base/AGENTS.md" ]; then
+    create_symlink "$src_base/AGENTS.md" "$project_path/AGENTS.md"
+  fi
 
   # Also deploy lib/ resources
   deploy_lib "$project"
@@ -306,7 +352,6 @@ check_project() {
   local project_path
 
   case "$project" in
-    zdpos_dev)  project_path="$PROJECTS_ROOT/zdpos_dev" ;;
     zdpos-217)  project_path="$PROJECTS_ROOT/zdpos-217" ;;
     line-bot)   project_path="$PROJECTS_ROOT/line-bot" ;;
     *)
@@ -327,16 +372,54 @@ check_project() {
   if [ -d "$src_base/.claude" ]; then
     shopt -s dotglob
     for item in "$src_base/.claude"/*; do
-      check_symlink "$item" "$project_path/.claude/$(basename "$item")"
+      local name
+      name="$(basename "$item")"
+      if [ "$name" = "skills" ] && [ -d "$project_path/.claude/skills" ] && [ ! -L "$project_path/.claude/skills" ]; then
+        for s_item in "$item"/*; do
+          local s_name="$(basename "$s_item")"
+          [[ "$s_name" =~ ^openspec- ]] && continue
+          check_symlink "$s_item" "$project_path/.claude/skills/$s_name"
+        done
+      elif [ "$name" = "commands" ] && [ -d "$project_path/.claude/commands" ] && [ ! -L "$project_path/.claude/commands" ]; then
+        for c_item in "$item"/*; do
+          local c_name="$(basename "$c_item")"
+          [ "$c_name" = "opsx" ] && continue
+          check_symlink "$c_item" "$project_path/.claude/commands/$c_name"
+        done
+      else
+        check_symlink "$item" "$project_path/.claude/$name"
+      fi
     done
     shopt -u dotglob
   fi
 
-  for f in CLAUDE.md GEMINI.md AGENTS.md; do
+  for f in CLAUDE.md GEMINI.md; do
     if [ -f "$src_base/$f" ]; then
       check_symlink "$src_base/$f" "$project_path/$f"
     fi
   done
+  if [ "$project" != "zdpos-217" ] && [ -f "$src_base/AGENTS.md" ]; then
+    check_symlink "$src_base/AGENTS.md" "$project_path/AGENTS.md"
+  fi
+
+  # Check .agents/ contents
+  if [ -d "$src_base/.agents" ]; then
+    if [ -d "$src_base/.agents/skills" ]; then
+      for s_item in "$src_base/.agents/skills"/*; do
+        [ -e "$s_item" ] || continue
+        local s_name="$(basename "$s_item")"
+        [[ "$s_name" =~ ^openspec- ]] && continue
+        check_symlink "$s_item" "$project_path/.agents/skills/$s_name"
+      done
+    fi
+    if [ -d "$src_base/.agents/workflows" ]; then
+      for w_item in "$src_base/.agents/workflows"/*; do
+        [ -e "$w_item" ] || continue
+        local w_name="$(basename "$w_item")"
+        check_symlink "$w_item" "$project_path/.agents/workflows/$w_name"
+      done
+    fi
+  fi
 
   check_pluginconfig_drift "$src_base" "$project_path"
 }
@@ -346,7 +429,7 @@ deploy_all() {
   deploy_user
   echo ""
 
-  for project in zdpos_dev zdpos-217 line-bot; do
+  for project in zdpos-217 line-bot; do
     deploy_project "$project"
     echo ""
   done
@@ -362,7 +445,7 @@ check_all() {
   check_user
   echo ""
   log_info "Checking projects..."
-  for project in zdpos_dev zdpos-217 line-bot; do
+  for project in zdpos-217 line-bot; do
     check_project "$project"
     echo ""
   done
