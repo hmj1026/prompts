@@ -259,7 +259,9 @@ deploy_project() {
     for item in "$src_base/.claude"/*; do
       local name
       name="$(basename "$item")"
-      if [ "$name" = "skills" ] && [ -d "$project_path/.claude/skills" ] && [ ! -L "$project_path/.claude/skills" ]; then
+      if [ "$name" = "skills" ] && [ -L "$project_path/.claude/skills" ] && [ "$(readlink "$project_path/.claude/skills")" = "../.agents/skills" ]; then
+        log_ok "skills -> ../.agents/skills (SSOT)"
+      elif [ "$name" = "skills" ] && [ -d "$project_path/.claude/skills" ] && [ ! -L "$project_path/.claude/skills" ]; then
         for s_item in "$item"/*; do
           local s_name="$(basename "$s_item")"
           [[ "$s_name" =~ ^openspec- ]] && continue
@@ -301,7 +303,9 @@ deploy_project() {
 
   # Deploy root-level files (CLAUDE.md, GEMINI.md; AGENTS.md only for other projects)
   for f in CLAUDE.md GEMINI.md; do
-    if [ -f "$src_base/$f" ]; then
+    if [ -L "$project_path/$f" ] && [ "$(readlink "$project_path/$f")" = "AGENTS.md" ]; then
+      log_ok "$f -> AGENTS.md (SSOT)"
+    elif [ -f "$src_base/$f" ]; then
       create_symlink "$src_base/$f" "$project_path/$f"
     fi
   done
