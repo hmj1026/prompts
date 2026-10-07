@@ -1,96 +1,84 @@
 # AGENTS.md
 
-Legacy POS web application built on PHP 5.6 + Yii 1.1 framework with DDD layered architecture (`domain/`, `infrastructure/`, `protected/`).
+Legacy POS web application on PHP 5.6 + Yii 1.1 with DDD layered architecture (`domain/`, `infrastructure/`, `protected/`).
 
-## Package Manager & Toolchain
+## Critical Constraints (Zero Tolerance)
 
-- **PHP (Backend)**: Composer (`vendor/bin/phpunit -c phpunit.xml`, `php -l <file>`)
-- **JS (Frontend)**: npm (`npm run lint`, `npm run typecheck` — no build step)
+- **PHP 5.6 Compatibility**: Production runs PHP 5.6.40. Modern syntax causes fatal errors.
+  - Null coalescing: Use `isset($a) ? $a : $b` (never `??`).
+  - Type declarations: Use PHPDoc `@param` / `@return` (never scalar/return type hints).
+  - Arrays: Short syntax `[]` is supported and preferred.
+  - Anonymous functions: Closures allowed; arrow functions `fn() =>` forbidden.
+- **Frontend POS State**: Global `POS` object is SSOT. Use `POS.list.ajaxPromise()` for async calls (never `fetch`, `axios`, or raw `$.ajax`).
+- **Communication**: Reply and write code comments in **Traditional Chinese (正體中文)**; preserve technical and domain terms in English.
+- **Git Discipline**: Never auto-commit or auto-push. Use `/dhpk:smart-commit` or wait for human instructions.
 
-## Core Working Principles
+## Quick Toolchain (Verified)
 
-- **Language**: Reply and write code comments in **Traditional Chinese (正體中文)**; preserve technical terms in English.
-- **Safety & Read-before-Write**:
-  - Symbol definition/overview $\rightarrow$ `cx`
-  - Blast radius & execution flow $\rightarrow$ `GitNexus` (impact analysis required before editing)
-  - Code changes $\rightarrow$ Extend existing single source of truth (SSOT), never duplicate.
-- **Git Discipline**: No automatic commits (`/dhpk:smart-commit` or `/dhpk:precommit` required).
+- **PHP Test (All)**: `vendor/bin/phpunit -c protected/tests/phpunit.xml`
+- **PHP Test (Fast Pure Unit)**: `vendor/bin/phpunit -c protected/tests/phpunit-fast.xml`
+- **PHP Syntax Check**: `php -l <file>`
+- **Frontend Lint & Types**: `npm run lint` · `npm run typecheck`
+- **Frontend Unit Test (Jest)**: `npm run test:js`
+- **Frontend E2E Test (Playwright)**: `npm run test:e2e`
 
-## 3-Tier Model Routing
+## Model & Tool Routing
 
-- **Haiku**: Locate code, grep, understand, diff review
-- **Sonnet**: Default for everything iterative
-- **Opus**: Architecture decisions only
+- **Haiku**: Code search, grep, file reading, diff review.
+- **Sonnet**: Default for all iterative implementation and bug fixes.
+- **Opus**: High-level architecture decisions only.
+- **Read-before-Write**:
+  - Symbol definition/overview: `cx`
+  - Blast radius & call graph: `gitnexus_impact` before modifying any symbol.
+  - Execution trace: `gitnexus_query` for cross-file flows.
 
-> **NEVER use Opus for:**
-> - Code lookup or file reading
-> - Single-function questions
-> - Diff review
+## Context Pointers (Verified Paths)
 
-## Task & Issue Tracking
+Front-loaded triggers for specialized documentation (read on demand):
 
-- **Temporary / Scratch Tasks**: Tracked under `.scratch/`. See `docs/agents/issue-tracker.md`.
-- **Structured Changes & Specs**: Managed via `openspec/` and lifecycle requests.
-- **Domain Context**: See `docs/agents/domain.md`.
+- **Docs / OpenSpec governance** (`docs/` or `openspec/` create, edit, move, archive, visibility): [`docs/workflow/documentation-governance.md`](docs/workflow/documentation-governance.md)
+- **Cross-Agent SSOT & dhpk harness** (skills, instructions, symlink topology): [`docs/workflow/agent-ssot-specification.md`](docs/workflow/agent-ssot-specification.md)
+- **Split Bill QA & flow** (split-bill test, checkout stages, receipt verification): [`docs/qa/split-bill/QA-split-bill-checkout-manual.md`](docs/qa/split-bill/QA-split-bill-checkout-manual.md) · terms: [`docs/features/split-bill/vocabulary-drift.md`](docs/features/split-bill/vocabulary-drift.md)
+- **PHP 5.6 Coding Style & Standards**: [`CODING_STANDARDS.md`](CODING_STANDARDS.md)
+- **PHP & Yii architectural details** (ActiveRecord, transactions, CDbCriteria, error handling): [`.claude/rules/php/`](.claude/rules/php/)
+- **Frontend conventions** (POS event bus, jQuery plugins, blade escape): [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
+- **Execution policy & review gates** (PR checklist, verification standards): [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md)
+- **Tasks & issue tracking**: Temporary tasks in `.scratch/` ([`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)); lifecycle specs in `openspec/`.
 
-## Modular References
+## Subdirectory Scopes (Hierarchical SSOT)
 
-- **Documentation／OpenSpec governance**: When creating, moving, archiving, deleting, generating, or changing Git visibility for anything under `docs/` or `openspec/`, or when producing evidence／receipts／runtime artifacts, read [`docs/workflow/documentation-governance.md`](docs/workflow/documentation-governance.md) first. Classify the content before choosing its path; preserve untracked／ignored unique content until an owner explicitly decides its destination.
-- **Review & evidence rules**: When reviewing or changing code, tests, OpenSpec evidence, Golden assets, or harnesses, read [`CODING_STANDARDS.md`](CODING_STANDARDS.md) (見 feature 分支或本機端規範).
-- **Split Bill QA**：安排或執行拆帳驗收時，依 [`docs/qa/QA-split-bill-checkout-manual.md`](docs/qa/QA-split-bill-checkout-manual.md) 的三階段順序與完成條件；查找規格、維運或技術驗證時，從 [`docs/features/split-bill/README.md`](docs/features/split-bill/README.md) 分流。歷史 receipt 的結果只適用原測試版本與環境。
-- **PHP 5.6 & Yii Architecture**: [`.claude/rules/php/`](.claude/rules/php/)（或 feature 分支 [`docs/conventions/php-yii.md`](docs/conventions/php-yii.md)）
-- **Frontend & JS Conventions**: [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
-- **Execution Policy & Review Gates**: [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md)（或 feature 分支 [`docs/workflow/execution-policy.md`](docs/workflow/execution-policy.md)）
-- **Tool Routing Decision Tree**: [`.claude/rules/tool-routing.md`](.claude/rules/tool-routing.md)
-- **Model Routing Details**: [`docs/workflow/model-routing.md`](docs/workflow/model-routing.md)
+Each directory contains its own canonical `AGENTS.md`:
 
-## Subdirectory Indices
-
-- [`protected/AGENTS.md`](protected/AGENTS.md): Yii MVC core, controllers, models, views, tests.
-- [`domain/AGENTS.md`](domain/AGENTS.md): Domain layer boundaries, models, services.
-- [`infrastructure/AGENTS.md`](infrastructure/AGENTS.md): Repositories, external integrations, data access.
-- [`js/AGENTS.md`](js/AGENTS.md): Legacy frontend POS scripts and state management.
+- [`domain/AGENTS.md`](domain/AGENTS.md): Domain models, DTOs, business rules, service boundaries.
+- [`infrastructure/AGENTS.md`](infrastructure/AGENTS.md): Repositories, database connections, external APIs.
+- [`protected/controllers/AGENTS.md`](protected/controllers/AGENTS.md): Controller actions, HTTP requests, responses.
+- [`protected/models/AGENTS.md`](protected/models/AGENTS.md): ActiveRecord models, relations, scopes, validation.
+- [`protected/views/AGENTS.md`](protected/views/AGENTS.md): View templates, rendering, layout, XSS escaping.
+- [`protected/migrations/AGENTS.md`](protected/migrations/AGENTS.md): Database migrations, schema versioning, rollbacks.
+- [`protected/tests/AGENTS.md`](protected/tests/AGENTS.md): PHPUnit tests, integration fixtures, assertions.
+- [`js/AGENTS.md`](js/AGENTS.md): POS frontend legacy scripts, checkout state machine.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **zdpos-217** (87068 symbols, 212413 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **zdpos-217**. Use GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
-## Always Do
+## Operating Rules
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
+- **Impact Analysis**: Run `gitnexus_impact({target: "symbolName", direction: "upstream"})` before modifying any symbol. Report blast radius and risk level.
+- **Change Verification**: Run `gitnexus_detect_changes()` before concluding tasks to confirm changes match expected symbols.
+- **Safe Refactoring**: Use `gitnexus_rename` for symbol renames across the call graph.
+- **Concept Discovery**: Use `gitnexus_query({query: "concept"})` to locate execution flows grouped by process.
+- **Symbol Inspection**: Use `gitnexus_context({name: "symbolName"})` for callers, callees, and process participation.
 
-## Never Do
+## Resources & Workflows
 
-- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
-- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
-
-## Resources
-
-| Resource | Use for |
+| Resource | Purpose |
 |----------|---------|
-| `gitnexus://repo/zdpos-217/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/zdpos-217/clusters` | All functional areas |
-| `gitnexus://repo/zdpos-217/processes` | All execution flows |
-| `gitnexus://repo/zdpos-217/process/{name}` | Step-by-step execution trace |
-
-## CLI
-
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
-
+| `gitnexus://repo/zdpos-217/context` | Overview and index freshness |
+| `gitnexus://repo/zdpos-217/processes` | Execution flows |
+| `gitnexus://repo/zdpos-217/process/{name}` | Step-by-step flow trace |
+| `.agents/skills/gitnexus/` | Skills for exploring, impact analysis, debugging, and refactoring |
 <!-- gitnexus:end -->

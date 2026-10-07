@@ -5,7 +5,7 @@ paths:
 
 # PHP Coding Style (zdpos-specific)
 
-> Extends `~/.claude/rules/common/coding-style.md`. PHP 5.6 baseline — assume **all** PHP 7.0+ syntax is forbidden (typed params/returns/properties, `??`, `?->`, `match`, arrow fn, named args, group use, multi-catch, short list `[$a,$b]=`, `new class`, union types). Use PHPDoc for types, `isset() ?:` for null coalescing.
+> **Canonical SSOT**: See [`CODING_STANDARDS.md`](../../../CODING_STANDARDS.md) at the project root for the authoritative rules. Extends `~/.claude/rules/common/coding-style.md`. PHP 5.6 baseline — assume **all** PHP 7.0+ syntax is forbidden (typed params/returns/properties, `??`, `?->`, `match`, arrow fn, named args, group use, multi-catch, short list `[$a,$b]=`, `new class`, union types). Use PHPDoc for types, `isset() ?:` for null coalescing.
 
 ## Scope Rule（新增 / 觸碰碼，避免無意義 sweep）
 

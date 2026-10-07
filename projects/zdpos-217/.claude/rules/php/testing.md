@@ -6,6 +6,7 @@ paths:
 # PHP Testing (PHPUnit 5.7, zdpos)
 
 > Extends `~/.claude/rules/common/testing.md`. Full standards: `protected/tests/docs/TESTING_STANDARDS.md`.
+> 判斷紅燈是既有還是回歸：`protected/tests/docs/KNOWN-FAILURES.md`（host 端已知失敗清單與判定準則）。
 
 ## Suite Layout
 - `unit/` — no `Yii::app()` / DB
