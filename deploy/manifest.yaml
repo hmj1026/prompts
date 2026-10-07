@@ -42,8 +42,10 @@ projects:
     symlink:
       - .claude/      # all items present under projects/zdpos-217/.claude/
       - .agents/      # skills and workflows for agy-cli / Antigravity / Codex
+      - AGENTS.md
       - CLAUDE.md
       - GEMINI.md
+      - CODING_STANDARDS.md
   ccas:
     target: "~/projects/ccas"
     managed: self
