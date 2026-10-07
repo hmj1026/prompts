@@ -1,6 +1,6 @@
 ---
 name: zdpos-in-queries
-description: IN / NOT IN：用 addInCondition / addNotInCondition，傳入前 array_values，空陣列先 guard。Use when 寫多 ID 查詢或合併 LIKE+IN。一般 WHERE = / LIKE 不需要。
+description: IN / NOT IN：query builder 用 whereIn / whereNotIn，CDbCriteria 用 addInCondition / addNotInCondition，傳入前 array_values，空陣列先 guard。Use when 寫多 ID 查詢或合併 LIKE+IN。一般 WHERE = / LIKE 不需要。
 allowed-tools: Read, Grep, Glob
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Read, Grep, Glob
 
 ## Hard Rules
 
-1. 用 `CDbCriteria::addInCondition()` / `addNotInCondition()`。
+1. query builder 用 `whereIn()` / `whereNotIn()`；`CDbCriteria` 用 `addInCondition()` / `addNotInCondition()`。
 2. 傳入前 `array_values($ids)` — 防止非連續 key 造成參數綁定錯位。
 3. `addNotInCondition` 先 guard 空陣列：`addNotInCondition('col', [])` 會生成無效 SQL。
 
@@ -61,7 +61,7 @@ $c->addNotInCondition('id', $excludeIds);  // 若 $excludeIds = [] → 無效 SQ
 
 ## Builder 替代
 
-- **新寫的 Repository / 查詢層** → 用 `Infrastructure\Database\Query\Builder` 的 IN 方法。見 `infrastructure/CLAUDE.md` Database Query Toolkit 段 / `docs/guides/query-toolkit-cookbook.md`。
+- **新寫的 Repository / 查詢層** → 用 `Infrastructure\Database\Query\Builder` 的 IN 方法。見 `infrastructure/AGENTS.md` Database Query Toolkit 段 / `docs/guides/query-toolkit-cookbook.md`。
 - **改既有 legacy code、AR `findAll($criteria)`、或要併入既有 `CDbCriteria` 條件鏈** → 沿用本頁 `addInCondition` / `addNotInCondition`。
 
 兩者底層同走 PDO bind，安全性等價；選擇看所在層是否已是 Builder 風格。
@@ -69,4 +69,4 @@ $c->addNotInCondition('id', $excludeIds);  // 若 $excludeIds = [] → 無效 SQ
 ## 相關
 
 - always-loaded floor：`.claude/rules/php/patterns.md`
-- Repository 設計：`infrastructure/CLAUDE.md` Database Query Toolkit 段
+- Repository 設計：`infrastructure/AGENTS.md` Database Query Toolkit 段
