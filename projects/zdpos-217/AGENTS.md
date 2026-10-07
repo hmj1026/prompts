@@ -7,9 +7,9 @@ Legacy POS web application on PHP 5.6 + Yii 1.1 with DDD layered architecture (`
 - **PHP 5.6 Compatibility**: Production runs PHP 5.6.40. Modern syntax causes fatal errors.
   - Null coalescing: Use `isset($a) ? $a : $b` (never `??`).
   - Type declarations: Use PHPDoc `@param` / `@return` (never scalar/return type hints).
-  - Arrays: Short syntax `[]` is supported and preferred.
+  - Arrays: Short syntax `[]` works on 5.6. For new or touched code, always use `[]` (style rule; scope per `CODING_STANDARDS.md` §1).
   - Anonymous functions: Closures allowed; arrow functions `fn() =>` forbidden.
-- **Frontend POS State**: Global `POS` object is SSOT. Use `POS.list.ajaxPromise()` for async calls (never `fetch`, `axios`, or raw `$.ajax`).
+- **Frontend POS State**: Global `POS` object is SSOT. New features use the existing AJAX wrappers, preferably `POS.list.ajaxPromise()` (never `fetch`, `axios`, `$.ajax`, `$.post`, `$.get`; core files that define the wrappers are exempt).
 - **Communication**: Reply and write code comments in **Traditional Chinese (正體中文)**; preserve technical and domain terms in English.
 - **Git Discipline**: Never auto-commit or auto-push. Use `/dhpk:smart-commit` or wait for human instructions.
 
@@ -44,6 +44,9 @@ Front-loaded triggers for specialized documentation (read on demand):
 - **Frontend conventions** (POS event bus, jQuery plugins, blade escape): [`docs/conventions/frontend.md`](docs/conventions/frontend.md)
 - **Execution policy & review gates** (PR checklist, verification standards): [`.claude/rules/execution-policy.md`](.claude/rules/execution-policy.md)
 - **Tasks & issue tracking**: Temporary tasks in `.scratch/` ([`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)); lifecycle specs in `openspec/`.
+- **Testing standards & test harness** (test layers, bootstrap, antipatterns): [`protected/tests/docs/TESTING_STANDARDS.md`](protected/tests/docs/TESTING_STANDARDS.md) · spec: [`openspec/specs/test-harness/spec.md`](openspec/specs/test-harness/spec.md)
+- **Codebase design & architecture** (deep modules, seams): global skill `codebase-design` constrained by [`CODING_STANDARDS.md`](CODING_STANDARDS.md)
+- **Bug investigation & diagnosis** (quick red-loop: skill `diagnosing-bugs`; deep 5-phase root cause: skill `bug-investigation`)
 
 ## Subdirectory Scopes (Hierarchical SSOT)
 

@@ -19,7 +19,7 @@ Inject `IXxxRepository` into Domain Service (not AR model directly). Service Lay
 4. **Migration cadence**: new code follows 1+2 immediately; existing inline SQL only pushed down when its section is being modified.
 5. **No mirror-existing escape hatch**: neighbor using `createCommand()` is not justification — create a **V2 parallel method** with `queryBuilder()` if upgrading is impractical, and annotate the legacy method `@see xxxV2`.
 
-Toolkit prerequisite (unfamiliarity is not a fallback reason): read `docs/guides/query-toolkit-cookbook.md` + `docs/guides/query-toolkit-migration-guide.md`. Date helpers (`BuildsDateWheres` trait): `->whereDate('col', '>=|<=', 'YYYY-MM-DD')`. Spec: `infrastructure/CLAUDE.md` "Database Query Toolkit".
+Toolkit prerequisite (unfamiliarity is not a fallback reason): read `docs/guides/query-toolkit-cookbook.md` + `docs/guides/query-toolkit-migration-guide.md`. Date helpers (`BuildsDateWheres` trait): `->whereDate('col', '>=|<=', 'YYYY-MM-DD')`. Spec: `infrastructure/AGENTS.md` "Database Query Toolkit".
 
 ## Batch Mark-Processed Race (snapshot-then-blanket-UPDATE)
 
@@ -88,19 +88,21 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 > IN → skill `zdpos-in-queries`
 
-**Hard rule**: use `CDbCriteria::addInCondition()` / `addNotInCondition()`; never string interpolation; always `array_values($ids)`; guard empty arrays before `addNotInCondition`.
+**Hard rule**: query-builder path → `whereIn()` / `whereNotIn()`; `CDbCriteria` path → `addInCondition()` / `addNotInCondition()`. Never string interpolation; always `array_values($ids)`; guard empty arrays before building the condition.
 
 ## Validator / DI / Controller Response
 
 - Validator: `class XxxValidator extends CValidator`; rules: `['field', 'ext.validators.XxxValidator']`
 - DI: `Yii::app()->getComponent('orderService')`; config `'components' => ['orderService' => ['class' => 'app.services.OrderService']]`
-- AJAX uses the `Response` trait. Legacy `['err' => 0/1]` is deprecated.
+- AJAX / API response shape is chosen by the **caller** — rule SSOT: `CODING_STANDARDS.md` §10. Summary:
 
-| Status | Method |
-|---|---|
-| 200 | `$this->json(['success' => true, 'data' => $r, 'message' => ''])` |
-| 400 | `$this->error('reason')` |
-| 403 / 404 | `throw new CHttpException(403\|404)` |
+| Caller | Shape | Build with |
+|---|---|---|
+| POS front-end (`POS.list.ajaxPromise` / `ajaxQuery`, `POS.post`) | `{err, date, result, msg, data}` (`err` 0 = ok; **not** deprecated) | `PosController::response()` |
+| Back-office AJAX (`js/admin/**`) | `{success, data, message}` | `ApiResponse::success()` / `fail()` + `Respondable::respond()` |
+| ZTable built-in callbacks | plain text `success` | `ZTableErrorResponse::end()` on error |
+| `protected/modules/api/**` | module contract | module trait `json()` / `error($text, $status)` |
+| Full-page request | HTTP error page | `throw new CHttpException(403\|404)` |
 
 ## Raw SQL vs Query Builder
 
@@ -137,7 +139,7 @@ class XxxPolicy
 }
 ```
 
-- **決策動詞一律 `passes()`**，語意固定為 **true = 放行**。
+- **決策動詞一律 `passes()`**，語意固定為 **true = 放行**；不放行訊息用 `message()`（對齊 Laravel Rule 物件，於 `passes()` 之後呼叫）。命名對齊原則見 `CODING_STANDARDS.md` §14。
 - **環境參數不進決策方法**：目前 DB 名稱、`$use_name`、使用者等級這類「一次 request 內固定」的值放 constructor。決策方法的引數只留被判定的標的——各 policy 的方法簽名才對得齊，日後才抽得出共同介面。
 - **instance-based，不寫 static**：static 無法實作介面，等於預先封死抽象化。
 
@@ -149,7 +151,7 @@ class XxxPolicy
 | `MenuAccessPolicy::decide()` | static + 全域 namespace + 動詞不同 | Yii component 層 legacy |
 | `DebugControllerPolicy::isAllowedForCurrentEnv()` | static + 讀 `$GLOBALS` | 同上 |
 
-## Repository Class Constants
+## Class Constants
 
 Detail → `php/coding-style.md` "Magic Values". Single-value enums need no `AbstractEnum` subclass.
 

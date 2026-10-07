@@ -71,7 +71,7 @@ Bare literals `0` / `'0'` / `1` forbidden — **不只 query / WHERE**，也涵�
    - Subclasses live in `domain/{Module}/Enums/` or `domain/Models/`
    - `const DESCRIPTIONS` is required, otherwise `getDescription()` throws
    - Canonical 範例：`domain/Reports/Enums/StoreTypeEnum.php`（`HEADQUARTERS = 0` / `BRANCH = 1` + `DESCRIPTIONS`）、`domain/Stock/Enums/AllocateStatusEnum.php`
-2. **Repository class constants** (fallback) — single-Repo usage, simple flags
+2. **Class constants** (fallback) — marks used inside a single class (Repository / Controller / Policy …), simple flags
    - Naming: `FIELD_SEMANTIC` (e.g. `PACKAGE_STATE_PENDING`)
    - Declared at top of class body + PHPDoc noting the field semantic source
 

@@ -34,7 +34,7 @@ Controller action + View + asset 註冊的現代化範式。**範圍依 `php/cod
 
 - **File-head PHPDoc**：`@var` 逐一宣告 controller 傳入變數（型別 + 用途），至少涵蓋本次新增 / 依賴的變數。
 - **單一 PHP→JS 注入點**：`const configs = <?php echo CJavaScript::encode($configs); ?>;`（`CJavaScript::encode` 或 `CJSON::encode` 皆可，Yii 內建安全轉義），再 destructure。**禁止**散落多個 `<?php echo ?>` 於 script body，或 heredoc 內直接內插變數（XSS / 轉義風險）。
-- **HTML body 不夾 PHP 流程控制**：見 `protected/views/CLAUDE.md` View hygiene baseline。
+- **HTML body 不夾 PHP 流程控制**：見 `protected/views/AGENTS.md` View hygiene baseline。
 - **View 為 SQL 禁區**：見 `php/patterns.md` DB Query Layering item 2。
 
 ## Anti-pattern 對照（勿仿）
@@ -43,6 +43,6 @@ Controller action + View + asset 註冊的現代化範式。**範圍依 `php/cod
 
 ## Refs
 
-- View hygiene（PHPDoc head、單一注入點、IIFE、idempotent guard）→ `protected/views/CLAUDE.md`
+- View hygiene（PHPDoc head、單一注入點、IIFE、idempotent guard）→ `protected/views/AGENTS.md`
 - 前端 AJAX wrapper SSOT / ES6-native → `.claude/rules/frontend.md`
 - Magic value / enum 常數化 → `.claude/rules/php/coding-style.md` "Magic Values"

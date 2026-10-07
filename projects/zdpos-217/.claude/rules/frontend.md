@@ -67,5 +67,5 @@ const { page, searchConfig } = recordPageConfig;
 
 ## Refs
 
-- View-layer patterns (utils / idempotent guard / IIFE) → `protected/views/CLAUDE.md`
+- View-layer patterns (utils / idempotent guard / IIFE) → `protected/views/AGENTS.md`
 - Page Service → `docs/guides/page-service-pattern.md`

@@ -6,25 +6,28 @@ paths:
 # PHP Testing (PHPUnit 5.7, zdpos)
 
 > Extends `~/.claude/rules/common/testing.md`. Full standards: `protected/tests/docs/TESTING_STANDARDS.md`.
-> 判斷紅燈是既有還是回歸：`protected/tests/docs/KNOWN-FAILURES.md`（host 端已知失敗清單與判定準則）。
+> 判斷紅燈是既有還是回歸：`protected/tests/docs/KNOWN-FAILURES.md`（host 端已知失敗清單與判定準則；目前只在 `dev` 等部分分支，當前分支沒有時以 `git show dev:protected/tests/docs/KNOWN-FAILURES.md` 讀取）。
 
 ## Suite Layout
 - `unit/` — no `Yii::app()` / DB
 - `integration/` — Yii + DB; InnoDB → `IntegrationTestCase` (auto rollback); MyISAM → manual setUp/tearDown cleanup
 - `functional/` — E2E
+- `smoke/` — post-deploy smoke checks
+- Base classes: pure unit → `PHPUnit\Framework\TestCase`; DB → `integration/IntegrationTestCase` (auto rollback; `unit/DbTestCase` lives under `unit/` but is used only by integration tests); `WebTestCase` is Selenium-style `CWebTestCase` with no current subclasses
 
 ## Docker Commands (`-i` required, else WSL hangs)
 ```bash
-docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php phpunit -c protected/tests/phpunit.xml [--testsuite unit|integration]
-docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php phpunit -c protected/tests/phpunit-fast.xml  # ~330ms, Domain+Infrastructure only
+docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php php -d memory_limit=1G vendor/bin/phpunit -c protected/tests/phpunit.xml [--testsuite unit|integration]
+docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php php -d memory_limit=1G vendor/bin/phpunit -c protected/tests/phpunit-fast.xml  # ~330ms, Domain+Infrastructure only
 ```
 
 ## PHPUnit 5.7
+- Version baseline: the installed `vendor/phpunit` (5.7.27). Only APIs present in that version are allowed.
 - `public function testXxx()` — not `@test`
 - Naming: `test[Subject]_[Condition]_[ExpectedOutcome]` — e.g. `testGoldMemberPurchase1000_shouldReceive100Discount()` (rule body in common/testing.md `Test Naming`)
 - `assertSame()` over `assertEquals()` (strict type + value); for float use `assertEquals($exp, $act, '', $delta)`
 - `assertInternalType('array', $v)` — 5.7 has no `assertIsArray`
-- Exceptions: `@expectedException` or `setExpectedException()`
+- Exceptions: prefer `expectException()` (+ `expectExceptionMessage()`) for new tests; `setExpectedException()` works but is `@deprecated` since 5.2; `@expectedException` also works
 - `createMock()` (all stubbed, returns null) ≠ `getMockBuilder()->setMethods(null)` (calls real methods)
 
 ## Bad Test Patterns — PHPUnit 5.7 syntax mapping
@@ -32,7 +35,7 @@ docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php phpunit -c protected/tes
 
 | Pattern | PHPUnit 5.7 Symptom | Fix |
 |---------|---------------------|-----|
-| Giant | `setUp()` > 30 lines | Extract `createXxx($overrides = array())` factory |
+| Giant | `setUp()` > 30 lines | Extract `createXxx($overrides = [])` factory |
 | Inspector | `expects($this->once())->method('internalStep')` | Assert observable output only |
 | Flicker | `date()` / `time()` / `rand()` in test body | Inject clock via constructor |
 | Silent | `assertTrue(true)` / empty `catch {}` | `addToAssertionCount(1)` or assert real outcome |
