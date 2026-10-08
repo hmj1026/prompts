@@ -5,7 +5,7 @@ paths:
 
 # JS 靜態檢查防線 SSOT (index)
 
-OpenSpec change: `modernize-zpos-js-static-checks`（Phase 1 ESLint + Phase 2 TypeScript noEmit 已落地，change dir 已隨歸檔移除；未來時機成熟後一次性全 ESM 重構為獨立 change）
+OpenSpec change: `modernize-zpos-js-static-checks`
 Capability: `zpos-static-check-gate`
 
 ## 工具鏈
@@ -19,7 +19,7 @@ Capability: `zpos-static-check-gate`
 
 ## Edit-time feedback
 
-2026-06-12 de-fork 起由 **dhpk js module** 接手：JS/TS edit 後 `modules/js/hooks/post-edit-js-lint.sh`（經 post-edit-dispatch 背景跑）即時 ESLint；commit time 由 `modules/js/hooks/pre-commit-js-validation.sh`（經 pre-bash-dispatch 的 git commit 預過濾）把關。npm script 名稱可經 `js_lint_script` / `js_typecheck_script` userConfig 覆寫。
+由 **dhpk js module** 負責：JS/TS edit 後 `modules/js/hooks/post-edit-js-lint.sh`（經 post-edit-dispatch 背景跑）即時 ESLint；commit time 由 `modules/js/hooks/pre-commit-js-validation.sh`（經 pre-bash-dispatch 的 git commit 預過濾）把關。npm script 名稱可經 `js_lint_script` / `js_typecheck_script` userConfig 覆寫。
 
 ## Hook 端 vendor / core 判定
 
@@ -32,7 +32,3 @@ SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_
 | eslint tier／新檔落哪一層 | skill `zdpos-js-lint-config` |
 | @ts-check per-leaf cleanup | skill `zdpos-js-static-check-strategy` |
 | 改 leaf 業務邏輯 | rule `.claude/rules/frontend.md` |
-
-## 相關 spec
-
-> OpenSpec change `modernize-zpos-js-static-checks`（Phase 1 ESLint + Phase 2 TS noEmit）已落地並歸檔，change dir（proposal / design D1-D4 / specs/zpos-static-check-gate / tasks）已移除。現況防線即本檔；per-leaf 執行細節見 skill `zdpos-js-static-check-strategy`、config tier 結構見 skill `zdpos-js-lint-config`。
