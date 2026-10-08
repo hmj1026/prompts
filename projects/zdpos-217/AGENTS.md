@@ -24,9 +24,6 @@ Legacy POS web application on PHP 5.6 + Yii 1.1 with DDD layered architecture (`
 
 ## Model & Tool Routing
 
-- **Haiku**: Code search, grep, file reading, diff review.
-- **Sonnet**: Default for all iterative implementation and bug fixes.
-- **Opus**: High-level architecture decisions only.
 - **Read-before-Write**:
   - Symbol definition/overview: `cx`
   - Blast radius & call graph: `gitnexus_impact` before modifying any symbol.
