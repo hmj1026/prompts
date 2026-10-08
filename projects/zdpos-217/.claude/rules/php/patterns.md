@@ -135,7 +135,10 @@ class XxxPolicy
     public function __construct(array $config, $environment) { ... }
 
     // 決策只吃「被判定的標的」，回 bool，true = 放行
-    public function passes($subject, array $context) { ... }
+    public function passes($subject, array $context = []) { ... }
+
+    // 不放行訊息（於 passes() 之後呼叫；所需標的值由 passes() 記住）
+    public function message() { ... }
 }
 ```
 
@@ -150,6 +153,7 @@ class XxxPolicy
 | `ColumnLevelMaskPolicy::shouldHide()` | static + 極性相反（true = 遮蔽） | caller 需自行 `!shouldHide(...)`；抽介面時要一併轉成 instance + `passes()` |
 | `MenuAccessPolicy::decide()` | static + 全域 namespace + 動詞不同 | Yii component 層 legacy |
 | `DebugControllerPolicy::isAllowedForCurrentEnv()` | static + 讀 `$GLOBALS` | 同上 |
+| `StickerOrderTypePolicy::passes($table, array $items)` | 第二參數為必填業務資料而非 `$context` | 抽共同介面前需改為 `passes($subject, array $context = [])` 形狀 |
 
 ## Class Constants
 
