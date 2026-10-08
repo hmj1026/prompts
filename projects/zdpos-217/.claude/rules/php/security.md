@@ -26,5 +26,3 @@ paths:
 ## Commit-time checklist
 
 PDO bind for SQL / IN via `CDbCriteria` / output via `CHtml::encode` / controller checks `!isGuest` + ownership / no hardcoded secrets / upload whitelist / cookie httponly+secure.
-
-> Examples → `php-pro` skill `references/php56-legacy.md`.

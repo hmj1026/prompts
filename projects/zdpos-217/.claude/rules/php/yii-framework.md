@@ -30,20 +30,20 @@ New classes auto-load when filename + namespace align. **Do not** touch `compose
 
 ## Bootstrap timing
 
-`CApplication::__construct($config)` 載入時序（驗證自 `yii_framework/base/CApplication.php:127-155`）：
+`CApplication::__construct($config)` 載入時序（依建構式內呼叫順序，見 `yii_framework/base/CApplication.php`）：
 
 ```
-line 129: Yii::setApplication($this)        ← Yii::app() 此時起即可用
-line 133: if (is_string($config))
-              $config = require($config)    ← 觸發 require <merchant-config>.php
-                                              → merchant config 第一行 require setPathOfAlias.php
-                                              → setPathOfAlias.php 執行時 Yii::app() **已存在**
-line 145: $this->preinit()
-line 148: $this->initSystemHandlers()
-line 149: $this->registerCoreComponents()   ← merge mode 註冊 db/cache/request 等核心 component
-line 150: $this->configure($config)         ← merge mode 套用 merchant config['components']
-line 152: $this->preloadComponents()
-line 155: $this->init()
+Yii::setApplication($this)        ← Yii::app() 此時起即可用
+if (is_string($config))
+    $config = require($config)    ← 觸發 require <merchant-config>.php
+                                  → merchant config 第一行 require setPathOfAlias.php
+                                  → setPathOfAlias.php 執行時 Yii::app() **已存在**
+$this->preinit()
+$this->initSystemHandlers()
+$this->registerCoreComponents()   ← merge mode 註冊 db/cache/request 等核心 component
+$this->configure($config)         ← merge mode 套用 merchant config['components']
+$this->preloadComponents()
+$this->init()
 ```
 
 **含義 / 可利用點**：
