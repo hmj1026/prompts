@@ -21,6 +21,15 @@ desktop.ini
 *.tmp
 *.temp
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Scratch & ephemeral directories
+**/.scratch/
+
 # OpenSpec working directory
 /openspec
 

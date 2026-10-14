@@ -13,3 +13,7 @@ Thumbs.db
 
 # WSL NTFS alternate data streams
 *:Zone.Identifier
+
+# Python
+__pycache__/
+*.py[cod]
