@@ -8,6 +8,12 @@
 |-----|------------|
 | local | `docker exec -i pos_mysql mysql -u root` (empty password); DB `zdpos_dev_2` |
 | DEV/UAT/PROD | Cloud SQL Proxy (`/home/deploy/scripts/cloud-sql-proxy.sh`, started `@reboot`) |
+| 地端 EIV2 (電子發票) | `192.168.2.246:3306` (MariaDB 10.1.38, 主機 `eiv2`；DB `eiv2`, `eiv2_archive`, `zdn_api`)。與 GCP 雲端虛擬機 (`vm1`/`vm2`) 網路完全隔離，不受線上 POS / LINE Pay 結帳依賴。 |
+
+> 📝 事務異常狀態排查：
+> - 線上問題調查唯讀權限配置：[Playbook：MCP 資料庫唯讀權限調製與線上問題排查 SOP](../../../../docs/operations/playbooks/mcp-database-investigation-grant.md)
+> - 巨型事務被 KILL 後卡在 ROLLING BACK 診斷：[Playbook：巨型事務被 KILL 後 ROLLING BACK 排查與處置 SOP](../../../../docs/operations/playbooks/innodb-killed-rollback-troubleshooting.md)
+> - 詳細診斷實例：[線上商戶 LINE Pay 串接與 EIV2 資料庫 ROLLING BACK 排查診斷分析](../../../../docs/analysis/2026-10-15-onongs-linepay-and-eiv2-rollback-investigation.md)
 
 ### Read-only MCP（schema introspection；2026-06-15 建，2026-09-14 補第四個）
 
