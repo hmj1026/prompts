@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} — 協作者技術手冊</title>
+<style>
+/* ==========================================================================
+   1. WCAG AA/AAA 高對比色彩系統 (Light & Dark Mode)
+   ========================================================================== */
+:root {
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --panel-alt: #f1f5f9;
+  --ink: #0f172a;
+  --ink-secondary: #334155;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --line-strong: #94a3b8;
+
+  --accent: #0369a1;
+  --accent-soft: #e0f2fe;
+  --accent-ink: #0c4a6e;
+
+  --pass: #15803d;
+  --pass-bg: #dcfce7;
+  --pass-border: #16a34a;
+  --pass-ink: #14532d;
+
+  --fail: #b91c1c;
+  --fail-bg: #fee2e2;
+  --fail-border: #dc2626;
+  --fail-ink: #7f1d1d;
+
+  --block: #b45309;
+  --block-bg: #fef3c7;
+  --block-border: #d97706;
+  --block-ink: #78350f;
+
+  --na: #475569;
+  --na-bg: #e2e8f0;
+  --na-border: #64748b;
+  --na-ink: #1e293b;
+
+  --co-info-bg: #f0f9ff;
+  --co-info-border: #0284c7;
+  --co-info-text: #0c4a6e;
+  --co-info-title: #075985;
+
+  --co-warn-bg: #fffbeb;
+  --co-warn-border: #d97706;
+  --co-warn-text: #78350f;
+  --co-warn-title: #451a03;
+
+  --co-danger-bg: #fef2f2;
+  --co-danger-border: #dc2626;
+  --co-danger-text: #7f1d1d;
+  --co-danger-title: #450a0a;
+
+  --co-success-bg: #f0fdf4;
+  --co-success-border: #16a34a;
+  --co-success-text: #14532d;
+  --co-success-title: #052e16;
+
+  --code-bg: #0f172a;
+  --code-ink: #f8fafc;
+  --code-inline-bg: #e2e8f0;
+  --code-inline-ink: #0f172a;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1120;
+  --panel: #111827;
+  --panel-alt: #1e293b;
+  --ink: #f8fafc;
+  --ink-secondary: #cbd5e1;
+  --muted: #94a3b8;
+  --line: #334155;
+  --line-strong: #475569;
+
+  --accent: #38bdf8;
+  --accent-soft: #0c4a6e;
+  --accent-ink: #e0f2fe;
+
+  --pass: #4ade80;
+  --pass-bg: #052e16;
+  --pass-border: #22c55e;
+  --pass-ink: #bbf7d0;
+
+  --fail: #f87171;
+  --fail-bg: #450a0a;
+  --fail-border: #ef4444;
+  --fail-ink: #fecaca;
+
+  --block: #fbbf24;
+  --block-bg: #451a03;
+  --block-border: #f59e0b;
+  --block-ink: #fde68a;
+
+  --na: #94a3b8;
+  --na-bg: #1e293b;
+  --na-border: #64748b;
+  --na-ink: #e2e8f0;
+
+  --co-info-bg: #082f49;
+  --co-info-border: #38bdf8;
+  --co-info-text: #e0f2fe;
+  --co-info-title: #7dd3fc;
+
+  --co-warn-bg: #451a03;
+  --co-warn-border: #f59e0b;
+  --co-warn-text: #fef3c7;
+  --co-warn-title: #fde68a;
+
+  --co-danger-bg: #450a0a;
+  --co-danger-border: #ef4444;
+  --co-danger-text: #fee2e2;
+  --co-danger-title: #fca5a5;
+
+  --co-success-bg: #052e16;
+  --co-success-border: #22c55e;
+  --co-success-text: #dcfce7;
+  --co-success-title: #86efac;
+
+  --code-bg: #020617;
+  --code-ink: #f1f5f9;
+  --code-inline-bg: #1e293b;
+  --code-inline-ink: #7dd3fc;
+}
+
+/* ==========================================================================
+   2. 基礎版面與雙欄導覽 (Layout & Sticky Sidebar)
+   ========================================================================== */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.68;
+  font-size: 15px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+nav.side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 22px 16px;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+nav.side .hub-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+  transition: all 0.15s ease;
+}
+nav.side .hub-back:hover {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+nav.side .brand {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+nav.side .sub-brand {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+nav.side .nav-group-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 10px 8px 4px;
+}
+
+nav.side a.nav-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  color: var(--ink-secondary);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+nav.side a.nav-item:hover {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+main {
+  padding: 0 44px 96px;
+  min-width: 0;
+  max-width: 1240px;
+}
+
+/* ==========================================================================
+   3. 頂部常駐工具與進度列 (Sticky Action & Progress Bar)
+   ========================================================================== */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 20px;
+  margin: 0 -44px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.progress-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.progress-track {
+  flex: 1;
+  max-width: 300px;
+  height: 10px;
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--pass));
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.progress-stats {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+.btn:hover {
+  background: var(--panel-alt);
+  border-color: var(--accent);
+}
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+  background: var(--accent);
+  color: #ffffff;
+}
+.btn-danger {
+  color: var(--fail);
+  border-color: var(--fail-border);
+}
+.btn-danger:hover {
+  background: var(--fail-bg);
+  color: var(--fail-ink);
+}
+
+/* ==========================================================================
+   4. 頁首與元資料卡片 (Header, Badges & Metadata)
+   ========================================================================== */
+header.doc-header {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 26px 30px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.doc-subtitle {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 14px;
+}
+
+.header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-blue { background: #0369a1; color: #ffffff; }
+.badge-green { background: #15803d; color: #ffffff; }
+.badge-purple { background: #6d28d9; color: #ffffff; }
+.badge-amber { background: #b45309; color: #ffffff; }
+.badge-red { background: #b91c1c; color: #ffffff; }
+.badge-slate { background: #334155; color: #ffffff; }
+
+.lead-summary {
+  background: var(--panel-alt);
+  border-left: 4px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 4px 8px 8px 4px;
+  color: var(--ink-secondary);
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.meta-item {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.meta-item .k {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+}
+.meta-item .v {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+/* ==========================================================================
+   5. 章節卡片、排版、表格與程式碼 (Sections, Typography, Tables & Code)
+   ========================================================================== */
+.section-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  scroll-margin-top: 76px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 16px;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 8px;
+  color: var(--ink);
+}
+
+h3 {
+  font-size: 16.5px;
+  font-weight: 800;
+  margin: 22px 0 10px;
+  color: var(--ink);
+  scroll-margin-top: 76px;
+}
+
+h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+  color: var(--ink);
+}
+
+p { margin: 10px 0; }
+ul, ol { margin: 8px 0 14px 22px; padding: 0; }
+li { margin-bottom: 5px; }
+a { color: var(--accent); font-weight: 600; text-decoration: underline; }
+
+/* Callout 高對比度盒 (> 7:1 Contrast) */
+.callout, .callout-info, .callout-warning, .callout-danger, .callout-success,
+.call-info, .call-warning, .call-danger, .call-success {
+  border-left: 5px solid var(--co-info-border);
+  background-color: var(--co-info-bg);
+  color: var(--co-info-text);
+  padding: 14px 18px;
+  border-radius: 4px 8px 8px 4px;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.callout-title {
+  font-weight: 800;
+  font-size: 14.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--co-info-title);
+}
+
+.callout.info, .callout-info, .call-info {
+  background-color: var(--co-info-bg) !important;
+  border-left-color: var(--co-info-border) !important;
+  color: var(--co-info-text) !important;
+}
+.callout.info .callout-title, .callout-info .callout-title, .call-info .callout-title {
+  color: var(--co-info-title) !important;
+}
+
+.callout.warning, .callout-warning, .call-warning {
+  background-color: var(--co-warn-bg) !important;
+  border-left-color: var(--co-warn-border) !important;
+  color: var(--co-warn-text) !important;
+}
+.callout.warning .callout-title, .callout-warning .callout-title, .call-warning .callout-title {
+  color: var(--co-warn-title) !important;
+}
+
+.callout.danger, .callout-danger, .call-danger {
+  background-color: var(--co-danger-bg) !important;
+  border-left-color: var(--co-danger-border) !important;
+  color: var(--co-danger-text) !important;
+}
+.callout.danger .callout-title, .callout-danger .callout-title, .call-danger .callout-title {
+  color: var(--co-danger-title) !important;
+}
+
+.callout.success, .callout-success, .call-success {
+  background-color: var(--co-success-bg) !important;
+  border-left-color: var(--co-success-border) !important;
+  color: var(--co-success-text) !important;
+}
+.callout.success .callout-title, .callout-success .callout-title, .call-success .callout-title {
+  color: var(--co-success-title) !important;
+}
+
+.callout strong, .callout b { color: inherit !important; font-weight: 800; }
+.callout a { color: inherit !important; text-decoration: underline !important; font-weight: 700; }
+.callout code {
+  background: rgba(15, 23, 42, 0.09) !important;
+  color: inherit !important;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+[data-theme="dark"] .callout code {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+.callout table {
+  background: var(--panel) !important;
+  color: var(--ink) !important;
+}
+
+/* 表格高對比規範 */
+.table-responsive { overflow-x: auto; margin: 14px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  background: var(--panel);
+  color: var(--ink);
+}
+th, td {
+  padding: 10px 13px;
+  text-align: left;
+  border: 1px solid var(--line);
+  vertical-align: top;
+}
+th {
+  background: var(--panel-alt);
+  font-weight: 800;
+  color: var(--ink);
+}
+tr:nth-child(even) td {
+  background: rgba(148, 163, 184, 0.05);
+}
+
+/* 程式碼與 ASCII 圖表 */
+pre, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+code {
+  background: var(--code-inline-bg);
+  color: var(--code-inline-ink);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.code-block-wrap {
+  margin: 14px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+}
+.code-lang-bar {
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-bottom: 1px solid #334155;
+  letter-spacing: 0.05em;
+}
+pre {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  padding: 15px 18px;
+  margin: 0;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.55;
+}
+pre.ascii-diagram {
+  line-height: 1.35;
+  font-size: 12.5px;
+}
+pre code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0;
+  font-weight: 400;
+}
+
+details {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 14px 0;
+  padding: 10px 16px;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--accent);
+  user-select: none;
+  padding: 4px 0;
+}
+details[open] summary {
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+/* ==========================================================================
+   6. Mermaid 預渲染純白高對比畫布與互動式檢視器 (Interactive SVG Viewer & Lightbox)
+   ========================================================================== */
+.mermaid {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+  margin: 18px 0 !important;
+  overflow: hidden !important;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
+}
+[data-theme="dark"] .mermaid {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #64748b !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+.mermaid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f1f5f9 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  font-size: 12.5px;
+  text-align: left;
+}
+.mermaid-toolbar-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mermaid-toolbar-title {
+  font-weight: 800;
+  color: #0f172a !important;
+}
+.mermaid-toolbar-title small {
+  font-weight: 600;
+  color: #475569 !important;
+  margin-left: 4px;
+}
+.mermaid-scale-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #93c5fd !important;
+  font-weight: 800;
+  font-size: 11.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.mermaid-pan-hint {
+  font-size: 12px;
+  color: #475569 !important;
+  font-weight: 600;
+}
+.mermaid-toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.m-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #94a3b8 !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.3;
+}
+.m-tool-btn:hover {
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+}
+.m-tool-btn-primary {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1e40af !important;
+}
+.m-tool-btn-primary:hover {
+  background: #1e40af !important;
+  color: #ffffff !important;
+}
+.mermaid-viewport {
+  width: 100%;
+  overflow: auto;
+  padding: 20px;
+  background: #ffffff !important;
+  text-align: center;
+  cursor: grab;
+  max-height: 78vh;
+}
+.mermaid-viewport.is-grabbing {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+.mermaid svg {
+  display: block;
+  margin: 0 auto;
+  height: auto;
+  line-height: 1.35 !important;
+  font-size: 14px !important;
+}
+.mermaid svg foreignObject,
+.lightbox-stage svg foreignObject {
+  overflow: visible !important;
+}
+.mermaid svg foreignObject div,
+.mermaid svg foreignObject span,
+.mermaid svg .nodeLabel,
+.mermaid svg .edgeLabel,
+.mermaid svg .cluster-label,
+.lightbox-stage svg foreignObject div,
+.lightbox-stage svg foreignObject span,
+.lightbox-stage svg .nodeLabel,
+.lightbox-stage svg .edgeLabel,
+.lightbox-stage svg .cluster-label {
+  line-height: 1.35 !important;
+  font-size: 14px !important;
+  color: #0f172a !important;
+  fill: #0f172a !important;
+  box-sizing: border-box !important;
+}
+
+/* 全螢幕圖表互動燈箱 (Mermaid Fullscreen Lightbox Modal) */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.82);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.lightbox-backdrop.open {
+  display: flex;
+}
+.lightbox-box {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #64748b;
+  border-radius: 12px;
+  width: 96vw;
+  height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+}
+.lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 18px;
+  background: #f1f5f9 !important;
+  border-bottom: 1px solid #cbd5e1;
+  color: #0f172a !important;
+}
+.lightbox-viewport {
+  flex: 1;
+  overflow: auto;
+  padding: 28px;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  text-align: center;
+  cursor: grab;
+}
+.lightbox-viewport.is-grabbing {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+.lightbox-stage {
+  display: inline-block;
+  min-width: 100%;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  text-align: center;
+}
+.lightbox-stage svg {
+  display: block;
+  margin: 0 auto;
+  height: auto !important;
+  background: #ffffff !important;
+  line-height: 1.35 !important;
+  font-size: 14px !important;
+}
+
+/* ==========================================================================
+   7. 互動式協作者導入與驗收檢核系統 (Interactive Verification & Radio System)
+   ========================================================================== */
+.overview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.tc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-alt);
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+.tc-chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.tc-chip .chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.tc-chip[data-status="Pass"] { background: var(--pass-bg); color: var(--pass-ink); border-color: var(--pass-border); }
+.tc-chip[data-status="Pass"] .chip-dot { background: var(--pass); }
+.tc-chip[data-status="Fail"] { background: var(--fail-bg); color: var(--fail-ink); border-color: var(--fail-border); }
+.tc-chip[data-status="Fail"] .chip-dot { background: var(--fail); }
+.tc-chip[data-status="Blocked"] { background: var(--block-bg); color: var(--block-ink); border-color: var(--block-border); }
+.tc-chip[data-status="Blocked"] .chip-dot { background: var(--block); }
+.tc-chip[data-status="N/A"] { background: var(--na-bg); color: var(--na-ink); border-color: var(--na-border); }
+.tc-chip[data-status="N/A"] .chip-dot { background: var(--na); }
+
+.tc-card {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 16px 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  scroll-margin-top: 80px;
+}
+.tc-card[data-status="Pass"] { border-color: var(--pass-border); }
+.tc-card[data-status="Fail"] { border-color: var(--fail-border); }
+.tc-card[data-status="Blocked"] { border-color: var(--block-border); }
+.tc-card[data-status="N/A"] { border-color: var(--na-border); }
+
+.tc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.tc-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tc-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.tc-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0;
+}
+.tc-status-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--panel-alt);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.tc-card[data-status="Pass"] .tc-status-badge { background: var(--pass-bg); color: var(--pass-ink); border-color: var(--pass-border); }
+.tc-card[data-status="Fail"] .tc-status-badge { background: var(--fail-bg); color: var(--fail-ink); border-color: var(--fail-border); }
+.tc-card[data-status="Blocked"] .tc-status-badge { background: var(--block-bg); color: var(--block-ink); border-color: var(--block-border); }
+.tc-card[data-status="N/A"] .tc-status-badge { background: var(--na-bg); color: var(--na-ink); border-color: var(--na-border); }
+
+.tc-body {
+  font-size: 14px;
+  color: var(--ink-secondary);
+  margin-bottom: 12px;
+}
+
+.tc-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.radio-group {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+label.radio-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line-strong);
+  background: var(--panel-alt);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+label.radio-pill:hover {
+  border-color: var(--accent);
+}
+
+label.radio-pill input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--panel);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+label.radio-pill input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.12s ease-in-out;
+  background: currentColor;
+}
+label.radio-pill input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+label.radio-pill[data-val="Pass"]:has(input:checked) {
+  background: var(--pass-bg); color: var(--pass-ink); border-color: var(--pass-border);
+}
+label.radio-pill[data-val="Pass"] input:checked { border-color: var(--pass); color: var(--pass); }
+
+label.radio-pill[data-val="Fail"]:has(input:checked) {
+  background: var(--fail-bg); color: var(--fail-ink); border-color: var(--fail-border);
+}
+label.radio-pill[data-val="Fail"] input:checked { border-color: var(--fail); color: var(--fail); }
+
+label.radio-pill[data-val="Blocked"]:has(input:checked) {
+  background: var(--block-bg); color: var(--block-ink); border-color: var(--block-border);
+}
+label.radio-pill[data-val="Blocked"] input:checked { border-color: var(--block); color: var(--block); }
+
+label.radio-pill[data-val="N/A"]:has(input:checked) {
+  background: var(--na-bg); color: var(--na-ink); border-color: var(--na-border);
+}
+label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color: var(--na); }
+
+.tc-note-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.tc-reset-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tc-reset-btn:hover {
+  color: var(--fail);
+  border-color: var(--fail-border);
+}
+
+/* ==========================================================================
+   8. 匯出與清空 Modal 視窗 (Modals)
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open {
+  display: flex;
+}
+.modal-box {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 720px;
+  padding: 22px 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+}
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.modal-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modal-tab.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.export-textarea {
+  width: 100%;
+  height: 260px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--code-bg);
+  color: var(--code-ink);
+  resize: vertical;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  nav.side { height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); }
+  main { padding: 0 18px 64px; }
+  .top-bar { margin: 0 -18px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- 側邊導覽列 -->
+  <nav class="side">
+    <a href="../index.html" class="hub-back">← 返回協作者手冊總覽</a>
+    <div class="brand">🚀 ZDPOS {{SLUG}}</div>
+    <div class="sub-brand">{{TITLE}}</div>
+
+    <div class="nav-group-label">核心技術章節</div>
+    {{NAV_LINKS}}
+
+    <div class="nav-group-label">導入與驗收檢核</div>
+    <a href="#sec-overview" class="nav-item">⚡ 快速導覽 Chips</a>
+    <a href="#sec-verify-checklist" class="nav-item">✅ 互動式 SOP 驗收卡</a>
+    <a href="#sec-4" class="nav-item">📋 驗收簽核總表</a>
+  </nav>
+
+  <!-- 主內容區 -->
+  <main>
+    <!-- 頂部常駐工具與進度列 -->
+    <div class="top-bar">
+      <div class="progress-wrap">
+        <span class="progress-label" id="progress-text">驗收進度 0% (0/{{TOTAL_TCS}})</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-bar-fill"></div>
+        </div>
+        <span class="progress-stats" id="progress-counts">Pass: 0 · Fail: 0 · Blocked: 0 · N/A: 0</span>
+      </div>
+      <div class="top-actions">
+        <button type="button" class="btn" id="btn-theme-toggle" onclick="window.DOC_APP.toggleTheme()">🌓 切換深淺模式</button>
+        <button type="button" class="btn btn-primary" id="btn-open-export" onclick="window.DOC_APP.openExportModal()">📤 匯出檢核紀錄</button>
+        <button type="button" class="btn btn-danger" id="btn-open-clear" onclick="window.DOC_APP.openClearModal()">🗑️ 清空重填</button>
+      </div>
+    </div>
+
+    <!-- 頁首與元資料 -->
+    <header class="doc-header">
+      <h1>{{TITLE}}</h1>
+      <div class="doc-subtitle">
+        規範代號/錨點：<code>{{ANCHOR}}</code> ｜ 開發者：{{AUTHOR}} ｜ 最後驗證：<code>{{LAST_VERIFIED}}</code> ｜ 適用架構：PHP 5.6.40 + Yii 1.1 + DDD
+      </div>
+
+      <div class="header-meta">
+        {{BADGES_HTML}}
+      </div>
+
+      {{LEAD_SUMMARY_HTML}}
+
+      <div class="meta-grid">
+        {{META_GRID_HTML}}
+      </div>
+    </header>
+
+    <!-- 快速檢核導覽 Chips -->
+    <section id="sec-overview" class="section-card">
+      <h2>⚡ 協作者導入與測試檢核快速導覽 (Quick Verification Chips)</h2>
+      <p style="color: var(--muted); font-size: 13.5px; margin-top: 0;">點擊下方編號可快速跳轉至對應之導入 SOP 或測試驗收檢核卡；圈選狀態將即時同步更新並儲存於瀏覽器本地。</p>
+      <div class="overview-chips" id="overview-chips-container">
+        {{OVERVIEW_CHIPS}}
+      </div>
+    </section>
+
+    <!-- 完整技術手冊章節內容 (100% 無損編譯自 README.md) -->
+    {{SECTIONS_HTML}}
+
+    <!-- 互動式 SOP 與測試驗收檢核卡 -->
+    <section id="sec-verify-checklist" class="section-card">
+      <h2>✅ 協作者導入與測試驗收檢核表 (Interactive Onboarding & Verification Checklist)</h2>
+      <div class="callout info">
+        <div class="callout-title">💡 互動式檢核操作說明</div>
+        每個檢核項皆採用四態單選（<strong>Pass</strong> / <strong>Fail</strong> / <strong>Blocked</strong> / <strong>N/A</strong>），支援<strong>再次點擊已選項目取消勾選</strong>，或點擊右側「↺ 重置」清空單題狀態。完成後可點擊頂部「📤 匯出檢核紀錄」輸出 TSV 或 Markdown 簽核報告。
+      </div>
+      <div id="tc-cards-container">
+        {{TC_CARDS_HTML}}
+      </div>
+    </section>
+
+    <!-- 即時同步簽核總表 -->
+    <section id="sec-4" class="section-card">
+      <h2>📋 導入與測試簽核總表 (Live Signoff Summary Table)</h2>
+      <div class="table-responsive">
+        <table id="signoff-summary-table">
+          <thead>
+            <tr>
+              <th style="width: 95px;">檢核編號</th>
+              <th>檢核階段 / 項目名稱</th>
+              <th style="width: 110px;">當前狀態</th>
+              <th style="width: 280px;">快速判定 (Pass / Fail / Blocked / N/A)</th>
+              <th>實測單號 / 執行備註</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{SIGNOFF_ROWS_HTML}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 匯出檢核紀錄 Modal -->
+<div class="modal-backdrop" id="export-modal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">📤 匯出協作者導入與測試檢核紀錄</h3>
+      <button type="button" class="btn" onclick="window.DOC_APP.closeExportModal()">✕ 關閉</button>
+    </div>
+    <div class="modal-tabs">
+      <button type="button" class="modal-tab active" id="tab-btn-tsv" onclick="window.DOC_APP.switchExportTab('tsv')">TSV 格式 (Excel / Google Sheets 貼上)</button>
+      <button type="button" class="modal-tab" id="tab-btn-md" onclick="window.DOC_APP.switchExportTab('md')">Markdown 格式 (PR / Issue 簽核貼上)</button>
+    </div>
+    <textarea class="export-textarea" id="export-output" readonly></textarea>
+    <div class="modal-footer">
+      <span id="copy-toast" style="color: var(--pass); font-size: 13px; font-weight: 700; align-self: center; display: none;">✓ 已複製到剪貼簿！</span>
+      <button type="button" class="btn btn-primary" id="btn-copy-export" onclick="window.DOC_APP.copyExportText()">📋 複製內容</button>
+      <button type="button" class="btn" onclick="window.DOC_APP.closeExportModal()">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 清空重填確認 Modal -->
+<div class="modal-backdrop" id="clear-modal" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width: 460px;">
+    <div class="modal-header">
+      <h3 class="modal-title">🗑️ 確定清空所有檢核紀錄？</h3>
+      <button type="button" class="btn" onclick="window.DOC_APP.closeClearModal()">✕</button>
+    </div>
+    <p style="color: var(--ink-secondary); font-size: 14px;">
+      此操作將清除本頁所有已勾選的判定狀態（Pass / Fail / Blocked / N/A）與備註文字，並將進度重置回 <strong>0%</strong>。
+    </p>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="window.DOC_APP.closeClearModal()">取消</button>
+      <button type="button" class="btn btn-danger" id="btn-confirm-clear" onclick="window.DOC_APP.confirmClearAll()">確定清空重置</button>
+    </div>
+  </div>
+</div>
+
+<!-- 全螢幕圖表互動檢視燈箱 Modal -->
+<div class="lightbox-backdrop" id="mermaid-lightbox-modal" role="dialog" aria-modal="true">
+  <div class="lightbox-box">
+    <div class="lightbox-header">
+      <div class="mermaid-toolbar-left">
+        <span class="mermaid-toolbar-title" id="lightbox-title">🔍 架構與流程圖全螢幕檢視</span>
+        <span class="mermaid-scale-badge" id="lightbox-scale-badge">100%</span>
+        <span class="mermaid-pan-hint">💡 滾輪無段縮放 (Wheel Zoom) · 按住左鍵拖曳平移 · 按 ESC 關閉</span>
+      </div>
+      <div class="mermaid-toolbar-actions">
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-out" onclick="window.DOC_APP.zoomLightbox(-0.2)">➖ 縮小</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-in" onclick="window.DOC_APP.zoomLightbox(0.2)">➕ 放大</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-width" onclick="window.DOC_APP.fitLightboxWidth()">↔ 適應寬度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-height" onclick="window.DOC_APP.fitLightboxHeight()">↕ 適應高度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-reset" onclick="window.DOC_APP.resetLightboxZoom()">1:1 原始尺寸</button>
+        <button type="button" class="m-tool-btn m-tool-btn-primary" id="lightbox-close" onclick="window.DOC_APP.closeLightbox()">✕ 關閉 (ESC)</button>
+      </div>
+    </div>
+    <div class="lightbox-viewport" id="mermaid-lightbox-viewport">
+      <div class="lightbox-stage" id="mermaid-lightbox-stage"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'zdpos_doc_v2_{{SLUG}}';
+  var THEME_KEY = 'zdpos_doc_theme';
+  var currentExportTab = 'tsv';
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { items: {} };
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed.items === 'object') ? parsed : { items: {} };
+    } catch (e) {
+      return { items: {} };
+    }
+  }
+
+  function saveState(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }
+
+  var appState = loadState();
+
+  function getTcIds() {
+    var cards = document.querySelectorAll('.tc-card[data-tc-id]');
+    var ids = [];
+    for (var i = 0; i < cards.length; i++) {
+      ids.push(cards[i].getAttribute('data-tc-id'));
+    }
+    return ids;
+  }
+
+  function setItemStatus(tcId, status) {
+    if (!appState.items[tcId]) {
+      appState.items[tcId] = { status: '', note: '' };
+    }
+    appState.items[tcId].status = status || '';
+    saveState(appState);
+    syncAllUI();
+  }
+
+  function setItemNote(tcId, note) {
+    if (!appState.items[tcId]) {
+      appState.items[tcId] = { status: '', note: '' };
+    }
+    appState.items[tcId].note = note || '';
+    saveState(appState);
+    syncNoteInputs(tcId, note || '');
+  }
+
+  function syncNoteInputs(tcId, note) {
+    var inputs = document.querySelectorAll('input[data-note-tc="' + tcId + '"]');
+    for (var i = 0; i < inputs.length; i++) {
+      if (inputs[i].value !== note) {
+        inputs[i].value = note;
+      }
+    }
+  }
+
+  function syncAllUI() {
+    var tcIds = getTcIds();
+    var total = tcIds.length;
+    var counts = { Pass: 0, Fail: 0, Blocked: 0, 'N/A': 0 };
+    var completed = 0;
+
+    for (var i = 0; i < tcIds.length; i++) {
+      var tcId = tcIds[i];
+      var entry = appState.items[tcId] || { status: '', note: '' };
+      var st = entry.status || '';
+      var note = entry.note || '';
+
+      if (st && counts.hasOwnProperty(st)) {
+        counts[st]++;
+        completed++;
+      }
+
+      // 1. Sync Card
+      var card = document.querySelector('.tc-card[data-tc-id="' + tcId + '"]');
+      if (card) {
+        card.setAttribute('data-status', st);
+        var badge = card.querySelector('.tc-status-badge');
+        if (badge) {
+          badge.textContent = st ? st : '未檢核';
+        }
+        var cardRadios = card.querySelectorAll('input[type="radio"]');
+        for (var r = 0; r < cardRadios.length; r++) {
+          cardRadios[r].checked = (cardRadios[r].value === st && st !== '');
+        }
+      }
+
+      // 2. Sync Overview Chip
+      var chip = document.querySelector('.tc-chip[data-chip-tc="' + tcId + '"]');
+      if (chip) {
+        chip.setAttribute('data-status', st);
+        var chipSt = chip.querySelector('.chip-status-text');
+        if (chipSt) {
+          chipSt.textContent = st ? ('· ' + st) : '';
+        }
+      }
+
+      // 3. Sync Signoff Summary Row
+      var row = document.querySelector('tr[data-summary-tc="' + tcId + '"]');
+      if (row) {
+        row.setAttribute('data-status', st);
+        var statusCell = row.querySelector('.summary-status-badge');
+        if (statusCell) {
+          statusCell.textContent = st ? st : '未檢核';
+        }
+        var rowRadios = row.querySelectorAll('input[type="radio"]');
+        for (var rr = 0; rr < rowRadios.length; rr++) {
+          rowRadios[rr].checked = (rowRadios[rr].value === st && st !== '');
+        }
+      }
+
+      // 4. Sync Note Inputs
+      syncNoteInputs(tcId, note);
+    }
+
+    var pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    var progText = document.getElementById('progress-text');
+    if (progText) {
+      progText.textContent = '驗收進度 ' + pct + '% (' + completed + '/' + total + ')';
+    }
+    var progFill = document.getElementById('progress-bar-fill');
+    if (progFill) {
+      progFill.style.width = pct + '%';
+    }
+    var progCounts = document.getElementById('progress-counts');
+    if (progCounts) {
+      progCounts.textContent = 'Pass: ' + counts.Pass + ' · Fail: ' + counts.Fail + ' · Blocked: ' + counts.Blocked + ' · N/A: ' + counts['N/A'];
+    }
+  }
+
+  function bindRadioEvents() {
+    var radios = document.querySelectorAll('input[type="radio"][data-tc-id]');
+    for (var i = 0; i < radios.length; i++) {
+      (function (radio) {
+        radio.addEventListener('click', function () {
+          var tcId = radio.getAttribute('data-tc-id');
+          var val = radio.value;
+          var prevStatus = (appState.items[tcId] && appState.items[tcId].status) || '';
+          if (prevStatus === val) {
+            radio.checked = false;
+            setItemStatus(tcId, '');
+          } else {
+            setItemStatus(tcId, val);
+          }
+        });
+      })(radios[i]);
+    }
+
+    var resetBtns = document.querySelectorAll('[data-reset-tc]');
+    for (var j = 0; j < resetBtns.length; j++) {
+      (function (btn) {
+        btn.addEventListener('click', function () {
+          var tcId = btn.getAttribute('data-reset-tc');
+          setItemStatus(tcId, '');
+          setItemNote(tcId, '');
+        });
+      })(resetBtns[j]);
+    }
+
+    var noteInputs = document.querySelectorAll('input[data-note-tc]');
+    for (var k = 0; k < noteInputs.length; k++) {
+      (function (inp) {
+        inp.addEventListener('input', function () {
+          var tcId = inp.getAttribute('data-note-tc');
+          setItemNote(tcId, inp.value);
+        });
+      })(noteInputs[k]);
+    }
+  }
+
+  function generateExportString(format) {
+    var tcIds = getTcIds();
+    var lines = [];
+    if (format === 'tsv') {
+      lines.push(['檢核編號', '檢核項目名稱', '判定狀態', '備註'].join('\t'));
+      for (var i = 0; i < tcIds.length; i++) {
+        var tcId = tcIds[i];
+        var card = document.querySelector('.tc-card[data-tc-id="' + tcId + '"]');
+        var title = card ? (card.getAttribute('data-tc-title') || tcId) : tcId;
+        var entry = appState.items[tcId] || { status: '', note: '' };
+        var st = entry.status || '未檢核';
+        var note = (entry.note || '').replace(/[\t\r\n]+/g, ' ');
+        lines.push([tcId, title, st, note].join('\t'));
+      }
+    } else {
+      lines.push('# {{TITLE}} — 協作者導入與測試檢核報告');
+      lines.push('');
+      lines.push('| 檢核編號 | 檢核項目名稱 | 判定狀態 | 備註 |');
+      lines.push('| :--- | :--- | :---: | :--- |');
+      for (var j = 0; j < tcIds.length; j++) {
+        var tcIdM = tcIds[j];
+        var cardM = document.querySelector('.tc-card[data-tc-id="' + tcIdM + '"]');
+        var titleM = cardM ? (cardM.getAttribute('data-tc-title') || tcIdM) : tcIdM;
+        var entryM = appState.items[tcIdM] || { status: '', note: '' };
+        var stM = entryM.status || '未檢核';
+        var noteM = (entryM.note || '').replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
+        lines.push('| ' + tcIdM + ' | ' + titleM + ' | **' + stM + '** | ' + noteM + ' |');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }
+
+  var savedTheme = null;
+  try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (savedTheme) {
+    applyTheme(savedTheme);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    applyTheme('dark');
+  } else {
+    applyTheme('light');
+  }
+
+  /* ==========================================================================
+     Mermaid 互動式縮放、拖曳平移與全螢幕燈箱引擎
+     ========================================================================== */
+  var lightboxState = {
+    svg: null,
+    natW: 900,
+    natH: 600,
+    scale: 1.0
+  };
+
+  function extractSvgDimensions(svg) {
+    var natW = parseFloat(svg.getAttribute('data-natural-width') || '0');
+    var natH = parseFloat(svg.getAttribute('data-natural-height') || '0');
+    if ((!natW || !natH) && svg.getAttribute('viewBox')) {
+      var parts = svg.getAttribute('viewBox').trim().split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && !isNaN(parts[2]) && parts[2] > 0) {
+        natW = parts[2];
+        natH = parts[3] || 600;
+      }
+    }
+    if (!natW || natW <= 0) natW = 900;
+    if (!natH || natH <= 0) natH = 600;
+    return { width: Math.round(natW), height: Math.round(natH) };
+  }
+
+  function bindDragToPan(viewportEl) {
+    if (!viewportEl || viewportEl.getAttribute('data-pan-bound') === '1') return;
+    viewportEl.setAttribute('data-pan-bound', '1');
+    var isDown = false;
+    var startX = 0;
+    var startY = 0;
+    var startScrollLeft = 0;
+    var startScrollTop = 0;
+
+    viewportEl.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      if (e.target && e.target.closest && e.target.closest('button, a, summary, input')) return;
+      isDown = true;
+      viewportEl.classList.add('is-grabbing');
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = viewportEl.scrollLeft;
+      startScrollTop = viewportEl.scrollTop;
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (!isDown) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      viewportEl.scrollLeft = startScrollLeft - dx;
+      viewportEl.scrollTop = startScrollTop - dy;
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (isDown) {
+        isDown = false;
+        viewportEl.classList.remove('is-grabbing');
+      }
+    });
+  }
+
+  function applyLightboxScale(newScale) {
+    if (!lightboxState.svg) return;
+    var clamped = Math.max(0.2, Math.min(4.0, Math.round(newScale * 100) / 100));
+    lightboxState.scale = clamped;
+    var targetW = Math.round(lightboxState.natW * clamped);
+    lightboxState.svg.style.width = targetW + 'px';
+    lightboxState.svg.style.minWidth = targetW + 'px';
+    lightboxState.svg.style.maxWidth = 'none';
+    var badge = document.getElementById('lightbox-scale-badge');
+    if (badge) {
+      badge.textContent = Math.round(clamped * 100) + '%';
+    }
+  }
+
+  function initMermaidViewers() {
+    var containers = document.querySelectorAll('.mermaid');
+    for (var i = 0; i < containers.length; i++) {
+      (function (el, idx) {
+        if (el.getAttribute('data-mermaid-viewer') === '1') return;
+        var svg = el.querySelector('svg');
+        if (!svg) return;
+        el.setAttribute('data-mermaid-viewer', '1');
+
+        var dims = extractSvgDimensions(svg);
+        var natW = dims.width;
+        var natH = dims.height;
+
+        var toolbar = document.createElement('div');
+        toolbar.className = 'mermaid-toolbar';
+        var titleText = '📊 圖表 #' + (idx + 1);
+        toolbar.innerHTML =
+          '<div class="mermaid-toolbar-left">' +
+            '<span class="mermaid-toolbar-title">' + titleText + '<small>(' + natW + '×' + natH + 'px)</small></span>' +
+            '<span class="mermaid-scale-badge" data-role="scale-badge">100%</span>' +
+            '<span class="mermaid-pan-hint">✋ 可按住滑鼠拖曳平移 · 雙擊全螢幕放大</span>' +
+          '</div>' +
+          '<div class="mermaid-toolbar-actions">' +
+            '<button type="button" class="m-tool-btn" data-m-act="zoom-out" title="縮小 20%">➖ 縮小</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="zoom-in" title="放大 20%">➕ 放大</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="fit" title="縮放至適應欄位寬度">↔ 適應寬度</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="reset" title="1:1 原始清晰尺寸 (100%)">1:1 原始尺寸</button>' +
+            '<button type="button" class="m-tool-btn m-tool-btn-primary" data-m-act="fullscreen" title="開啟全螢幕互動放大檢視">⛶ 全螢幕檢視</button>' +
+          '</div>';
+
+        var viewport = document.createElement('div');
+        viewport.className = 'mermaid-viewport';
+        while (el.firstChild) {
+          viewport.appendChild(el.firstChild);
+        }
+        el.appendChild(toolbar);
+        el.appendChild(viewport);
+
+        bindDragToPan(viewport);
+
+        var badge = toolbar.querySelector('[data-role="scale-badge"]');
+        var currentScale = 1.0;
+
+        function setInlineScale(scaleVal) {
+          currentScale = Math.max(0.25, Math.min(3.0, Math.round(scaleVal * 100) / 100));
+          var pxW = Math.round(natW * currentScale);
+          svg.style.width = pxW + 'px';
+          svg.style.minWidth = pxW + 'px';
+          svg.style.maxWidth = 'none';
+          if (badge) badge.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        function setInlineFit() {
+          var availW = Math.max(320, (viewport.clientWidth || 860) - 44);
+          var fitW = Math.min(natW, availW);
+          currentScale = Math.round((fitW / natW) * 100) / 100;
+          svg.style.width = fitW + 'px';
+          svg.style.minWidth = '0';
+          svg.style.maxWidth = '100%';
+          if (badge) badge.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        // 預設智慧可讀比例：保證文字絕不小於 ~82% 原始字級（約 11.5px），同時允許拖曳平移
+        var initAvailW = Math.max(640, (viewport.clientWidth || 860) - 44);
+        if (natW <= initAvailW) {
+          currentScale = 1.0;
+          svg.style.width = natW + 'px';
+          svg.style.minWidth = '0';
+          svg.style.maxWidth = '100%';
+          if (badge) badge.textContent = '100%';
+        } else {
+          var readableW = Math.max(initAvailW, Math.round(natW * 0.82));
+          setInlineScale(Math.min(1.0, readableW / natW));
+        }
+
+        toolbar.addEventListener('click', function (e) {
+          var btn = e.target.closest('button[data-m-act]');
+          if (!btn) return;
+          var act = btn.getAttribute('data-m-act');
+          if (act === 'zoom-in') setInlineScale(currentScale + 0.2);
+          else if (act === 'zoom-out') setInlineScale(currentScale - 0.2);
+          else if (act === 'fit') setInlineFit();
+          else if (act === 'reset') setInlineScale(1.0);
+          else if (act === 'fullscreen') {
+            api.openLightbox(svg, titleText + ' (' + natW + '×' + natH + 'px)');
+          }
+        });
+
+        viewport.addEventListener('dblclick', function (e) {
+          if (e.target && e.target.closest && e.target.closest('button')) return;
+          api.openLightbox(svg, titleText + ' (' + natW + '×' + natH + 'px)');
+        });
+      })(containers[i], i);
+    }
+
+    var lbViewport = document.getElementById('mermaid-lightbox-viewport');
+    if (lbViewport) {
+      bindDragToPan(lbViewport);
+      lbViewport.addEventListener('wheel', function (e) {
+        if (!lightboxState.svg) return;
+        e.preventDefault();
+        var delta = e.deltaY < 0 ? 0.15 : -0.15;
+        applyLightboxScale(lightboxState.scale + delta);
+      }, { passive: false });
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var lb = document.getElementById('mermaid-lightbox-modal');
+        if (lb && lb.classList.contains('open')) {
+          api.closeLightbox();
+        }
+      }
+    });
+  }
+
+  var api = {
+    toggleTheme: function () {
+      var cur = document.documentElement.getAttribute('data-theme');
+      var next = cur === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+    },
+    openLightbox: function (sourceSvg, title) {
+      var modal = document.getElementById('mermaid-lightbox-modal');
+      var stage = document.getElementById('mermaid-lightbox-stage');
+      var viewport = document.getElementById('mermaid-lightbox-viewport');
+      var titleEl = document.getElementById('lightbox-title');
+      if (!modal || !stage || !sourceSvg) return;
+
+      stage.innerHTML = '';
+      var origId = sourceSvg.getAttribute('id') || '';
+      var clone;
+      if (origId) {
+        var lbId = origId + '_lb';
+        var tempWrap = document.createElement('div');
+        tempWrap.innerHTML = sourceSvg.outerHTML.split(origId).join(lbId);
+        clone = tempWrap.querySelector('svg');
+      } else {
+        clone = sourceSvg.cloneNode(true);
+      }
+      if (!clone) return;
+      stage.appendChild(clone);
+
+      var dims = extractSvgDimensions(sourceSvg);
+      lightboxState.svg = clone;
+      lightboxState.natW = dims.width;
+      lightboxState.natH = dims.height;
+
+      if (titleEl) {
+        titleEl.textContent = '🔍 ' + (title || '架構與流程圖全螢幕檢視');
+      }
+
+      modal.classList.add('open');
+      var availW = Math.max(800, (viewport ? viewport.clientWidth : window.innerWidth) - 72);
+      var initScale = dims.width <= availW ? 1.0 : Math.max(0.88, availW / dims.width);
+      applyLightboxScale(initScale);
+      if (viewport) {
+        viewport.scrollLeft = 0;
+        viewport.scrollTop = 0;
+      }
+    },
+    closeLightbox: function () {
+      var modal = document.getElementById('mermaid-lightbox-modal');
+      var stage = document.getElementById('mermaid-lightbox-stage');
+      if (modal) modal.classList.remove('open');
+      if (stage) stage.innerHTML = '';
+      lightboxState.svg = null;
+    },
+    zoomLightbox: function (delta) {
+      applyLightboxScale(lightboxState.scale + delta);
+    },
+    fitLightboxWidth: function () {
+      var viewport = document.getElementById('mermaid-lightbox-viewport');
+      if (!viewport || !lightboxState.svg) return;
+      var availW = Math.max(400, viewport.clientWidth - 72);
+      applyLightboxScale(availW / lightboxState.natW);
+    },
+    fitLightboxHeight: function () {
+      var viewport = document.getElementById('mermaid-lightbox-viewport');
+      if (!viewport || !lightboxState.svg) return;
+      var availH = Math.max(300, viewport.clientHeight - 72);
+      applyLightboxScale(availH / lightboxState.natH);
+    },
+    resetLightboxZoom: function () {
+      applyLightboxScale(1.0);
+    },
+    openExportModal: function () {
+      var modal = document.getElementById('export-modal');
+      if (modal) modal.classList.add('open');
+      api.switchExportTab(currentExportTab);
+    },
+    closeExportModal: function () {
+      var modal = document.getElementById('export-modal');
+      if (modal) modal.classList.remove('open');
+    },
+    switchExportTab: function (tab) {
+      currentExportTab = (tab === 'md') ? 'md' : 'tsv';
+      var btnTsv = document.getElementById('tab-btn-tsv');
+      var btnMd = document.getElementById('tab-btn-md');
+      if (btnTsv) btnTsv.classList.toggle('active', currentExportTab === 'tsv');
+      if (btnMd) btnMd.classList.toggle('active', currentExportTab === 'md');
+      var out = document.getElementById('export-output');
+      if (out) out.value = generateExportString(currentExportTab);
+    },
+    copyExportText: function () {
+      var out = document.getElementById('export-output');
+      if (!out) return;
+      out.select();
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(out.value);
+        } else {
+          document.execCommand('copy');
+        }
+      } catch (e) {}
+      var toast = document.getElementById('copy-toast');
+      if (toast) {
+        toast.style.display = 'inline';
+        setTimeout(function () { toast.style.display = 'none'; }, 2000);
+      }
+    },
+    openClearModal: function () {
+      var modal = document.getElementById('clear-modal');
+      if (modal) modal.classList.add('open');
+    },
+    closeClearModal: function () {
+      var modal = document.getElementById('clear-modal');
+      if (modal) modal.classList.remove('open');
+    },
+    confirmClearAll: function () {
+      appState = { items: {} };
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      syncAllUI();
+      api.closeClearModal();
+    }
+  };
+
+  window.DOC_APP = api;
+  window.QA_APP = api;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      bindRadioEvents();
+      syncAllUI();
+      initMermaidViewers();
+    });
+  } else {
+    bindRadioEvents();
+    syncAllUI();
+    initMermaidViewers();
+  }
+})();
+</script>
+</body>
+</html>

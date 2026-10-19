@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="doc-slug" content="{{SLUG}}">
+<title>QA 手動功能測試手冊 — {{FEATURE_NAME}} ({{ENV}})</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --panel: #ffffff;
+    --surface: #f8fafc;
+    --ink: #0f172a;
+    --ink-secondary: #1e293b;
+    --muted: #475569;
+    --line: #cbd5e1;
+    --line-strong: #94a3b8;
+    --accent: #1d4ed8;
+    --accent-soft: #eff6ff;
+    --accent-border: #93c5fd;
+    --accent-ink: #1e3a8a;
+    --pass: #15803d;
+    --pass-soft: #f0fdf4;
+    --pass-border: #86efac;
+    --pass-ink: #14532d;
+    --fail: #b91c1c;
+    --fail-soft: #fef2f2;
+    --fail-border: #fca5a5;
+    --fail-ink: #7f1d1d;
+    --warn: #b45309;
+    --warn-soft: #fffbeb;
+    --warn-border: #fcd34d;
+    --warn-ink: #78350f;
+    --star: #b45309;
+    --code: #e2e8f0;
+    --code-ink: #0f172a;
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1120;
+      --panel: #151f32;
+      --surface: #1e293b;
+      --ink: #f8fafc;
+      --ink-secondary: #e2e8f0;
+      --muted: #94a3b8;
+      --line: #334155;
+      --line-strong: #475569;
+      --accent: #3b82f6;
+      --accent-soft: #172554;
+      --accent-border: #2563eb;
+      --accent-ink: #dbeafe;
+      --pass: #16a34a;
+      --pass-soft: #052e16;
+      --pass-border: #22c55e;
+      --pass-ink: #dcfce7;
+      --fail: #dc2626;
+      --fail-soft: #450a0a;
+      --fail-border: #ef4444;
+      --fail-ink: #fee2e2;
+      --warn: #d97706;
+      --warn-soft: #451a03;
+      --warn-border: #f59e0b;
+      --warn-ink: #fef3c7;
+      --star: #fbbf24;
+      --code: #0f172a;
+      --code-ink: #f1f5f9;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  [data-theme="dark"] {
+    --bg: #0b1120;
+    --panel: #151f32;
+    --surface: #1e293b;
+    --ink: #f8fafc;
+    --ink-secondary: #e2e8f0;
+    --muted: #94a3b8;
+    --line: #334155;
+    --line-strong: #475569;
+    --accent: #3b82f6;
+    --accent-soft: #172554;
+    --accent-border: #2563eb;
+    --accent-ink: #dbeafe;
+    --pass: #16a34a;
+    --pass-soft: #052e16;
+    --pass-border: #22c55e;
+    --pass-ink: #dcfce7;
+    --fail: #dc2626;
+    --fail-soft: #450a0a;
+    --fail-border: #ef4444;
+    --fail-ink: #fee2e2;
+    --warn: #d97706;
+    --warn-soft: #451a03;
+    --warn-border: #f59e0b;
+    --warn-ink: #fef3c7;
+    --star: #fbbf24;
+    --code: #0f172a;
+    --code-ink: #f1f5f9;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  [data-theme="dark"] a { color: #93c5fd; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    background: var(--code);
+    color: var(--code-ink);
+    border: 1px solid var(--line);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.88em;
+    word-break: break-word;
+  }
+
+  pre {
+    background: var(--code);
+    color: var(--code-ink);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 12px 0;
+  }
+  pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /* 頂部固定導覽與進度條 */
+  .top-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--panel);
+    border-bottom: 2px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 10px 24px;
+  }
+  .top-header-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand-title {
+    font-weight: 800;
+    font-size: 16.5px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-width: 480px;
+    min-width: 240px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--code);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--pass));
+    width: 0%;
+    transition: width 0.25s ease;
+  }
+  .progress-stats {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .stat-badges {
+    display: flex;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .stat-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-secondary);
+  }
+  .stat-badge.pass { background: var(--pass-soft); color: var(--pass-ink); border-color: var(--pass-border); }
+  .stat-badge.fail { background: var(--fail-soft); color: var(--fail-ink); border-color: var(--fail-border); }
+
+  /* 工具列 */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .toolbar input[type="search"],
+  .toolbar select,
+  .toolbar button {
+    padding: 6px 11px;
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .toolbar input[type="search"] {
+    cursor: text;
+    width: 190px;
+    font-weight: 400;
+    background: var(--panel);
+  }
+  .toolbar input[type="search"]:focus,
+  .toolbar select:focus {
+    outline: 2px solid var(--accent);
+    border-color: var(--accent);
+  }
+  .toolbar button:hover,
+  .toolbar select:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .toolbar button.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+  .toolbar button.btn-danger-outline {
+    border-color: var(--fail-border);
+    color: var(--fail-ink);
+    background: var(--fail-soft);
+  }
+  .toolbar button.btn-danger-outline:hover {
+    background: var(--fail);
+    color: #ffffff;
+    border-color: var(--fail);
+  }
+
+  /* 主版面：左側目錄 + 右側內容 */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1440px;
+    margin: 0 auto;
+    gap: 24px;
+    padding: 24px;
+  }
+
+  nav.sidebar {
+    position: sticky;
+    top: 74px;
+    height: calc(100vh - 96px);
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  nav.sidebar .nav-title {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 12px 0 6px;
+  }
+  nav.sidebar .nav-title:first-child { margin-top: 0; }
+  nav.sidebar a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--ink-secondary);
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    text-decoration: none;
+  }
+  nav.sidebar a:hover {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  nav.sidebar a.tc-link {
+    font-size: 12.5px;
+    padding: 5px 8px 5px 12px;
+    border-left: 2px solid var(--line);
+    border-radius: 0 6px 6px 0;
+  }
+  nav.sidebar a.tc-link:hover {
+    border-left-color: var(--accent);
+  }
+
+  main.content {
+    min-width: 0;
+    padding-bottom: 80px;
+  }
+
+  /* 卡片區塊與標題 */
+  section.card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 12px; color: var(--ink); line-height: 1.35; }
+  h2 {
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--line);
+    color: var(--ink);
+  }
+  h3 { font-size: 16px; font-weight: 700; margin: 18px 0 10px; color: var(--ink); }
+  h4 { font-size: 14.5px; font-weight: 700; margin: 14px 0 8px; color: var(--ink-secondary); }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin-bottom: 5px; }
+
+  /* 表格高對比規範 */
+  .tbl-wrap { overflow-x: auto; margin: 12px 0; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    border-bottom: 2px solid var(--line-strong);
+  }
+  tr:nth-child(even) td {
+    background: rgba(148, 163, 184, 0.05);
+  }
+
+  /* Callout 提示框（高對比邊框與內文） */
+  .callout {
+    border: 1px solid var(--accent-border);
+    border-left: 5px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--ink);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .callout.warn {
+    border-color: var(--warn-border);
+    border-left-color: var(--warn);
+    background: var(--warn-soft);
+  }
+  .callout.bad {
+    border-color: var(--fail-border);
+    border-left-color: var(--fail);
+    background: var(--fail-soft);
+  }
+  .callout.good {
+    border-color: var(--pass-border);
+    border-left-color: var(--pass);
+    background: var(--pass-soft);
+  }
+  .callout-title {
+    font-weight: 800;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent-ink);
+  }
+  .callout.warn .callout-title { color: var(--warn-ink); }
+  .callout.bad .callout-title { color: var(--fail-ink); }
+  .callout.good .callout-title { color: var(--pass-ink); }
+  /* Callout 內部表格強制維持面板純色底，避免紅底/黃底干擾表格文字閱讀 */
+  .callout table {
+    background: var(--panel);
+    color: var(--ink);
+    margin-top: 8px;
+  }
+
+  /* 工具列使用說明折疊面板 */
+  details.toolbar-help {
+    background: var(--panel);
+    border: 1px solid var(--accent-border);
+    border-left: 5px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    font-size: 13.5px;
+    box-shadow: var(--shadow);
+  }
+  details.toolbar-help > summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--accent-ink);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+  }
+  details.toolbar-help > summary::-webkit-details-marker { display: none; }
+  details.toolbar-help > summary::before {
+    content: "▸";
+    font-size: 14px;
+    transition: transform 0.15s ease;
+  }
+  details.toolbar-help[open] > summary::before { transform: rotate(90deg); }
+  .toolbar-help-body {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    color: var(--ink-secondary);
+  }
+
+  /* 案例快速導覽 Chips */
+  .overview-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .chip {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .chip:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+  .chip.core {
+    border: 2px solid var(--star);
+  }
+  .chip.Pass { background: var(--pass); color: #ffffff; border-color: var(--pass); }
+  .chip.Fail { background: var(--fail); color: #ffffff; border-color: var(--fail); }
+  .chip.Blocked { background: var(--warn); color: #ffffff; border-color: var(--warn); }
+  .chip.NA { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+
+  /* 判定狀態說明卡片 */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .legend-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+  .legend-item strong { display: block; font-size: 14px; margin-bottom: 3px; }
+
+  /* Mermaid 圖表容器：強制高對比白底畫布，徹底防暗色模式黑線消失與縮放失真 */
+  .mermaid-container,
+  .mermaid {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #94a3b8 !important;
+    border-radius: 10px !important;
+    padding: 0 !important;
+    margin: 16px 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+  }
+  [data-theme="dark"] .mermaid-container,
+  [data-theme="dark"] .mermaid {
+    border-color: #64748b !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+  .mermaid-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-size: 12.5px;
+    text-align: left;
+  }
+  .mermaid-toolbar-left {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mermaid-toolbar-title {
+    font-weight: 800;
+    color: #0f172a !important;
+  }
+  .mermaid-toolbar-title small {
+    font-weight: 600;
+    color: #475569 !important;
+    margin-left: 4px;
+  }
+  .mermaid-scale-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    border: 1px solid #93c5fd !important;
+    font-weight: 800;
+    font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .mermaid-pan-hint {
+    font-size: 12px;
+    color: #475569 !important;
+    font-weight: 600;
+  }
+  .mermaid-toolbar-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .m-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #94a3b8 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.3;
+  }
+  .m-tool-btn:hover {
+    background: #eff6ff !important;
+    border-color: #2563eb !important;
+    color: #1d4ed8 !important;
+  }
+  .m-tool-btn-primary {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    border-color: #1e40af !important;
+  }
+  .m-tool-btn-primary:hover {
+    background: #1e40af !important;
+    color: #ffffff !important;
+  }
+  .mermaid-diagram,
+  .mermaid-viewport {
+    display: block;
+    text-align: center;
+    width: 100%;
+    overflow: auto;
+    padding: 20px;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    cursor: grab;
+    max-height: 78vh;
+  }
+  .mermaid-diagram.is-grabbing,
+  .mermaid-viewport.is-grabbing {
+    cursor: grabbing !important;
+    user-select: none !important;
+  }
+  .mermaid-diagram svg,
+  .mermaid svg {
+    display: block;
+    margin: 0 auto;
+    height: auto !important;
+    line-height: 1.35 !important;
+    font-size: 14px !important;
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif !important;
+  }
+  .mermaid-diagram svg foreignObject,
+  .mermaid svg foreignObject,
+  .lightbox-stage svg foreignObject {
+    overflow: visible !important;
+  }
+  /* 強制 SVG 內所有文字與標籤維持深色高對比與一致行高 */
+  .mermaid-diagram svg text,
+  .mermaid svg text,
+  .lightbox-stage svg text,
+  .mermaid-diagram .nodeLabel,
+  .mermaid-diagram .edgeLabel,
+  .mermaid-diagram .cluster-label,
+  .mermaid-diagram foreignObject div,
+  .mermaid-diagram foreignObject span,
+  .mermaid .nodeLabel,
+  .mermaid .edgeLabel,
+  .mermaid .cluster-label,
+  .mermaid foreignObject div,
+  .mermaid foreignObject span,
+  .lightbox-stage .nodeLabel,
+  .lightbox-stage .edgeLabel,
+  .lightbox-stage .cluster-label,
+  .lightbox-stage foreignObject div,
+  .lightbox-stage foreignObject span {
+    color: #0f172a !important;
+    fill: #0f172a !important;
+    line-height: 1.35 !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+  }
+  .mermaid-source-details {
+    margin: 0;
+    border-top: 1px dashed #cbd5e1;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    text-align: left;
+  }
+  .mermaid-source-details summary {
+    cursor: pointer;
+    user-select: none;
+    color: #334155 !important;
+    font-weight: 600;
+  }
+  .mermaid-source-details pre {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    margin-top: 6px;
+  }
+  /* 全螢幕圖表互動燈箱 (Mermaid Fullscreen Lightbox Modal) */
+  .lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.82);
+    z-index: 1050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .lightbox-backdrop.open {
+    display: flex;
+  }
+  .lightbox-box {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #64748b;
+    border-radius: 12px;
+    width: 96vw;
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+  }
+  .lightbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 18px;
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid #cbd5e1;
+    color: #0f172a !important;
+  }
+  .lightbox-viewport {
+    flex: 1;
+    overflow: auto;
+    padding: 28px;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    text-align: center;
+    cursor: grab;
+  }
+  .lightbox-viewport.is-grabbing {
+    cursor: grabbing !important;
+    user-select: none !important;
+  }
+  .lightbox-stage {
+    display: inline-block;
+    min-width: 100%;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    text-align: center;
+  }
+  .lightbox-stage svg {
+    display: block;
+    margin: 0 auto;
+    height: auto !important;
+    background: #ffffff !important;
+    line-height: 1.35 !important;
+    font-size: 14px !important;
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif !important;
+  }
+
+  /* 階段橫幅 (Phase Banner) */
+  .phase-banner {
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 17px;
+    margin: 26px 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+  }
+  .phase-banner small {
+    font-weight: 500;
+    opacity: 0.9;
+    font-size: 13px;
+  }
+
+  /* 測試案例卡片 (TC Card) */
+  details.tc {
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-left: 6px solid var(--accent);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  details.tc.core { border-left-color: var(--star); }
+  details.tc[data-status="Pass"] { border-left-color: var(--pass); }
+  details.tc[data-status="Fail"] { border-left-color: var(--fail); }
+  details.tc[data-status="Blocked"] { border-left-color: var(--warn); }
+
+  details.tc > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    user-select: none;
+    background: var(--panel);
+    border-radius: 12px;
+  }
+  details.tc[open] > summary {
+    border-bottom: 1px solid var(--line);
+    border-radius: 12px 12px 0 0;
+    background: var(--surface);
+  }
+  details.tc > summary::-webkit-details-marker { display: none; }
+  details.tc > summary::before {
+    content: "▸";
+    color: var(--muted);
+    font-weight: 700;
+    transition: transform 0.15s ease;
+  }
+  details.tc[open] > summary::before { transform: rotate(90deg); }
+
+  .tc-id {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-weight: 800;
+    background: var(--code);
+    color: var(--code-ink);
+    border: 1px solid var(--line);
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 13.5px;
+  }
+  .tc-title {
+    font-weight: 700;
+    font-size: 15.5px;
+    flex: 1 1 240px;
+    color: var(--ink);
+  }
+  .pill-core {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border: 1px solid var(--warn-border);
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .pill-status {
+    font-size: 12.5px;
+    font-weight: 800;
+    padding: 3px 11px;
+    border-radius: 999px;
+    white-space: nowrap;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .pill-status.NOT_RUN {
+    background: var(--surface);
+    color: var(--muted);
+    border-color: var(--line-strong);
+  }
+  .pill-status.Pass {
+    background: var(--pass-soft);
+    color: var(--pass-ink);
+    border-color: var(--pass-border);
+  }
+  .pill-status.Fail {
+    background: var(--fail-soft);
+    color: var(--fail-ink);
+    border-color: var(--fail-border);
+  }
+  .pill-status.Blocked {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border-color: var(--warn-border);
+  }
+  .pill-status.NA {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-color: var(--accent-border);
+  }
+
+  .tc-body {
+    padding: 18px 22px 20px;
+  }
+  .tc-pre {
+    margin: 10px 0 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .tc-pre h4 { margin: 0 0 8px; color: var(--ink); }
+  .tc-goal {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    border-left: 5px solid var(--accent);
+    color: var(--ink);
+    padding: 11px 15px;
+    border-radius: 8px;
+    margin: 12px 0;
+    font-size: 14.5px;
+  }
+  .tc-goal strong { color: var(--accent-ink); }
+
+  ol.tc-steps {
+    padding-left: 0;
+    list-style: none;
+    margin: 12px 0;
+  }
+  ol.tc-steps > li {
+    position: relative;
+    padding: 10px 14px 10px 44px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  ol.tc-steps > li > .step-num {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .expect {
+    background: var(--pass-soft);
+    color: var(--pass-ink);
+    border: 1px solid var(--pass-border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .verdict-box {
+    display: flex;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-size: 14px;
+    align-items: flex-start;
+  }
+  .verdict-box.pass {
+    background: var(--pass-soft);
+    border: 1px solid var(--pass-border);
+    border-left: 5px solid var(--pass);
+    color: var(--ink);
+  }
+  .verdict-box.fail {
+    background: var(--fail-soft);
+    border: 1px solid var(--fail-border);
+    border-left: 5px solid var(--fail);
+    color: var(--ink);
+  }
+  .verdict-label {
+    font-weight: 800;
+    min-width: 66px;
+    padding-top: 1px;
+    white-space: nowrap;
+  }
+  .verdict-box.pass .verdict-label { color: var(--pass-ink); }
+  .verdict-box.fail .verdict-label { color: var(--fail-ink); }
+  .verdict-content { flex: 1; min-width: 0; }
+  .verdict-content ul, .verdict-content ol { margin: 4px 0 0; padding-left: 20px; }
+
+  /* 互動式測試結果記錄區 (Radio 元件與備註) */
+  .result-area {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+  }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .result-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .btn-clear-verdict {
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    color: var(--ink-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-clear-verdict:hover {
+    background: var(--fail-soft);
+    color: var(--fail-ink);
+    border-color: var(--fail-border);
+  }
+
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .radio-group label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 16px;
+    border: 2px solid var(--line-strong);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 700;
+    user-select: none;
+    background: var(--panel);
+    color: var(--ink);
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  /* 明確繪製圓形單選框指示點，讓操作者一眼辨識為可點擊之 Radio 元件 */
+  .radio-group label::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--muted);
+    background: transparent;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .radio-group label:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .radio-group input[type="radio"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .radio-group label:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .radio-group label:has(input:checked)::before {
+    border-color: #ffffff;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.35);
+  }
+  .radio-group label:has(input[value="Pass"]:checked) {
+    background: var(--pass);
+    color: #ffffff;
+    border-color: var(--pass);
+  }
+  .radio-group label:has(input[value="Fail"]:checked) {
+    background: var(--fail);
+    color: #ffffff;
+    border-color: var(--fail);
+  }
+  .radio-group label:has(input[value="Blocked"]:checked) {
+    background: var(--warn);
+    color: #ffffff;
+    border-color: var(--warn);
+  }
+  .radio-group label:has(input[value="N/A"]:checked) {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+
+  .result-input {
+    width: 100%;
+    min-height: 64px;
+    padding: 9px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13.5px;
+    resize: vertical;
+  }
+  .result-input:focus {
+    outline: 2px solid var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* §4 簽核對照表狀態色 */
+  .sv { font-weight: 800; white-space: nowrap; }
+  .sv.Pass { color: var(--pass-ink); background: var(--pass-soft); }
+  .sv.Fail { color: var(--fail-ink); background: var(--fail-soft); }
+  .sv.Blocked { color: var(--warn-ink); background: var(--warn-soft); }
+  .sv.NA { color: var(--accent-ink); background: var(--accent-soft); }
+  .signoff-input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 13.5px;
+  }
+
+  /* 彈出式視窗 (Export / Reset Modal) */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    backdrop-filter: blur(2px);
+  }
+  .modal-backdrop.hidden { display: none !important; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-box.modal-sm { max-width: 480px; }
+  .modal-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+  }
+  .modal-header h3 { margin: 0; font-size: 16.5px; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .modal-close:hover { background: var(--code); color: var(--ink); }
+  .modal-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--surface);
+  }
+  .export-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 7px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--ink-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+  .export-desc { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  #export-textarea {
+    width: 100%;
+    height: 280px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12.5px;
+    padding: 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--code);
+    color: var(--code-ink);
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-secondary {
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: var(--code); }
+  .btn-danger {
+    background: var(--fail);
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-danger:hover { opacity: 0.92; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--pass);
+    color: #ffffff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 1000;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.hidden { opacity: 0; transform: translate(-50%, 15px); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; padding: 14px; }
+    nav.sidebar { position: static; height: auto; max-height: 280px; }
+    .top-header { padding: 10px 14px; }
+  }
+  @media print {
+    .top-header, nav.sidebar, .toolbar-help, .modal-backdrop, .toast { display: none !important; }
+    .layout { display: block; padding: 0; }
+    details.tc { break-inside: avoid; }
+    body { background: #ffffff; color: #000000; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 頂部固定導覽列 -->
+<header class="top-header">
+  <div class="top-header-inner">
+    <div class="brand-title">📋 QA 測試手冊：{{FEATURE_NAME}}</div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-stats" id="progress-text">0 / 0 (0%)</div>
+      <div class="stat-badges">
+        <span class="stat-badge pass" id="stat-pass">Pass 0</span>
+        <span class="stat-badge fail" id="stat-fail">Fail 0</span>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="search-input" placeholder="🔍 搜尋編號或關鍵字..." aria-label="搜尋測試案例">
+      <select id="filter-select" aria-label="篩選判定狀態">
+        <option value="ALL">全部狀態</option>
+        <option value="NOT_RUN">未執行 (NOT_RUN)</option>
+        <option value="Pass">✅ Pass</option>
+        <option value="Fail">❌ Fail</option>
+        <option value="Blocked">⚠️ Blocked</option>
+        <option value="N/A">➖ N/A</option>
+      </select>
+      <button type="button" id="core-filter-btn" title="只顯示標記 ★ 核心的必測案例">★ 核心必測</button>
+      <button type="button" id="expand-all-btn" title="展開或收合全部測試案例">展開全部</button>
+      <button type="button" id="export-btn" title="匯出 TSV 或 Markdown 簽核結果">📤 匯出結果</button>
+      <button type="button" id="reset-all-btn" class="btn-danger-outline" title="清空所有判定與備註紀錄">🗑️ 清空全部紀錄</button>
+      <button type="button" id="theme-toggle-btn" title="切換深色 / 淺色高對比模式">🌓 深淺色</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- 左側快速導覽列 -->
+  <nav class="sidebar" aria-label="手冊章節導覽">
+    <div class="nav-title">章節導覽</div>
+    <a href="#sec-intro">📄 文件資訊與導讀</a>
+    <a href="#sec-overview">🧭 案例快速導覽</a>
+    {{NAV_SECTIONS_HTML}}
+    <div class="nav-title">測試案例 ({{TC_COUNT}})</div>
+    <div id="sidebar-tc-links">
+      {{SIDEBAR_TC_LINKS}}
+    </div>
+  </nav>
+
+  <!-- 右側主要內容 -->
+  <main class="content">
+    <details class="toolbar-help">
+      <summary>💡 工具列操作、單選重置與結果匯出說明（點擊展開）</summary>
+      <div class="toolbar-help-body">
+        <ul>
+          <li><strong>判定點選與取消（Toggle）</strong>：點擊案例底部的 <code>Pass</code>、<code>Fail</code>、<code>Blocked</code>、<code>N/A</code> 圓點按鈕即可記錄判定；<strong>再次點擊已選中的按鈕</strong>或按右側 <code>[↺ 重置未填]</code> 即可取消選取並恢復為「未填 (NOT_RUN)」。</li>
+          <li><strong>自動保存</strong>：所有判定結果、備註與簽核欄位皆即時保存在本瀏覽器的 <code>localStorage</code>，重新整理不會遺失。</li>
+          <li><strong>匯出結果</strong>：點擊上方 <code>📤 匯出結果</code> 可一鍵複製或下載 <strong>TSV（貼入 Excel / Google 試算表）</strong> 或 <strong>Markdown 簽核表（貼入 PR / 簽核文件）</strong>。</li>
+          <li><strong>清空全部紀錄</strong>：點擊上方 <code>🗑️ 清空全部紀錄</code>（含二次確認視窗）可一鍵將整份手冊所有案例與備註歸零。</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- 文件標題與治理資訊 -->
+    <section class="card" id="sec-intro">
+      <h1>QA 手動功能測試 SOP — {{FEATURE_NAME}}（{{ENV}}）</h1>
+      {{META_HTML}}
+      <div class="legend-grid">
+        <div class="legend-item"><strong style="color:var(--pass-ink)">✅ Pass</strong>實際畫面與行為符合 Pass 判定條件</div>
+        <div class="legend-item"><strong style="color:var(--fail-ink)">❌ Fail</strong>前置齊備但結果不符預期，請依 §5 開立缺陷單</div>
+        <div class="legend-item"><strong style="color:var(--warn-ink)">⚠️ Blocked</strong>環境、權限、設定或前置資料尚未備妥</div>
+        <div class="legend-item"><strong style="color:var(--accent-ink)">➖ N/A</strong>該門市或模式不適用此測試案例</div>
+        <div class="legend-item"><strong style="color:var(--muted)">⏳ NOT_RUN（未填）</strong>尚未實際操作驗證（初始預設狀態）</div>
+      </div>
+    </section>
+
+    <!-- 案例快速導覽 Chips -->
+    <section class="card" id="sec-overview">
+      <h2>🧭 案例快速導覽 <small style="font-weight:500;color:var(--muted);font-size:13px">點擊編號跳至該案例；金框代表 ★ 核心必測；顏色隨判定即時更新</small></h2>
+      <div class="overview-chips">
+        {{OVERVIEW_CHIPS_HTML}}
+      </div>
+    </section>
+
+    <!-- 前置與導讀章節 (§0 ~ §2 等) -->
+    {{INTRO_SECTIONS_HTML}}
+
+    <!-- §3 測試案例清單 -->
+    <section class="card" id="sec-3">
+      <h2>3. 測試案例清單</h2>
+      <p style="color:var(--muted);margin-bottom:14px">每完成一項案例，請於卡片底部點選判定狀態並填寫實際結果備註。標示 <span class="pill-core">★ 核心</span> 為出場必過案例。</p>
+      {{TC_INTRO_HTML}}
+      <div id="tc-container">
+        {{TC_CARDS_HTML}}
+      </div>
+    </section>
+
+    <!-- §4 簽核與出場判定總表 -->
+    <section class="card" id="sec-4">
+      <h2>4. 驗收簽核與判定總表</h2>
+      <p style="color:var(--muted)">下方總表隨各測試案例之點選結果與備註<strong>即時同步更新</strong>，亦可透過頂部「📤 匯出結果」匯出完整 Markdown 或 Excel 表格。</p>
+      {{SIGNOFF_EXTRA_HTML}}
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px">案例編號</th>
+              <th>測試案例名稱</th>
+              <th style="width:110px">判定結果</th>
+              <th>實際結果與備註（首行摘要）</th>
+            </tr>
+          </thead>
+          <tbody id="signoff-summary-tbody">
+            {{SIGNOFF_ROWS_HTML}}
+          </tbody>
+        </table>
+      </div>
+      <h3>簽核欄</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:140px">角色</th>
+              <th>姓名</th>
+              <th>日期</th>
+              <th>整輪結論</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>QA 執行</strong></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="qa_name" placeholder="請輸入 QA 執行人員姓名"></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="qa_date" placeholder="YYYY-MM-DD"></td>
+              <td>
+                <select class="signoff-input" data-signoff-field="qa_verdict">
+                  <option value="">— 請選擇結論 —</option>
+                  <option value="PASS">✅ PASS（准予放行）</option>
+                  <option value="FAIL">❌ FAIL（退回修正）</option>
+                  <option value="BLOCKED">⚠️ BLOCKED（環境/資料受阻）</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>開發覆核</strong></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="dev_name" placeholder="請輸入開發覆核人員姓名"></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="dev_date" placeholder="YYYY-MM-DD"></td>
+              <td>
+                <select class="signoff-input" data-signoff-field="dev_verdict">
+                  <option value="">— 請選擇結論 —</option>
+                  <option value="PASS">✅ PASS（准予放行）</option>
+                  <option value="FAIL">❌ FAIL（退回修正）</option>
+                  <option value="BLOCKED">⚠️ BLOCKED（環境/資料受阻）</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 後續章節 (§5 缺陷回報、§6 已知狀況、§7 開發參考等) -->
+    {{TAIL_SECTIONS_HTML}}
+  </main>
+</div>
+
+<!-- 匯出結果視窗 (Export Modal) -->
+<div id="export-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="export-modal-title">📤 匯出測試結果</h3>
+      <button type="button" class="modal-close" id="export-modal-close" aria-label="關閉">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="export-tabs">
+        <button type="button" class="tab-btn active" id="tab-tsv">TSV 格式（適用 Excel / Google 試算表）</button>
+        <button type="button" class="tab-btn" id="tab-md">Markdown 簽核表（適用 PR / 簽核文件）</button>
+      </div>
+      <p class="export-desc" id="export-desc">以 Tab 分隔格式（TSV），點擊「複製到剪貼簿」後可直接在 Excel 或 Google 試算表中按 Ctrl+V 貼上成完整表格。</p>
+      <textarea id="export-textarea" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" id="copy-export-btn">📋 複製到剪貼簿</button>
+      <button type="button" class="btn-secondary" id="download-export-btn">💾 下載檔案</button>
+      <button type="button" class="btn-secondary" id="close-export-btn">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 清空全部確認視窗 (Reset Modal) -->
+<div id="reset-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h3 id="reset-modal-title" style="color:var(--fail-ink)">⚠️ 確認清空全部測試紀錄？</h3>
+      <button type="button" class="modal-close" id="reset-modal-close" aria-label="關閉">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>此動作將會清除本瀏覽器中保存的<strong>所有測試案例判定、實際結果備註與簽核欄紀錄</strong>，並將整份手冊恢復為初始未填（0%）狀態。</p>
+      <p style="color:var(--muted);font-size:13px">提示：若僅需重置單一案例，請點擊該案例卡片內的 <code>[↺ 重置未填]</code> 按鈕，或再次點擊已選中的判定按鈕即可。</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-danger" id="confirm-reset-btn">確定清空全部</button>
+      <button type="button" class="btn-secondary" id="cancel-reset-btn">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 浮動提示 Toast -->
+<div id="toast" class="toast hidden" role="status" aria-live="polite">已複製到剪貼簿！</div>
+
+<!-- 全螢幕圖表互動檢視燈箱 Modal -->
+<div class="lightbox-backdrop" id="mermaid-lightbox-modal" role="dialog" aria-modal="true">
+  <div class="lightbox-box">
+    <div class="lightbox-header">
+      <div class="mermaid-toolbar-left">
+        <span class="mermaid-toolbar-title" id="lightbox-title">🔍 架構與流程圖全螢幕檢視</span>
+        <span class="mermaid-scale-badge" id="lightbox-scale-badge">100%</span>
+        <span class="mermaid-pan-hint">💡 滾輪無段縮放 (Wheel Zoom) · 按住左鍵拖曳平移 · 按 ESC 關閉</span>
+      </div>
+      <div class="mermaid-toolbar-actions">
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-out">➖ 縮小</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-in">➕ 放大</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-width">↔ 適應寬度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-height">↕ 適應高度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-reset">1:1 原始尺寸</button>
+        <button type="button" class="m-tool-btn m-tool-btn-primary" id="lightbox-close">✕ 關閉 (ESC)</button>
+      </div>
+    </div>
+    <div class="lightbox-viewport" id="mermaid-lightbox-viewport">
+      <div class="lightbox-stage" id="mermaid-lightbox-stage"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  var slugMeta = document.querySelector('meta[name="doc-slug"]');
+  var DOC_SLUG = (slugMeta && slugMeta.content) ? slugMeta.content : (window.location.pathname.split('/').pop() || 'qa-manual');
+  var STORAGE_KEY = 'zdpos_qa_v2_' + DOC_SLUG;
+  var THEME_KEY = 'zdpos_qa_theme';
+
+  // 記憶體狀態 SSOT（即使在受限 file:// 環境下無 localStorage 亦能 100% 正常運作與匯出）
+  var state = { cases: {}, signoff: {} };
+
+  function loadStorage() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          state.cases = parsed.cases || {};
+          state.signoff = parsed.signoff || {};
+        }
+      }
+    } catch (e) {
+      state = { cases: {}, signoff: {} };
+    }
+  }
+
+  function saveStorage() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }
+
+  var tcCards = Array.prototype.slice.call(document.querySelectorAll('details.tc'));
+  var currentExportFormat = 'tsv';
+  var coreOnlyFilter = false;
+  var allExpanded = false;
+  var toastTimer = null;
+
+  function statusClass(verdict) {
+    if (!verdict || verdict === 'NOT_RUN') return 'NOT_RUN';
+    if (verdict === 'N/A') return 'NA';
+    return verdict;
+  }
+
+  function showToast(msg, type) {
+    var toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = msg;
+    if (type === 'danger') {
+      toast.style.background = 'var(--fail)';
+    } else if (type === 'info') {
+      toast.style.background = 'var(--accent)';
+    } else {
+      toast.style.background = 'var(--pass)';
+    }
+    toast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() {
+      toast.classList.add('hidden');
+    }, 2200);
+  }
+
+  /**
+   * 同步更新頂部進度條、卡片狀態 Pill、快速導覽 Chip、以及 §4 簽核總表
+   */
+  function syncAllUI() {
+    var total = tcCards.length;
+    var done = 0;
+    var passCount = 0;
+    var failCount = 0;
+
+    tcCards.forEach(function(card) {
+      var id = card.getAttribute('data-tc-id');
+      var rec = state.cases[id] || {};
+      var v = rec.verdict || '';
+      var note = rec.note || '';
+      var cls = statusClass(v);
+
+      card.setAttribute('data-status', v || 'NOT_RUN');
+
+      // 1. 更新卡片標題 Pill
+      var pill = card.querySelector('.pill-status');
+      if (pill) {
+        pill.className = 'pill-status ' + cls;
+        pill.textContent = v || 'NOT_RUN';
+      }
+
+      // 2. 更新快速導覽 Chip
+      var chip = document.querySelector('[data-chip="' + id + '"]');
+      if (chip) {
+        var isCore = card.classList.contains('core') || card.getAttribute('data-core') === 'true';
+        chip.className = 'chip' + (isCore ? ' core' : '') + (v ? ' ' + cls : '');
+      }
+
+      // 3. 更新 §4 簽核總表對應列
+      var row = document.querySelector('tr[data-sign="' + id + '"]');
+      if (row) {
+        var sv = row.querySelector('.sv');
+        var sn = row.querySelector('.sn');
+        if (sv) {
+          sv.className = 'sv' + (v ? ' ' + cls : '');
+          sv.textContent = v || '未填';
+        }
+        if (sn) {
+          var firstLine = note.trim() ? note.trim().split('\n')[0] : '－';
+          sn.textContent = firstLine;
+        }
+      }
+
+      if (v && v !== 'NOT_RUN') {
+        done++;
+        if (v === 'Pass') passCount++;
+        if (v === 'Fail') failCount++;
+      }
+    });
+
+    var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    var fillEl = document.getElementById('progress-fill');
+    var textEl = document.getElementById('progress-text');
+    var passEl = document.getElementById('stat-pass');
+    var failEl = document.getElementById('stat-fail');
+
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (textEl) textEl.textContent = done + ' / ' + total + ' (' + pct + '%)';
+    if (passEl) passEl.textContent = 'Pass ' + passCount;
+    if (failEl) failEl.textContent = 'Fail ' + failCount;
+  }
+
+  /**
+   * 篩選測試案例卡片
+   */
+  function filterCases() {
+    var searchEl = document.getElementById('search-input');
+    var filterEl = document.getElementById('filter-select');
+    var q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var statusFilter = filterEl ? filterEl.value : 'ALL';
+
+    tcCards.forEach(function(card) {
+      var id = card.getAttribute('data-tc-id');
+      var rec = state.cases[id] || {};
+      var currentStatus = rec.verdict || 'NOT_RUN';
+      var isCore = card.classList.contains('core') || card.getAttribute('data-core') === 'true';
+
+      var matchSearch = !q || card.textContent.toLowerCase().indexOf(q) !== -1;
+      var matchStatus = (statusFilter === 'ALL') || (currentStatus === statusFilter);
+      var matchCore = !coreOnlyFilter || isCore;
+
+      var visible = matchSearch && matchStatus && matchCore;
+      card.classList.toggle('hidden', !visible);
+      if (q && visible) {
+        card.open = true;
+      }
+    });
+  }
+
+  /**
+   * 設定單一案例判定狀態
+   */
+  function handleVerdictChange(tcId, verdict) {
+    var card = document.getElementById(tcId);
+    if (!state.cases[tcId]) state.cases[tcId] = {};
+    state.cases[tcId].verdict = verdict;
+
+    if (card) {
+      card.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        r.checked = (r.value === verdict);
+      });
+    }
+    saveStorage();
+    syncAllUI();
+    filterCases();
+  }
+
+  /**
+   * 重置單一案例為未填 (NOT_RUN)
+   */
+  function handleVerdictClear(tcId, silent) {
+    var card = document.getElementById(tcId);
+    if (card) {
+      card.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        r.checked = false;
+      });
+    }
+    if (state.cases[tcId]) {
+      delete state.cases[tcId].verdict;
+    }
+    saveStorage();
+    syncAllUI();
+    filterCases();
+    if (!silent) {
+      showToast('已重置 ' + tcId + ' 為未填狀態', 'info');
+    }
+  }
+
+  /**
+   * 儲存單一案例備註
+   */
+  function handleNoteChange(tcId, note) {
+    if (!state.cases[tcId]) state.cases[tcId] = {};
+    state.cases[tcId].note = note;
+    saveStorage();
+    syncAllUI();
+  }
+
+  /**
+   * 初始化所有案例卡片之 Radio 與 Textarea 事件（決定性單一來源控制，無雙重觸發或焦點跳動問題）
+   */
+  function initCaseEvents() {
+    tcCards.forEach(function(card) {
+      var id = card.getAttribute('data-tc-id');
+      var saved = state.cases[id] || {};
+
+      // 移除任何可能殘留的 NOT_RUN radio，確保初始零狀態 100% 合規
+      card.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        if (r.value === 'NOT_RUN') {
+          var parentLabel = r.closest('label');
+          if (parentLabel) parentLabel.remove();
+          else r.remove();
+          return;
+        }
+        r.removeAttribute('onchange');
+        r.checked = (saved.verdict === r.value);
+
+        r.addEventListener('click', function() {
+          var prevVerdict = (state.cases[id] && state.cases[id].verdict) || '';
+          if (prevVerdict === r.value) {
+            // 再次點擊已選中項目 -> 取消選取 (Toggle Uncheck)
+            handleVerdictClear(id, false);
+          } else {
+            handleVerdictChange(id, r.value);
+          }
+        });
+      });
+
+      var clearBtn = card.querySelector('.btn-clear-verdict');
+      if (clearBtn) {
+        clearBtn.removeAttribute('onclick');
+        clearBtn.addEventListener('click', function() {
+          handleVerdictClear(id, false);
+        });
+      }
+
+      var textarea = card.querySelector('.result-input');
+      if (textarea) {
+        textarea.removeAttribute(' oninput');
+        textarea.removeAttribute('oninput');
+        textarea.value = saved.note || '';
+        textarea.addEventListener('input', function() {
+          handleNoteChange(id, textarea.value);
+        });
+      }
+    });
+
+    // 綁定 §4 簽核人員欄位
+    document.querySelectorAll('.signoff-input').forEach(function(inp) {
+      var field = inp.getAttribute('data-signoff-field');
+      if (!field) return;
+      if (state.signoff[field]) {
+        inp.value = state.signoff[field];
+      }
+      var evtName = inp.tagName === 'SELECT' ? 'change' : 'input';
+      inp.addEventListener(evtName, function() {
+        state.signoff[field] = inp.value;
+        saveStorage();
+      });
+    });
+  }
+
+  /**
+   * 建構匯出內容（直接由 DOM 與記憶體 state 即時組裝，確保 100% 準確）
+   */
+  function buildExportText(format) {
+    if (format === 'tsv') {
+      var rows = [['案例編號', '測試案例名稱', '核心必測', '判定結果', '實際結果與備註'].join('\t')];
+      tcCards.forEach(function(card) {
+        var id = card.getAttribute('data-tc-id');
+        var titleEl = card.querySelector('.tc-title');
+        var title = titleEl ? titleEl.textContent.trim() : id;
+        var isCore = (card.classList.contains('core') || card.getAttribute('data-core') === 'true') ? '★核心' : '一般';
+        var rec = state.cases[id] || {};
+        var checkedRadio = card.querySelector('input[type="radio"]:checked');
+        var verdict = rec.verdict || (checkedRadio ? checkedRadio.value : 'NOT_RUN');
+        var textarea = card.querySelector('.result-input');
+        var note = (rec.note !== undefined ? rec.note : (textarea ? textarea.value : '')).replace(/[\r\n\t]+/g, ' ').trim();
+        rows.push([id, title, isCore, verdict, note].join('\t'));
+      });
+      return rows.join('\n');
+    } else {
+      var total = tcCards.length;
+      var pass = 0, fail = 0, blocked = 0, na = 0, notRun = 0;
+      var tableLines = [
+        '| 案例編號 | 測試案例名稱 | 核心 | 判定結果 | 實際結果與備註 |',
+        '| :--- | :--- | :---: | :---: | :--- |'
+      ];
+      tcCards.forEach(function(card) {
+        var id = card.getAttribute('data-tc-id');
+        var titleEl = card.querySelector('.tc-title');
+        var title = titleEl ? titleEl.textContent.trim().replace(/\|/g, '\\|') : id;
+        var isCore = (card.classList.contains('core') || card.getAttribute('data-core') === 'true') ? '★' : '-';
+        var rec = state.cases[id] || {};
+        var checkedRadio = card.querySelector('input[type="radio"]:checked');
+        var verdict = rec.verdict || (checkedRadio ? checkedRadio.value : 'NOT_RUN');
+        var textarea = card.querySelector('.result-input');
+        var note = (rec.note !== undefined ? rec.note : (textarea ? textarea.value : '')).replace(/[\r\n]+/g, '<br>').replace(/\|/g, '\\|').trim() || '－';
+
+        if (verdict === 'Pass') pass++;
+        else if (verdict === 'Fail') fail++;
+        else if (verdict === 'Blocked') blocked++;
+        else if (verdict === 'N/A') na++;
+        else notRun++;
+
+        tableLines.push('| ' + id + ' | ' + title + ' | ' + isCore + ' | **' + verdict + '** | ' + note + ' |');
+      });
+
+      var headerLines = [
+        '## QA 測試執行結果摘要 — ' + document.title,
+        '',
+        '- **總案例數**：' + total + ' 題（Pass: ' + pass + ' / Fail: ' + fail + ' / Blocked: ' + blocked + ' / N/A: ' + na + ' / 未執行: ' + notRun + '）',
+        '- **匯出時間**：' + new Date().toISOString().slice(0, 19).replace('T', ' '),
+        ''
+      ];
+      if (state.signoff && (state.signoff.qa_name || state.signoff.qa_verdict)) {
+        headerLines.push('- **QA 簽核**：' + (state.signoff.qa_name || '未填') + '（' + (state.signoff.qa_date || '') + '）— 結論：**' + (state.signoff.qa_verdict || '未定') + '**');
+        headerLines.push('');
+      }
+      return headerLines.concat(tableLines).join('\n');
+    }
+  }
+
+  function renderExportContent() {
+    var area = document.getElementById('export-textarea');
+    var desc = document.getElementById('export-desc');
+    if (!area) return;
+    area.value = buildExportText(currentExportFormat);
+    if (desc) {
+      desc.textContent = currentExportFormat === 'tsv'
+        ? '以 Tab 分隔格式（TSV），點擊「複製到剪貼簿」後可直接在 Excel 或 Google 試算表中按 Ctrl+V 貼上成完整表格。'
+        : '以標準 Markdown 簽核表格式匯出，可直接貼入 PR 留言或驗收簽核文件中。';
+    }
+  }
+
+  function openExportModal() {
+    renderExportContent();
+    var m = document.getElementById('export-modal');
+    if (m) m.classList.remove('hidden');
+  }
+
+  function closeExportModal() {
+    var m = document.getElementById('export-modal');
+    if (m) m.classList.add('hidden');
+  }
+
+  function switchExportTab(format) {
+    currentExportFormat = format;
+    var tsvBtn = document.getElementById('tab-tsv');
+    var mdBtn = document.getElementById('tab-md');
+    if (tsvBtn) tsvBtn.classList.toggle('active', format === 'tsv');
+    if (mdBtn) mdBtn.classList.toggle('active', format === 'md');
+    renderExportContent();
+  }
+
+  function copyExportContent() {
+    var area = document.getElementById('export-textarea');
+    if (!area) return;
+    var val = area.value;
+    var done = function() { showToast('已複製到剪貼簿！', 'pass'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(done, function() {
+        area.select();
+        document.execCommand('copy');
+        done();
+      });
+    } else {
+      area.select();
+      document.execCommand('copy');
+      done();
+    }
+  }
+
+  function downloadExportFile() {
+    var area = document.getElementById('export-textarea');
+    if (!area) return;
+    var ext = currentExportFormat === 'tsv' ? 'tsv' : 'md';
+    var mime = currentExportFormat === 'tsv' ? 'text/tab-separated-values;charset=utf-8' : 'text/markdown;charset=utf-8';
+    var blob = new Blob([area.value], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = DOC_SLUG + '-qa-results.' + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('已觸發檔案下載！', 'pass');
+  }
+
+  function openResetModal() {
+    var m = document.getElementById('reset-modal');
+    if (m) m.classList.remove('hidden');
+  }
+
+  function closeResetModal() {
+    var m = document.getElementById('reset-modal');
+    if (m) m.classList.add('hidden');
+  }
+
+  function confirmResetAll() {
+    state = { cases: {}, signoff: {} };
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+
+    tcCards.forEach(function(card) {
+      card.querySelectorAll('input[type="radio"]').forEach(function(r) {
+        r.checked = false;
+      });
+      var area = card.querySelector('.result-input');
+      if (area) area.value = '';
+    });
+
+    document.querySelectorAll('.signoff-input').forEach(function(inp) {
+      inp.value = '';
+    });
+
+    syncAllUI();
+    filterCases();
+    closeResetModal();
+    showToast('已清空全部測試紀錄並恢復初始狀態', 'danger');
+  }
+
+  function toggleExpandAll() {
+    allExpanded = !allExpanded;
+    tcCards.forEach(function(c) {
+      if (!c.classList.contains('hidden')) {
+        c.open = allExpanded;
+      }
+    });
+    var btn = document.getElementById('expand-all-btn');
+    if (btn) btn.textContent = allExpanded ? '收合全部' : '展開全部';
+  }
+
+  function toggleTheme() {
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  }
+
+  function initClientMermaid() {
+    var rawNodes = document.querySelectorAll('pre.mermaid:not([data-processed="true"]), div.mermaid:not([data-processed="true"])');
+    if (rawNodes.length > 0 && window.mermaid) {
+      try {
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          securityLevel: 'loose',
+          fontFamily: '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif',
+          themeVariables: {
+            background: '#ffffff',
+            primaryColor: '#eff6ff',
+            primaryTextColor: '#0f172a',
+            primaryBorderColor: '#2563eb',
+            lineColor: '#334155',
+            secondaryColor: '#f0fdf4',
+            secondaryTextColor: '#0f172a',
+            secondaryBorderColor: '#16a34a',
+            tertiaryColor: '#fffbeb',
+            tertiaryTextColor: '#0f172a',
+            tertiaryBorderColor: '#d97706',
+            clusterBkg: '#f8fafc',
+            clusterBorder: '#475569',
+            edgeLabelBackground: '#ffffff',
+            fontSize: '14px'
+          },
+          flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+        });
+        window.mermaid.run({ nodes: rawNodes });
+      } catch (e) {
+        console.error('Mermaid 渲染異常:', e);
+      }
+    }
+  }
+
+  /* ==========================================================================
+     Mermaid 互動式縮放、拖曳平移與全螢幕燈箱引擎
+     ========================================================================== */
+  var lightboxState = {
+    svg: null,
+    natW: 900,
+    natH: 600,
+    scale: 1.0
+  };
+
+  function extractSvgDimensions(svg) {
+    var natW = parseFloat(svg.getAttribute('data-natural-width') || '0');
+    var natH = parseFloat(svg.getAttribute('data-natural-height') || '0');
+    if ((!natW || !natH) && svg.getAttribute('viewBox')) {
+      var parts = svg.getAttribute('viewBox').trim().split(/[\s,]+/).map(Number);
+      if (parts.length === 4 && !isNaN(parts[2]) && parts[2] > 0) {
+        natW = parts[2];
+        natH = parts[3] || 600;
+      }
+    }
+    if (!natW || natW <= 0) natW = 900;
+    if (!natH || natH <= 0) natH = 600;
+    return { width: Math.round(natW), height: Math.round(natH) };
+  }
+
+  function bindDragToPan(viewportEl) {
+    if (!viewportEl || viewportEl.getAttribute('data-pan-bound') === '1') return;
+    viewportEl.setAttribute('data-pan-bound', '1');
+    var isDown = false;
+    var startX = 0;
+    var startY = 0;
+    var startScrollLeft = 0;
+    var startScrollTop = 0;
+
+    viewportEl.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      if (e.target && e.target.closest && e.target.closest('button, a, summary, input')) return;
+      isDown = true;
+      viewportEl.classList.add('is-grabbing');
+      startX = e.clientX;
+      startY = e.clientY;
+      startScrollLeft = viewportEl.scrollLeft;
+      startScrollTop = viewportEl.scrollTop;
+    });
+
+    window.addEventListener('mousemove', function (e) {
+      if (!isDown) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      viewportEl.scrollLeft = startScrollLeft - dx;
+      viewportEl.scrollTop = startScrollTop - dy;
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (isDown) {
+        isDown = false;
+        viewportEl.classList.remove('is-grabbing');
+      }
+    });
+  }
+
+  function applyLightboxScale(newScale) {
+    if (!lightboxState.svg) return;
+    var clamped = Math.max(0.2, Math.min(4.0, Math.round(newScale * 100) / 100));
+    lightboxState.scale = clamped;
+    var targetW = Math.round(lightboxState.natW * clamped);
+    lightboxState.svg.style.width = targetW + 'px';
+    lightboxState.svg.style.minWidth = targetW + 'px';
+    lightboxState.svg.style.maxWidth = 'none';
+    var badge = document.getElementById('lightbox-scale-badge');
+    if (badge) {
+      badge.textContent = Math.round(clamped * 100) + '%';
+    }
+  }
+
+  function openLightbox(sourceSvg, title) {
+    var modal = document.getElementById('mermaid-lightbox-modal');
+    var stage = document.getElementById('mermaid-lightbox-stage');
+    var viewport = document.getElementById('mermaid-lightbox-viewport');
+    var titleEl = document.getElementById('lightbox-title');
+    if (!modal || !stage || !sourceSvg) return;
+
+    stage.innerHTML = '';
+    var origId = sourceSvg.getAttribute('id') || '';
+    var clone;
+    if (origId) {
+      var lbId = origId + '_lb';
+      var tempWrap = document.createElement('div');
+      tempWrap.innerHTML = sourceSvg.outerHTML.split(origId).join(lbId);
+      clone = tempWrap.querySelector('svg');
+    } else {
+      clone = sourceSvg.cloneNode(true);
+    }
+    if (!clone) return;
+    stage.appendChild(clone);
+
+    var dims = extractSvgDimensions(sourceSvg);
+    lightboxState.svg = clone;
+    lightboxState.natW = dims.width;
+    lightboxState.natH = dims.height;
+
+    if (titleEl) {
+      titleEl.textContent = '🔍 ' + (title || '架構與流程圖全螢幕檢視');
+    }
+
+    modal.classList.add('open');
+    var availW = Math.max(800, (viewport ? viewport.clientWidth : window.innerWidth) - 72);
+    var initScale = dims.width <= availW ? 1.0 : Math.max(0.88, availW / dims.width);
+    applyLightboxScale(initScale);
+    if (viewport) {
+      viewport.scrollLeft = 0;
+      viewport.scrollTop = 0;
+    }
+  }
+
+  function closeLightbox() {
+    var modal = document.getElementById('mermaid-lightbox-modal');
+    var stage = document.getElementById('mermaid-lightbox-stage');
+    if (modal) modal.classList.remove('open');
+    if (stage) stage.innerHTML = '';
+    lightboxState.svg = null;
+  }
+
+  function initMermaidViewers() {
+    var containers = document.querySelectorAll('.mermaid-container, .mermaid');
+    for (var i = 0; i < containers.length; i++) {
+      (function (el, idx) {
+        if (el.getAttribute('data-mermaid-viewer') === '1') return;
+        var svg = el.querySelector('svg');
+        if (!svg) return;
+        el.setAttribute('data-mermaid-viewer', '1');
+
+        var dims = extractSvgDimensions(svg);
+        var natW = dims.width;
+        var natH = dims.height;
+
+        var toolbar = document.createElement('div');
+        toolbar.className = 'mermaid-toolbar';
+        var titleText = '📊 圖表 #' + (idx + 1);
+        toolbar.innerHTML =
+          '<div class="mermaid-toolbar-left">' +
+            '<span class="mermaid-toolbar-title">' + titleText + '<small>(' + natW + '×' + natH + 'px)</small></span>' +
+            '<span class="mermaid-scale-badge" data-role="scale-badge">100%</span>' +
+            '<span class="mermaid-pan-hint">✋ 可按住滑鼠拖曳平移 · 雙擊全螢幕放大</span>' +
+          '</div>' +
+          '<div class="mermaid-toolbar-actions">' +
+            '<button type="button" class="m-tool-btn" data-m-act="zoom-out" title="縮小 20%">➖ 縮小</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="zoom-in" title="放大 20%">➕ 放大</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="fit" title="縮放至適應欄位寬度">↔ 適應寬度</button>' +
+            '<button type="button" class="m-tool-btn" data-m-act="reset" title="1:1 原始清晰尺寸 (100%)">1:1 原始尺寸</button>' +
+            '<button type="button" class="m-tool-btn m-tool-btn-primary" data-m-act="fullscreen" title="開啟全螢幕互動放大檢視">⛶ 全螢幕檢視</button>' +
+          '</div>';
+
+        var viewport = el.querySelector('.mermaid-diagram');
+        if (viewport) {
+          el.insertBefore(toolbar, viewport);
+        } else {
+          viewport = document.createElement('div');
+          viewport.className = 'mermaid-viewport';
+          while (el.firstChild) {
+            viewport.appendChild(el.firstChild);
+          }
+          el.appendChild(toolbar);
+          el.appendChild(viewport);
+        }
+
+        bindDragToPan(viewport);
+
+        var badge = toolbar.querySelector('[data-role="scale-badge"]');
+        var currentScale = 1.0;
+
+        function setInlineScale(scaleVal) {
+          currentScale = Math.max(0.25, Math.min(3.0, Math.round(scaleVal * 100) / 100));
+          var pxW = Math.round(natW * currentScale);
+          svg.style.width = pxW + 'px';
+          svg.style.minWidth = pxW + 'px';
+          svg.style.maxWidth = 'none';
+          if (badge) badge.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        function setInlineFit() {
+          var availW = Math.max(320, (viewport.clientWidth || 860) - 44);
+          var fitW = Math.min(natW, availW);
+          currentScale = Math.round((fitW / natW) * 100) / 100;
+          svg.style.width = fitW + 'px';
+          svg.style.minWidth = '0';
+          svg.style.maxWidth = '100%';
+          if (badge) badge.textContent = Math.round(currentScale * 100) + '%';
+        }
+
+        var initAvailW = Math.max(640, (viewport.clientWidth || 860) - 44);
+        if (natW <= initAvailW) {
+          currentScale = 1.0;
+          svg.style.width = natW + 'px';
+          svg.style.minWidth = '0';
+          svg.style.maxWidth = '100%';
+          if (badge) badge.textContent = '100%';
+        } else {
+          var readableW = Math.max(initAvailW, Math.round(natW * 0.82));
+          setInlineScale(Math.min(1.0, readableW / natW));
+        }
+
+        toolbar.addEventListener('click', function (e) {
+          var btn = e.target.closest('button[data-m-act]');
+          if (!btn) return;
+          var act = btn.getAttribute('data-m-act');
+          if (act === 'zoom-in') setInlineScale(currentScale + 0.2);
+          else if (act === 'zoom-out') setInlineScale(currentScale - 0.2);
+          else if (act === 'fit') setInlineFit();
+          else if (act === 'reset') setInlineScale(1.0);
+          else if (act === 'fullscreen') {
+            openLightbox(svg, titleText + ' (' + natW + '×' + natH + 'px)');
+          }
+        });
+
+        viewport.addEventListener('dblclick', function (e) {
+          if (e.target && e.target.closest && e.target.closest('button')) return;
+          openLightbox(svg, titleText + ' (' + natW + '×' + natH + 'px)');
+        });
+      })(containers[i], i);
+    }
+
+    var lbViewport = document.getElementById('mermaid-lightbox-viewport');
+    if (lbViewport) {
+      bindDragToPan(lbViewport);
+      lbViewport.addEventListener('wheel', function (e) {
+        if (!lightboxState.svg) return;
+        e.preventDefault();
+        var delta = e.deltaY < 0 ? 0.15 : -0.15;
+        applyLightboxScale(lightboxState.scale + delta);
+      }, { passive: false });
+    }
+
+    var lbZoomOut = document.getElementById('lightbox-zoom-out');
+    var lbZoomIn = document.getElementById('lightbox-zoom-in');
+    var lbFitW = document.getElementById('lightbox-fit-width');
+    var lbFitH = document.getElementById('lightbox-fit-height');
+    var lbReset = document.getElementById('lightbox-zoom-reset');
+    var lbClose = document.getElementById('lightbox-close');
+
+    if (lbZoomOut) lbZoomOut.addEventListener('click', function () { applyLightboxScale(lightboxState.scale - 0.2); });
+    if (lbZoomIn) lbZoomIn.addEventListener('click', function () { applyLightboxScale(lightboxState.scale + 0.2); });
+    if (lbFitW) lbFitW.addEventListener('click', function () {
+      var vp = document.getElementById('mermaid-lightbox-viewport');
+      if (vp && lightboxState.svg) applyLightboxScale(Math.max(400, vp.clientWidth - 72) / lightboxState.natW);
+    });
+    if (lbFitH) lbFitH.addEventListener('click', function () {
+      var vp = document.getElementById('mermaid-lightbox-viewport');
+      if (vp && lightboxState.svg) applyLightboxScale(Math.max(300, vp.clientHeight - 72) / lightboxState.natH);
+    });
+    if (lbReset) lbReset.addEventListener('click', function () { applyLightboxScale(1.0); });
+    if (lbClose) lbClose.addEventListener('click', closeLightbox);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var lb = document.getElementById('mermaid-lightbox-modal');
+        if (lb && lb.classList.contains('open')) {
+          closeLightbox();
+        }
+      }
+    });
+  }
+
+  // 匯出全域 API 相容函式（供舊版呼叫或自動化腳本直接調用）
+  window.handleVerdictChange = handleVerdictChange;
+  window.handleVerdictClear = handleVerdictClear;
+  window.handleNoteChange = handleNoteChange;
+  window.filterCases = filterCases;
+  window.openExportModal = openExportModal;
+  window.closeExportModal = closeExportModal;
+  window.switchExportTab = switchExportTab;
+  window.copyExportContent = copyExportContent;
+  window.downloadExportFile = downloadExportFile;
+  window.openResetModal = openResetModal;
+  window.closeResetModal = closeResetModal;
+  window.confirmResetAll = confirmResetAll;
+  window.toggleExpandAll = toggleExpandAll;
+  window.toggleTheme = toggleTheme;
+  window.openLightbox = openLightbox;
+  window.closeLightbox = closeLightbox;
+
+  // 啟動初始化
+  try {
+    var savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  } catch (e) {}
+
+  loadStorage();
+  initCaseEvents();
+  syncAllUI();
+
+  // 綁定工具列與視窗按鈕
+  var searchInput = document.getElementById('search-input');
+  var filterSelect = document.getElementById('filter-select');
+  var coreBtn = document.getElementById('core-filter-btn');
+  var expandBtn = document.getElementById('expand-all-btn');
+  var exportBtn = document.getElementById('export-btn');
+  var resetBtn = document.getElementById('reset-all-btn');
+  var themeBtn = document.getElementById('theme-toggle-btn');
+
+  if (searchInput) searchInput.addEventListener('input', filterCases);
+  if (filterSelect) filterSelect.addEventListener('change', filterCases);
+  if (coreBtn) {
+    coreBtn.addEventListener('click', function() {
+      coreOnlyFilter = !coreOnlyFilter;
+      coreBtn.classList.toggle('active', coreOnlyFilter);
+      filterCases();
+    });
+  }
+  if (expandBtn) expandBtn.addEventListener('click', toggleExpandAll);
+  if (exportBtn) exportBtn.addEventListener('click', openExportModal);
+  if (resetBtn) resetBtn.addEventListener('click', openResetModal);
+  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+  var exportClose = document.getElementById('export-modal-close');
+  var closeExport = document.getElementById('close-export-btn');
+  var tabTsv = document.getElementById('tab-tsv');
+  var tabMd = document.getElementById('tab-md');
+  var copyBtn = document.getElementById('copy-export-btn');
+  var dlBtn = document.getElementById('download-export-btn');
+
+  if (exportClose) exportClose.addEventListener('click', closeExportModal);
+  if (closeExport) closeExport.addEventListener('click', closeExportModal);
+  if (tabTsv) tabTsv.addEventListener('click', function() { switchExportTab('tsv'); });
+  if (tabMd) tabMd.addEventListener('click', function() { switchExportTab('md'); });
+  if (copyBtn) copyBtn.addEventListener('click', copyExportContent);
+  if (dlBtn) dlBtn.addEventListener('click', downloadExportFile);
+
+  var resetClose = document.getElementById('reset-modal-close');
+  var cancelReset = document.getElementById('cancel-reset-btn');
+  var confirmReset = document.getElementById('confirm-reset-btn');
+
+  if (resetClose) resetClose.addEventListener('click', closeResetModal);
+  if (cancelReset) cancelReset.addEventListener('click', closeResetModal);
+  if (confirmReset) confirmReset.addEventListener('click', confirmResetAll);
+
+  // 點擊 #TC-xx 錨點時自動展開該卡片
+  document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+    link.addEventListener('click', function() {
+      var hash = link.getAttribute('href');
+      if (!hash || hash === '#') return;
+      var target = document.getElementById(hash.slice(1));
+      if (target && target.tagName === 'DETAILS') {
+        target.open = true;
+      }
+    });
+  });
+
+  if (window.location.hash) {
+    var initTarget = document.getElementById(window.location.hash.slice(1));
+    if (initTarget && initTarget.tagName === 'DETAILS') {
+      initTarget.open = true;
+    }
+  }
+
+  initClientMermaid();
+  initMermaidViewers();
+})();
+</script>
+</body>
+</html>
