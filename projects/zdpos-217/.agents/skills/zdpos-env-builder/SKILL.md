@@ -144,6 +144,12 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
 
 Yii 架構將網頁入口與程式碼主體分離（Thin-entry）。
 
+**先判斷站台跑哪個 PHP runtime**：
+- **5.6**（現行預設）：照下方步驟 1 的模板建立。
+- **8.4**：碼基須為含 8.4 修正的分支。薄入口與 console 入口改用 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/dev-php84-site-deployment.md` 附錄 A 的標準模板，該模板使用 `yii_framework-fork` 與 `config/runtime-bootstrap.php`，是 8.4 模板的唯一出處。另在 nginx map 加一行，見該文件 §12。
+
+步驟 2、3 的 symlink 佈局兩種 runtime 相同。
+
 1. **建立薄入口目錄與入口腳本**：
    ```bash
    ENTRY_DIR="${WEB_ROOT}/${MERCHANT_NAME}"

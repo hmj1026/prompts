@@ -24,6 +24,7 @@ allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *),
 |---|---|
 | merchant config SSOT / 新增商家 / **本地 dev4 入口、linked-worktree URL 碼基 identity、runtime/tracy 可寫性** / `## Command templates` (yiic·docker exec workdir) / **`## SSH`** 主機定義 / **`## Local Error Logs`** (application.log) | `references/environments.md`（`### Local dev4 entry` / `## Command templates` / `## SSH` / `## Local Error Logs`） |
 | 某 URL 跑哪份碼基 / thin-entry / cpos.zdpos.tw·www.zdpos.tw·www.posdev.test / oklao(2/3/dev4) / `X:Y:Z` 或 vm2 UNC `\pos`·`\logs` 直讀 / network share 掛載 / 遠端 opcache 假象 | `references/multi-site.md`（`## 多站部署架構`） |
+| DEV web 主機設定：FPM pool／nginx vhost·upstream·`fastcgi_pass`／public 薄入口與靜態目錄佈局／站台切 PHP 版本 | `references/dev-web-topology.md`（先跑探針，不從 playbook 推論） |
 | MySQL 連線 / 唯讀 schema MCP (`### Read-only MCP`) / `SELECT @@sql_mode` / strict-mode listener 風險 / `XxxRecordWriterListener` / `queryBuilder()->insert` / production-switch change | `references/mysql.md`（`## MySQL 連線` / `### Read-only MCP` / `## MySQL sql_mode`） |
 | playwright-cli 登入 dev4 / dev / cpos218 / 總店(HQ)·分店(Branch) 帳號 / 機號選取 / keyboardDiv overlay / 機號重複 RepeatAction / 遠端 dev4 前台登入 | `references/pos-login.md`（`## POS UI Login (playwright-cli)`：`### Step 0` / `### Step 2.5` / `### 遠端 dev4 前台登入`） |
 
