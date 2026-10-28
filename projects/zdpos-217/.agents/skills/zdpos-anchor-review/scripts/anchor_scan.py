@@ -22,13 +22,31 @@ import subprocess
 import sys
 
 EXTS = ('.php', '.js', '.html', '.vue')
+VENDOR_DIRS = ('vendor/', 'protected/vendors/', 'ckeditor/', 'ckfinder/')
 OTHER_ANCHOR = re.compile(r'(19|20)\d{2}[/-]\d{1,2}[/-]\d{1,2}\s+\w+')
 COMMENT = re.compile(r'\s*(\*|//|/\*\*|\*/|#|<!--)')
 CLASS = re.compile(r'\s*(final\s+|abstract\s+)?(class|interface|trait)\s+\w+')
-FUNC = re.compile(r'^\s*(?:((?:public|protected|private|static|final|abstract)\s+)*function\s+(\w+)\s*\(|[\'"]?(\w+)[\'"]?\s*:\s*(?:async\s+)?function\b)')
+KEYWORDS = {'if', 'for', 'while', 'switch', 'catch', 'do', 'else', 'finally', 'try', 'return'}
+FUNC_PHP = re.compile(r'^\s*(?:(?:public|protected|private|static|final|abstract)\s+)*function\s+(\w+)\s*\(')
+FUNC_JS_KEY = re.compile(r'^\s*[\'\"]?(\w+)[\'\"]?\s*:\s*(?:async\s+)?function\b')
+FUNC_JS_ES6 = re.compile(r'^\s*(?:(?:async|static)\s+)*(\w+)\s*\([^)]*\)\s*\{')
 JSBLOCK = re.compile(r'\s*(test|it|describe)\(')
 TRIVIAL = re.compile(r'^\s*[{}()\[\];,]*\s*$')
 JARGON = re.compile(r'(\bD\d{1,2}\b|\btask\s*\d+(?:\.\d+)?|\bStage\s*[A-Z]{1,2}\b|裁決\s*[A-Z]\b|Ruling\s*[A-Z]\b|\brulings?\b|review-\d+)', re.I)
+
+
+def match_func(line, is_js=False):
+    m = FUNC_PHP.match(line)
+    if m:
+        return m.group(1)
+    if is_js:
+        m = FUNC_JS_KEY.match(line)
+        if m:
+            return m.group(1)
+        m = FUNC_JS_ES6.match(line)
+        if m and m.group(1) not in KEYWORDS:
+            return m.group(1)
+    return None
 
 
 def git(repo, *args):
@@ -74,25 +92,46 @@ def build_scope(repo, base, anchor):
     for line in git(repo, 'diff', '--name-status', base).split('\n'):
         parts = line.split('\t')
         if len(parts) >= 2 and parts[-1].endswith(EXTS):
-            status[parts[-1]] = parts[0][0]
+            if not parts[-1].startswith(VENDOR_DIRS):
+                status[parts[-1]] = parts[0][0]
     for path in git(repo, 'ls-files', '--others', '--exclude-standard').split('\n'):
-        if path.endswith(EXTS):
+        if path.endswith(EXTS) and not path.startswith(VENDOR_DIRS):
             status[path] = 'A'
+
+    # 檢查工作區有變動的檔案（含 staged、unstaged 與 untracked）
+    dirty = set()
+    for line in git(repo, 'status', '--porcelain').split('\n'):
+        if len(line) > 3:
+            p = line[3:].strip()
+            if ' -> ' in p:
+                p = p.split(' -> ')[1]
+            if p.endswith(EXTS) and not p.startswith(VENDOR_DIRS):
+                dirty.add(p)
+
     scope = []
     for path, st in sorted(status.items()):
         full = os.path.join(repo, path)
-        if st in 'AMR' and os.path.isfile(full) and anchor in open(full, encoding='utf-8', errors='replace').read():
-            scope.append((st if st != 'R' else 'M', path))
+        if st in 'AMR' and os.path.isfile(full):
+            # 檔案若包含本次 anchor，或是目前工作區變更中的檔案，皆應納入審查範圍
+            if path in dirty or anchor in open(full, encoding='utf-8', errors='replace').read():
+                scope.append((st if st != 'R' else 'M', path))
     return scope
 
 
-def method_spans(src):
+def method_spans(src, path=''):
     """[(名稱, 宣告行, docblock 起始行或 None, 本體結束行)]，行號 1 起算；本體結束於下一個方法 docblock 之前。"""
-    decls = [i for i, l in enumerate(src) if FUNC.match(l)]
+    is_js = path.endswith(('.js', '.vue'))
+    decls = []
+    for i, l in enumerate(src):
+        name = match_func(l, is_js)
+        if name:
+            decls.append((i, name))
+
     spans = []
-    for idx, i in enumerate(decls):
+    for idx, (i, name) in enumerate(decls):
         j = i - 1
-        while j >= 0 and src[j].strip() == '':
+        # 跳過空白行與 PHP 8 屬性標註（例如 #[\ReturnTypeWillChange]、#[DataProvider(...)]）
+        while j >= 0 and (src[j].strip() == '' or (src[j].strip().startswith('#[') and src[j].strip().endswith(']'))):
             j -= 1
         doc_start = None
         if j >= 0 and src[j].strip().endswith('*/'):
@@ -102,13 +141,13 @@ def method_spans(src):
             doc_start = k + 1 if k >= 0 else None
         end = len(src)
         if idx + 1 < len(decls):
-            end = decls[idx + 1]
+            end = decls[idx + 1][0]
             while end - 1 > i and (src[end - 1].strip() == '' or COMMENT.match(src[end - 1])):
                 end -= 1
         stop = next((k for k in range(i + 1, end) if CLASS.match(src[k])), None)
         if stop is not None:
             end = stop
-        spans.append(((FUNC.match(src[i]).group(2) or FUNC.match(src[i]).group(3)), i + 1, doc_start, end))
+        spans.append((name, i + 1, doc_start, end))
     return spans
 
 
@@ -118,7 +157,7 @@ def anchor_owner(src, idx):
         line = src[j]
         if CLASS.match(line):
             return 'class'
-        if FUNC.match(line):
+        if match_func(line, is_js=True):
             return 'method'
         if line.strip() and not COMMENT.match(line):
             return 'code'
@@ -131,7 +170,7 @@ def check_new(repo, path, anchor):
     hits = [i for i, l in enumerate(src) if anchor in l and COMMENT.match(l)]
     if not hits:
         return [(path, 0, '缺 anchor')]
-    first_code = next((i for i, l in enumerate(src) if FUNC.match(l) or JSBLOCK.match(l)), len(src))
+    first_code = next((i for i, l in enumerate(src) if match_func(l, is_js=True) or JSBLOCK.match(l)), len(src))
     rows = []
     for n, i in enumerate(hits):
         owner = anchor_owner(src, i)
@@ -147,7 +186,7 @@ def check_new(repo, path, anchor):
 
 def check_mod(repo, base, path, anchor, dev_src):
     src = read_lines(repo, path)
-    spans = method_spans(src) if path.endswith(('.php', '.js')) else []
+    spans = method_spans(src, path) if path.endswith(('.php', '.js')) else []
     rows = []
     groups = {}
     for h in hunks(repo, base, path):
@@ -157,7 +196,8 @@ def check_mod(repo, base, path, anchor, dev_src):
         if dev_src and all(not t.strip() or t in dev_src for t in texts) and not any(anchor in t for t in texts):
             continue  # develop 帶入
         start = h[0][0]
-        owner = next((s for s in spans if s[1] <= start <= s[3]), None)
+        # 注意：hunk 可能落在 docblock 範圍 (doc_start ~ decl) 或方法本體 (decl ~ end)
+        owner = next((s for s in spans if (s[2] if s[2] else s[1]) <= start <= s[3]), None)
         key = owner if owner else ('<檔案層>', start)  # 方法外的 hunk 各自判定，不合併
         groups.setdefault(key, []).append(h)
     for key, hs in groups.items():
@@ -170,6 +210,11 @@ def check_mod(repo, base, path, anchor, dev_src):
         context = src[lo - 1:first - 1] if owner else src[max(0, first - 4):first - 1]
         if any(anchor in c for c in context):
             continue
+        # 若為方法層級變更，檢查整個方法範圍（含 docblock 與本體）是否已包含本次 anchor
+        if owner:
+            method_lines = src[(owner[2] or owner[1]) - 1:owner[3]]
+            if any(anchor in c for c in method_lines):
+                continue
         if any(OTHER_ANCHOR.search(t) for t in added) or any(OTHER_ANCHOR.search(c) and anchor not in c for c in context):
             continue  # 其他功能
         label = owner[0] if owner else '<檔案層>'
@@ -183,7 +228,7 @@ def check_doc(repo, base, path, status, anchor):
     src = read_lines(repo, path)
     touched = None if status == 'A' else set(n for n, t in added_lines(repo, base, path) if not TRIVIAL.match(t) and not COMMENT.match(t))
     nodoc, nozh, jargon = [], [], []
-    for name, decl, doc_start, end in method_spans(src):
+    for name, decl, doc_start, end in method_spans(src, path):
         if touched is not None and not any(decl <= n <= end for n in touched):
             continue
         block = '\n'.join(src[doc_start - 1:decl - 1]) if doc_start else ''
