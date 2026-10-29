@@ -184,6 +184,6 @@ view 檔（含新增檔、新增區段、修改段落）依 anchor 所在位置�
   3. 有 view 變更時重跑 §1 的 view 偵測，結果須為零。
   4. 以 `rg` 確認舊方法名在程式碼與測試中已無殘留。
   5. 在容器內跑受影響的測試：
-     `docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php php -d memory_limit=1G vendor/bin/phpunit -c protected/tests/phpunit.xml <測試路徑>`；
+     依專案 Quick Toolchain 執行 `bash protected/tests/scripts/run-php84-tests.sh fast <測試路徑>`（支援單檔/單案例，環境變數如未設置將自動探測 PHP 8.4 測試容器）；
      既有且與本次無關的失敗須以基準分支或 commit 歷史證明為既有，並列出。
 - 最後列出差異統計摘要、驗證結果與未處理項目。不自動 commit；建議改名類調整與其他調整分成獨立的 `refactor:` commit。

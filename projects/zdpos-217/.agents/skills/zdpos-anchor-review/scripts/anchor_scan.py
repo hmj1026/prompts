@@ -206,28 +206,40 @@ def check_mod(repo, base, path, anchor, dev_src):
         first = hs[0][0][0]
         if any(anchor in t for t in added):
             continue
-        lo = owner[2] or owner[1] if owner else max(1, first - 3)
-        context = src[lo - 1:first - 1] if owner else src[max(0, first - 4):first - 1]
-        if any(anchor in c for c in context):
+        immediate_context = src[max(0, first - 4):first - 1]
+        if any(anchor in c for c in immediate_context):
             continue
         # 若為方法層級變更，檢查整個方法範圍（含 docblock 與本體）是否已包含本次 anchor
         if owner:
             method_lines = src[(owner[2] or owner[1]) - 1:owner[3]]
             if any(anchor in c for c in method_lines):
                 continue
-        if any(OTHER_ANCHOR.search(t) for t in added) or any(OTHER_ANCHOR.search(c) and anchor not in c for c in context):
+        # 僅在變更行本身或緊鄰前 3 行包含其他功能 anchor 時視為其他功能，避免方法早期歷史註記造成盲區
+        if any(OTHER_ANCHOR.search(t) for t in added) or any(OTHER_ANCHOR.search(c) and anchor not in c for c in immediate_context):
             continue  # 其他功能
         label = owner[0] if owner else '<檔案層>'
         rows.append((path, first, label, len(hs), len(added)))
     return rows
 
 
-def check_doc(repo, base, path, status, anchor):
-    if not path.endswith('.php') or '/views/' in path:
-        return [], [], []  # view 內的 JS 函式不套 phpDoc 規則
+def check_doc(repo, base, path, status, anchor, include_legacy_nodoc=False):
+    if not path.endswith('.php') or '/views/' in path or path.startswith(('protected/tests/', 'tests/')):
+        return [], [], []  # view 與測試檔不套業務方法層 phpDoc 規範
     src = read_lines(repo, path)
     touched = None if status == 'A' else set(n for n, t in added_lines(repo, base, path) if not TRIVIAL.match(t) and not COMMENT.match(t))
     nodoc, nozh, jargon = [], [], []
+
+    # 取得基準版本的方法定義，用於判斷修改檔中的方法是否為既有 legacy（依 Scope Rule 免補 docblock）
+    base_no_doc_methods = set()
+    if not include_legacy_nodoc and status != 'A':
+        try:
+            base_src = git(repo, 'show', '%s:%s' % (base, path)).split('\n')
+            for b_name, b_decl, b_doc_start, b_end in method_spans(base_src, path):
+                if not b_doc_start:
+                    base_no_doc_methods.add(b_name)
+        except subprocess.CalledProcessError:
+            pass
+
     for name, decl, doc_start, end in method_spans(src, path):
         if touched is not None and not any(decl <= n <= end for n in touched):
             continue
@@ -235,6 +247,8 @@ def check_doc(repo, base, path, status, anchor):
         if touched is not None and anchor not in block and OTHER_ANCHOR.search(block):
             continue
         if not doc_start:
+            if not include_legacy_nodoc and name in base_no_doc_methods:
+                continue  # 既有 legacy 方法在基準分支原本即無 docblock，依 Scope Rule 豁免
             nodoc.append((path, decl, name))
             continue
         if not re.search(r'[一-鿿]', block):
@@ -257,6 +271,8 @@ def main():
     ap.add_argument('--base', default='origin/master')
     ap.add_argument('--repo', default='.')
     ap.add_argument('--out', required=True)
+    ap.add_argument('--include-legacy-nodoc', action='store_true', default=False,
+                    help='是否將修改檔中基準分支既有且原本即無 docblock 的 legacy 方法納入 nodoc 檢查（預設排除以避免歷史雜訊）')
     args = ap.parse_args()
     repo = os.path.abspath(args.repo)
     os.makedirs(args.out, exist_ok=True)
@@ -272,7 +288,7 @@ def main():
             except subprocess.CalledProcessError:
                 dev_src = ''
             mod_rows += check_mod(repo, base, path, args.anchor, dev_src)
-        a, b, c = check_doc(repo, base, path, st, args.anchor)
+        a, b, c = check_doc(repo, base, path, st, args.anchor, include_legacy_nodoc=args.include_legacy_nodoc)
         nodoc += a
         nozh += b
         jargon += c
