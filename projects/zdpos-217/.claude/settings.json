@@ -100,6 +100,16 @@
             "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-bash-guard.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__mysql-.*__mysql_query",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-mysql-sensitive-select.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [

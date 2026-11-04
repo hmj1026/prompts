@@ -27,6 +27,15 @@
 - 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。
 - 📝 線上問題與 Bug 調查的唯讀權限調製 SOP，請見 [Playbook：MCP 資料庫唯讀權限調製與線上問題排查 SOP](../../../../docs/operations/playbooks/mcp-database-investigation-grant.md)。
 
+### 含帳密欄位的表
+
+查這些表時明列欄位。`SELECT *`（含 `t.*`）會被 PreToolUse hook `.claude/hooks/pre-mysql-sensitive-select.sh` 擋下；新增表時同步改該 hook 的 `SENSITIVE_TABLES`。
+
+| 表 | 帳密欄位 | 常用的安全欄位 |
+|---|---|---|
+| `data_redeemtype` | `api_var1`～`api_var5`（第三方兌換 API 金鑰）、`api_url` | `redeem_type`, `redeem_name`, `redeem_action`, `api_env`, `state` |
+| `data_station` | `dvr_user`, `dvr_pass` | `store_no`, `station_no`, `station_id`, `need_table`, `need_employee` |
+
 ## MySQL sql_mode（event-dispatcher listener prerequisites）
 
 ### Local Docker (2026-05-28 verified)
