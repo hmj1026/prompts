@@ -10,6 +10,10 @@ Referenced from `rules/tool-routing.md`. Sub-agents do NOT inherit project rules
 
 > "Before planning any new DB query, check `infrastructure/Repositories/` for an existing Repository that handles the target table. First grep: `grep -rl '<target_table>' infrastructure/Repositories/`; if nothing matches, enumerate via `cx overview infrastructure/Repositories/`. If a Repository is found, new queries go there via `queryBuilder()` — not in the Controller. Existing `createCommand()` in a Controller is legacy debt; presence does NOT permit new violations."
 
+## Remote log / PROD investigation tasks (any agent that runs `ssh vm1`, `ssh vm2`, `ssh dev`)
+
+> "Read-only. Pipe everything back: `ssh <host> 'bash -s' < script.sh` or `ssh <host> 'sudo -n awk -f /dev/stdin <log>' < prog.awk`; never write a file on the remote host, `/tmp` included. Never read a config or credential file whole: extract DB coordinates only with `grep -o \"mysql:host=[^;]*;dbname=[^;\\\"']*\"`. The local shell is zsh: quote every glob (`--include='*.php'`). Report every command you ran. Log paths and thresholds: `zdpos-environment` skill → `references/prod-observability.md`."
+
 ## Extended anti-pattern reference
 
 - `Read --offset/--limit` as a substitute for `cx overview` on files >200 lines — first tool call MUST be `cx overview`. Exception: current session already ran `cx overview` / `cx definition` for the file and needed content is within the listed range.
