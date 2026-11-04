@@ -1,6 +1,6 @@
 ---
 name: zdpos-environment
-description: environment 座標：哪台主機、哪份碼基、哪個帳號、哪條 MySQL。Use when 答案需要環境座標而不是程式邏輯。Not for 純程式／UI／欄位邏輯。
+description: environment 座標：站台網址對應哪份碼基與 DB、部署驗證、MCP 連哪台主機、POS 登入帳號與功能鍵操作步驟。Use when 答案需要環境座標或 POS 前台操作，而不是程式邏輯。Not for 純程式／欄位邏輯。
 allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *), Bash(awk *), Bash(realpath *), Bash(dirname *), Bash(test *)
 ---
 
@@ -27,6 +27,7 @@ allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *),
 | DEV web 主機設定：FPM pool／nginx vhost·upstream·`fastcgi_pass`／public 薄入口與靜態目錄佈局／站台切 PHP 版本 | `references/dev-web-topology.md`（先跑探針，不從 playbook 推論） |
 | MySQL 連線 / 唯讀 schema MCP (`### Read-only MCP`) / `SELECT @@sql_mode` / strict-mode listener 風險 / `XxxRecordWriterListener` / `queryBuilder()->insert` / production-switch change | `references/mysql.md`（`## MySQL 連線` / `### Read-only MCP` / `## MySQL sql_mode`） |
 | playwright-cli 登入 dev4 / dev / cpos218 / 總店(HQ)·分店(Branch) 帳號 / 機號選取 / keyboardDiv overlay / 機號重複 RepeatAction / 遠端 dev4 前台登入 | `references/pos-login.md`（`## POS UI Login (playwright-cli)`：`### Step 0` / `### Step 2.5` / `### 遠端 dev4 前台登入`） |
+| POS 操作步驟 / 功能鍵在哪一頁·做什麼（`data_button`＋`data_action`）/ 桌位模式開桌·收單·續單·作廢 / 清測試暫存單 | `references/pos-operations.md` |
 
 > PROD (CPOS217 / ZCPOS217) **嚴禁** 由 AI 自動登入；playwright-cli 登入只支援 local / DEV / UAT(cpos218)。
 

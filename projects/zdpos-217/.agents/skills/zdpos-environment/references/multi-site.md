@@ -34,6 +34,9 @@ $yii    = '<相對路徑>/yii_framework/yii.php';
 | **PROD** `cpos.zdpos.tw/oklao3` | VM1 `development/zdpos_oklao_test` | `oklao3.php` | `zdpos_oklao3` |
 | **PROD** `cpos.zdpos.tw/oklao2` | VM1 `development/zdpos_oklao` | `oklao2.php` | `zdpos_oklao2` |
 | **DEV** `www.zdpos.tw/dev` | DEV `zdpos_develop` | `dev.php` | `zdpos_dev` |
+| **DEV** `www.zdpos.tw/splitbill` | DEV `zdpos_develop-splitbill`（git，拆帳分支；2026-10-30 為 `d0abd178`） | `splitbill.php` | `zdpos_splitbill` |
+| **DEV** `www.zdpos.tw/splitbillqa20261027` | DEV `zdpos_develop-splitbill-qa20261027`（**非 git** 複製；session cookie／mail dryRun／`runtime/qa/` 隔離） | `splitbillqa20261027.php` | `zdpos_splitbill_qa20261027`（`claude_ro` 無權限） |
+| **LOCAL** `www.posdev.test/splitbill`、`/splitbill-e2e` | local main checkout `zdpos-217`（拆帳分支）；`/splitbill-e2e` 供 owned E2E | 依薄入口 | 依 owned generation |
 | **LOCAL** `www.posdev.test/dev4` | local main checkout `zdpos-217`（薄入口預設指向此樹；linked worktree 必須另做 codebase identity guard，詳 `environments.md` `### Local dev4 entry`） | `dev4.php` | `zdpos_dev_2` |
 
 **DB**：config 取 DB 名兩種來源 —— 根 `dbConnectParams.php`（`zdpos_<use_name>`，如 oklao3 → `zdpos_oklao3`）或 config 內硬寫死（`dev.php` `$db_name="zdpos_dev"`、`dev4.php` `"zdpos_dev_2"`）。Cloud SQL host `10.8.202.2` + SSL client cert `/etc/gcpencrypt/cloud-sql/*.pem`（帳密見部署機 config，勿外流）。
