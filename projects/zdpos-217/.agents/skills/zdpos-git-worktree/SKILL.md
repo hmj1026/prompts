@@ -1,6 +1,6 @@
 ---
 name: zdpos-git-worktree
-description: linked-worktree writer fence 與測試 setup。Use when subAgent 要在 linked worktree edit/port/copy，或要跑 PHPUnit、precommit/Jest、Playwright；也用於 host-absolute `.git` pointer、yii_framework、TracyBootstrap、Jest/Playwright dependency failure。Output: writer/setup lease receipt 或 fail-closed INVALID_CHECKOUT。
+description: 'linked-worktree writer fence 與測試 setup。Use when subAgent 要在 linked worktree edit/port/copy，或要跑 PHPUnit、precommit/Jest、Playwright；也用於 host-absolute `.git` pointer、yii_framework、TracyBootstrap、Jest/Playwright dependency failure。Output: writer/setup lease receipt 或 fail-closed INVALID_CHECKOUT。'
 allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(ln *), Bash(cp *), Bash(mkdir *), Bash(chmod *), Bash(npm *), Bash(git *), Bash(bash *), Bash(test *), Bash(node *), Bash(readlink *), Bash(realpath *), Bash(diff *), Bash(pwd *), Bash(stat *), Bash(unlink *), Bash(docker exec *)
 ---
 
