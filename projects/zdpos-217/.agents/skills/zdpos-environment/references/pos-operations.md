@@ -41,3 +41,21 @@
 - 作廢後驗證：`sales_temp.sale_no`（欄名是 `sale_no`）與 `sales_temp_detail.sales_no` 都查不到該單號。單號已被取用，下一張會跳號，屬正常。
 
 DEV 有桌位的機號（2026-11-03）：113-13、113-15（113 店 12 張桌）。
+
+## 已知 Console 雜訊與既有提示（看到不用開單）
+
+QA 手冊的 §6「已知狀況」直接指向本節，不要在各手冊重複列出。
+
+| 現象 | 出處 | 說明 |
+|---|---|---|
+| `SyntaxError: Unexpected token '<' ... is not valid JSON` | `js/jqPlug/base.js:143` | 登入頁本身的錯誤。agent-browser 的 `errors` 緩衝區會把它帶到之後的頁面 |
+| `TypeError: Cannot read properties of null (reading 'addEventListener')` | `js/modules.polyfill.js` | `pos/index` 載入時就有的既有錯誤 |
+| `SweetAlert2: Unknown parameter "message"`（warning） | 收單流程 | 既有 |
+| `ws error ... Stock Status: 1006`、「列印貼紙錯誤」 | 列印 WebSocket | 測試機沒有列印程式 |
+| 「請關閉新分頁，避免造成資料錯誤！」 | `js/main.js:235` | 手動開新分頁時，sessionStorage 沒有 `session_flag` 就會跳出 |
+| 「已無可用發票編號，請前往發票維護設定」 | `EI::isSettingOK` → `EI_check::canInvoice` | 該機號缺當期（雙月期）發票字軌。關掉提示，**不要**按「確定」（會跳到發票維護頁）；這個提示只影響開立發票，補印不受影響。登入時，過期期別的字軌會被標成 `used=3` |
+
+## 本機環境前置
+
+- 瀏覽器 QA 開始前，先跑 `scripts/migration-drift.sh list`。收單、作廢會寫入新欄位（例如 `social_payment_amount`）；對應的 migration 沒跑時，作廢會回 500，並在 `invalid_receipt` 留下沒有明細的表頭，之後重試就變成「重複單號」。
+- 要補跑時，用 `migration-drift.sh apply <version>` 一次只跑一支。已經留下殘留表頭的話，先備份、刪除該表頭，再從畫面重新作廢。

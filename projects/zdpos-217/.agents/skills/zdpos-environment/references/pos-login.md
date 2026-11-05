@@ -35,16 +35,15 @@ EOF
 
 ### Step 1 — 取得帳號
 
-帳號明文 **不** 寫在本 skill；改放未追蹤檔：
+帳號明文 **不** 寫在本 skill。帳號的來源依序是：agent-browser auth vault → `.claude/artifacts/accounts.md`（未追蹤）。
 
-```bash
-cat .claude/artifacts/accounts.md
-```
-
-| 檔案存在 | 動作 |
-|----------|------|
-| 存在 | 從表格抓對應 env / 角色（總店 = HQ / 分店 = Branch）的 account / password |
-| 不存在或內容缺該 env | 用 `AskUserQuestion` 向使用者索取，並提示「請補進 `.claude/artifacts/accounts.md`（已 .gitignore）以利下次自動使用」 |
+1. 先看 vault：`agent-browser auth list`。已有該 env／店號的 profile，就用 vault 登入，流程見 [`agent-browser-pos.md`](agent-browser-pos.md)。
+2. vault 沒有，但 `accounts.md` 有該列時，用受控抽取把該列存進 vault，密碼不會進對話：
+   ```bash
+   python3 -I <skill>/scripts/vault-import.py .claude/artifacts/accounts.md <env> <account> <profile> <login-url>
+   ```
+   抽取時只比對 `env` 與 `account` 兩欄，且必須剛好命中 1 列，輸出只有 `exit=`。`accounts.md` 裡有兩張表，其中一張放 DB 密碼，**禁止**用 `cat`、`grep` 讀整個檔案。
+3. 兩邊都沒有時，用 `AskUserQuestion` 請使用者補進 `accounts.md`（已 .gitignore），或請使用者在 **Claude 以外的終端機** 執行 `agent-browser auth save <profile> --url <login-url> --username <帳號> --password-stdin`。`!` 前綴沒有 stdin，執行 `--password-stdin` 會失敗；如果改用 `echo 密碼 |`，密碼會連同整行指令出現在對話中。
 
 **`accounts.md` 範本格式**（user 第一次填寫時參考）：
 
