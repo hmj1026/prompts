@@ -33,6 +33,8 @@ Referenced from `rules/tool-routing.md`. Sub-agents do NOT inherit project rules
 1. 找符號用 `cx symbols` 或 `rg -l`；不整檔 Read，除非完整內容必要。
 2. 改既有符號前跑 GitNexus impact（見上方 anti-pattern 第 2、4 點的例外規則）。HIGH/CRITICAL 必須在回報中標示。
 3. 分支新增或未提交的符號，impact 結果不可信，改用 `cx references --name X` 找呼叫者。
+4. 跨目錄搜尋用 Grep 工具；Bash 裡的 `grep -r`／`rg` 沒為每個憑證檔名加 `--exclude` 會被 bash-guard 擋下。
+5. 盤點 OpenSpec change 是否實作或發布：先跑 `node scripts/openspec-release-status.js [change ...]`；它會一併查 `archive/*` tag，刪掉的分支常封存在那裡，只搜分支會誤判「沒實作」。
 
 ### 權限與 Git 邊界
 - 禁止 commit、push、checkout、stash、reset、rebase。
