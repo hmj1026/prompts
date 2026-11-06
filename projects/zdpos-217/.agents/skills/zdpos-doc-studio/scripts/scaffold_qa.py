@@ -651,15 +651,15 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
     # 沒有填或填 none 時，在頁首加紅色橫幅並輸出警告，避免依程式碼寫成、尚未上機核對的手冊直接交給 QA。
     ui_m = re.search(r"^\|\s*`?ui-verified`?\s*\|\s*`?([^|`]*)`?[^|]*\|", md_text, re.MULTILINE)
     ui_state = ui_m.group(1).strip().lower() if ui_m else ""
-    if not ui_state.startswith(("full", "partial")):
+    if not ui_state.startswith(("full", "partial", "browser", "source")):
         print(f"⚠️ 實機核對狀態為「{ui_state or '未填'}」：按鈕位置、欄位標籤與提示文字尚未實機核對。請在 metadata 表加 `ui-verified` 列（full／partial／none＋日期與環境）。")
         meta_html = (
             '<div style="background:#cf222e;color:#fff;padding:10px 14px;border-radius:8px;font-weight:bold;margin-bottom:12px;">'
             "⚠️ 本手冊尚未實機核對（ui-verified 未填或為 none）：步驟、按鈕位置與標籤可能與實際畫面不同，執行時請以畫面為準並回報差異。"
             "</div>" + meta_html
         )
-    elif ui_state.startswith("partial"):
-        print("ℹ️ 實機核對狀態為 partial：部分案例尚未實機核對。")
+    elif ui_state.startswith(("partial", "source")):
+        print(f"ℹ️ 實機核對狀態為 {ui_state.split()[0]}：版面位置與顏色尚未用瀏覽器逐項核對。")
 
     # 4. 處理各 H2 章節（支援單一 §3 或多章節 TC 如 KDS）
     intro_sections_html = []

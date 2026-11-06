@@ -11,7 +11,8 @@
   1. `docs/qa/<module>/QA-<slug>-manual.md`（Markdown 單一事實來源 SSOT）
   2. `docs/qa/<module>/QA-<slug>-manual.html`（由 `doc_studio.py compile` 自動編譯之高對比離線互動版）
   3. 同步登錄路由表至 [`docs/qa/README.md`](../../../../../../zdpos-217/docs/qa/README.md) 的「模組分流導覽 (Domain Routing Matrix)」。
-- **實機核對狀態**：metadata 表必須有 `ui-verified` 列。依程式碼寫成的手冊填 `none`，`compile` 會在頁首加上紅色橫幅並輸出警告；在實機逐條核對過按鈕位置、欄位標籤與提示文字之後，才改成 `partial` 或 `full`，並附上日期與環境。
+- **畫面字串來源**：手冊裡每個 `「…」` 字串都從 [`ui-label-sources.md`](ui-label-sources.md) 列的來源查到後才寫。後台列表欄位先確認不是 `notShow`；版面位置沒用瀏覽器看過就寫「視窗內」。
+- **實機核對狀態**：metadata 表必須有 `ui-verified` 列，值依序為 `none`（依程式碼推測）、`source`（字串已對照原始碼與選單表，未開瀏覽器）、`browser`（實機逐條看過）。`partial`／`full` 視同 `browser`。填 `none` 時 `compile` 在頁首加紅色橫幅；每次 `compile` 另跑 `verify_labels.py`，列出原始碼找不到的字串。填完附日期與環境。
 - **前台操作唯一邊界（零容忍）**：
   - 測試步驟一律描述「畫面看得見、點得到」的操作（門市、機號、選單路徑、按鈕名稱、Toast／燈號／單據變化）。
   - **嚴禁**要求 QA 手動修改 PHP 設定檔、執行 SQL 查詢或檢查資料庫底層欄位；底層資料完整性與併發鎖定一律歸入「**§0 本文不測清單（底層由開發測試覆蓋）**」。

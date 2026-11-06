@@ -13,7 +13,7 @@
 | `canonical-source` | 本文件 |
 | `sensitivity` | `git-safe` |
 | `retention` | `current-until-superseded` |
-| `ui-verified` | `none`（依程式碼撰寫，尚未實機）／`partial YYYY-MM-DD <環境> TC-xx…`／`full YYYY-MM-DD <環境>` |
+| `ui-verified` | `none`（依程式碼推測）／`source YYYY-MM-DD <分支或 commit>`（字串已對照原始碼與選單表）／`browser YYYY-MM-DD <環境> TC-xx…`（實機看過） |
 
 > 對象：QA 測試人員或驗收代理（Agent）。所有操作都在 POS 畫面上完成。不用改設定檔，不用下 SQL。
 > 站台：`https://www.zdpos.tw/<merchant>/pos/index` 或本地容器 `https://www.posdev.test/<env>/pos/index`

@@ -16,7 +16,9 @@ description: 為 zdpos-217 系統產出高對比、離線可開、具備互動�
 | 模式 (`--mode`) | 適用情境 | 產出目標路徑 | 必讀專屬指引（按需讀取） |
 | :--- | :--- | :--- | :--- |
 | **`feature`**<br>（協作者技術手冊） | 產出給未來接手開發者的架構規格、DDD 分層、狀態機、DB DDL、邊界防護、舊客戶導入 SOP | `docs/collaborators/<slug>/README.md`<br>`docs/collaborators/<slug>/index.html`<br>（並註冊 `docs/collaborators/index.html`） | [`references/mode-feature-guidelines.md`](references/mode-feature-guidelines.md)<br>[`references/doc-template.md`](references/doc-template.md)<br>[`references/migration-sop.md`](references/migration-sop.md)（若含舊客導入） |
-| **`qa`**<br>（QA 驗收手冊） | 產出給 QA 測試人員的前台黑箱操作手冊、「本文不測清單」、四段式 `TC-xx` 測試案例與簽核表 | `docs/qa/<module>/QA-<slug>-manual.md`<br>`docs/qa/<module>/QA-<slug>-manual.html`<br>（並註冊 `docs/qa/README.md`） | [`references/mode-qa-guidelines.md`](references/mode-qa-guidelines.md)<br>[`references/qa-case-guidelines.md`](references/qa-case-guidelines.md)<br>[`references/qa-doc-template.md`](references/qa-doc-template.md) |
+| **`qa`**<br>（QA 驗收手冊） | 產出給 QA 測試人員的前台黑箱操作手冊、「本文不測清單」、四段式 `TC-xx` 測試案例與簽核表 | `docs/qa/<module>/QA-<slug>-manual.md`<br>`docs/qa/<module>/QA-<slug>-manual.html`<br>（並註冊 `docs/qa/README.md`） | [`references/ui-label-sources.md`](references/ui-label-sources.md) | QA 手冊畫面字串的查證處（選單、欄位、視窗、提示） |
+| [`scripts/verify_labels.py`](scripts/verify_labels.py) | 抓手冊引號字串，用 `git grep` 比對原始碼（`compile` 自動執行，可加 `--ref`） |
+| [`references/mode-qa-guidelines.md`](references/mode-qa-guidelines.md)<br>[`references/qa-case-guidelines.md`](references/qa-case-guidelines.md)<br>[`references/qa-doc-template.md`](references/qa-doc-template.md) |
 | **`both`**<br>（單次盤點雙軌產出） | 給定一個 Anchor 或分支，同時建立／更新「協作者手冊」與「QA 驗收手冊」，並讓兩邊的「開發測試覆蓋 vs 本文不測清單」自動對齊 | 同時產出上述兩組路徑與雙邊總覽頁註冊 | 同時讀取 `mode-feature-guidelines.md` 與 `mode-qa-guidelines.md` |
 
 ---
@@ -44,6 +46,9 @@ python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold \
 ### Step 3：撰寫 Markdown 單一事實來源 (Markdown SSOT)
 - **嚴禁手寫或直接編輯 `.html` 檔案**！所有文字、表格、SQL DDL、Mermaid 圖表與檢核／測試案例一律撰寫於 `.md` 檔案中。
 - 語言規範：正文與圖表說明使用**正體中文**；專有名詞、類別／函式／資料表名稱保留 English。
+
+### Step 3.5：畫面字串查證（`qa` 模式）
+手冊引號內的選單、按鈕、欄位、提示字串，依 [`references/ui-label-sources.md`](references/ui-label-sources.md) 查到來源才寫；`compile` 會執行 `verify_labels.py` 列出找不到的字串，全部處理完（改真名，或確認只存在 DB 後登記）再交付。
 
 ### Step 4：執行無損確定性編譯 (`compile`)
 ```bash

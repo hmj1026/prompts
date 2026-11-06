@@ -102,6 +102,11 @@ def cmd_compile(args):
             t_mode = detect_target_mode(t)
         if t_mode == "qa":
             rc = run_cmd([sys.executable, os.path.join(SCRIPT_DIR, "scaffold_qa.py"), "--compile", t])
+            # 畫面字串查證：只警告不擋編譯；功能在其他分支時用 --ref 指定
+            label_cmd = [sys.executable, os.path.join(SCRIPT_DIR, "verify_labels.py"), t]
+            if getattr(args, "ref", None):
+                label_cmd += ["--ref", args.ref]
+            run_cmd(label_cmd)
         else:
             rc = run_cmd([sys.executable, os.path.join(SCRIPT_DIR, "scaffold_doc.py"), "--compile", t])
         if rc != 0:
@@ -156,6 +161,7 @@ def main():
     p_comp = sub.add_parser("compile", help="將 Markdown SSOT 無損編譯為高對比互動式 HTML 並自動執行雙重驗證")
     p_comp.add_argument("--mode", choices=["auto", "feature", "qa", "both"], default="auto", help="編譯模式 (預設 auto 依路徑自動判斷)")
     p_comp.add_argument("targets", nargs="*", help="目標 Markdown 檔案或目錄路徑")
+    p_comp.add_argument("--ref", help="QA 手冊對應功能所在的分支或 commit（畫面字串查證用；預設查目前 checkout）")
 
     # 4. validate
     p_val = sub.add_parser("validate", help="執行靜態語法檢驗與 Playwright 無頭瀏覽器實機互動驗收")
