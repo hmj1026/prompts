@@ -9,7 +9,8 @@
 輸出（皆 TSV，--out 目錄下）：
   scope.tsv          狀態(A/M) 與檔案
   anchor_new.tsv     新檔：缺 anchor／method 層重複／不在類別層
-  anchor_mod.tsv     修改檔：程式段落缺 anchor（已排除純 docblock hunk、develop 帶入、其他功能 anchor）
+  anchor_mod.tsv     修改檔：程式段落缺 anchor（已排除純 docblock hunk、develop 帶入、其他功能 anchor）；hunk 逐行歸屬方法，另列基準沒有且缺 anchor 的新方法
+  anchor_wip.tsv     僅 --wip-anchor：工作樹相對 HEAD 的變更缺子題 anchor（新檔／修改段落）
   doc_nodoc.tsv      新檔全部方法＋修改檔本體有程式變更的方法中，缺 docblock 者
   doc_nozh.tsv       同上範圍，docblock 無中文說明者
   doc_jargon.tsv     同上範圍，docblock 含流程代號（Dnn、task N、Stage X、裁決 X、Ruling X、review-N）
@@ -184,7 +185,25 @@ def check_new(repo, path, anchor):
     return rows
 
 
-def check_mod(repo, base, path, anchor, dev_src):
+def span_of(spans, n):
+    """回傳涵蓋第 n 行的方法 span（docblock 起始～本體結束），無則 None。"""
+    return next((s for s in spans if (s[2] if s[2] else s[1]) <= n <= s[3]), None)
+
+
+def base_method_names(repo, base, path):
+    try:
+        base_src = git(repo, 'show', '%s:%s' % (base, path)).split('\n')
+    except subprocess.CalledProcessError:
+        return set()
+    return set(s[0] for s in method_spans(base_src, path))
+
+
+def is_other_anchor(line, anchor, not_other):
+    """該行帶其他功能 anchor；not_other 列出不算「其他功能」的 anchor（WIP 模式下的分支主 anchor）。"""
+    return bool(OTHER_ANCHOR.search(line)) and anchor not in line and not any(a in line for a in not_other)
+
+
+def check_mod(repo, base, path, anchor, dev_src, not_other=()):
     src = read_lines(repo, path)
     spans = method_spans(src, path) if path.endswith(('.php', '.js')) else []
     rows = []
@@ -196,8 +215,8 @@ def check_mod(repo, base, path, anchor, dev_src):
         if dev_src and all(not t.strip() or t in dev_src for t in texts) and not any(anchor in t for t in texts):
             continue  # develop 帶入
         start = h[0][0]
-        # 注意：hunk 可能落在 docblock 範圍 (doc_start ~ decl) 或方法本體 (decl ~ end)
-        owner = next((s for s in spans if (s[2] if s[2] else s[1]) <= start <= s[3]), None)
+        # hunk 依起始行歸屬方法；跨方法 hunk 中後段的新方法由 check_new_methods 另行檢查
+        owner = span_of(spans, start)
         key = owner if owner else ('<檔案層>', start)  # 方法外的 hunk 各自判定，不合併
         groups.setdefault(key, []).append(h)
     for key, hs in groups.items():
@@ -215,10 +234,50 @@ def check_mod(repo, base, path, anchor, dev_src):
             if any(anchor in c for c in method_lines):
                 continue
         # 僅在變更行本身或緊鄰前 3 行包含其他功能 anchor 時視為其他功能，避免方法早期歷史註記造成盲區
-        if any(OTHER_ANCHOR.search(t) for t in added) or any(OTHER_ANCHOR.search(c) and anchor not in c for c in immediate_context):
+        if any(is_other_anchor(t, anchor, not_other) for t in added) or any(is_other_anchor(c, anchor, not_other) for c in immediate_context):
             continue  # 其他功能
         label = owner[0] if owner else '<檔案層>'
         rows.append((path, first, label, len(hs), len(added)))
+    reported = set(r[2] for r in rows)
+    if dev_src:
+        reported |= set(sp[0] for sp in method_spans(dev_src.split('\n'), path))  # develop 帶入的方法
+    rows += check_new_methods(repo, base, path, anchor, src, spans, reported, not_other)
+    return rows
+
+
+JS_TEST_BLOCKS = {'describe', 'it', 'test', 'beforeEach', 'afterEach', 'beforeAll', 'afterAll'}
+
+
+def class_has_anchor(src, decl, anchor):
+    """宣告行之前最近的 class 宣告，其 docblock（含上方 3 行）是否帶本次 anchor。"""
+    k = next((i for i in range(decl - 2, -1, -1) if CLASS.match(src[i])), None)
+    if k is None:
+        return False
+    j = k - 1
+    while j >= 0 and (src[j].strip() == '' or COMMENT.match(src[j])):
+        j -= 1
+    return any(anchor in c for c in src[max(0, j - 3):k])
+
+
+def check_new_methods(repo, base, path, anchor, src, spans, reported, not_other=()):
+    """基準沒有的方法：方法範圍內須有本次 anchor，或 docblock 帶其他功能 anchor；不依賴 diff 對齊。"""
+    if not spans:
+        return []
+    base_names = base_method_names(repo, base, path)
+    rows = []
+    for name, decl, doc_start, end in spans:
+        if name in base_names or name in reported or name in JS_TEST_BLOCKS:
+            continue
+        if class_has_anchor(src, decl, anchor):
+            continue  # 同檔 helper class 的 class 層 anchor 已涵蓋其方法
+        top = doc_start or decl
+        method_lines = src[max(0, top - 4):end]  # 含宣告前 3 行的段落 anchor（JS 常見）
+        if any(anchor in c for c in method_lines):
+            continue
+        block = src[max(0, (doc_start or decl) - 4):decl - 1]  # docblock 加其上 3 行（段落 anchor 常寫在 /** 之前）
+        if any(is_other_anchor(c, anchor, not_other) for c in block):
+            continue  # 子題或其他功能 anchor
+        rows.append((path, decl, '%s（新方法缺 anchor）' % name, 0, 0))
     return rows
 
 
@@ -258,6 +317,18 @@ def check_doc(repo, base, path, status, anchor, include_legacy_nodoc=False):
     return nodoc, nozh, jargon
 
 
+def check_wip(repo, wip_anchor, main_anchor):
+    """工作樹相對 HEAD 的變更須帶子題 anchor：untracked 新檔依新物件規則，tracked 檔依修改段落規則。"""
+    rows = []
+    for path in git(repo, 'ls-files', '--others', '--exclude-standard').split('\n'):
+        if path.endswith(EXTS) and not path.startswith(VENDOR_DIRS):
+            rows += check_new(repo, path, wip_anchor)
+    for path in git(repo, 'diff', '--name-only', 'HEAD').split('\n'):
+        if path.endswith(EXTS) and not path.startswith(VENDOR_DIRS) and os.path.isfile(os.path.join(repo, path)):
+            rows += check_mod(repo, 'HEAD', path, wip_anchor, '', (main_anchor,))
+    return rows
+
+
 def write_tsv(out, name, rows):
     with open(os.path.join(out, name), 'w', encoding='utf-8') as fh:
         for r in rows:
@@ -273,6 +344,8 @@ def main():
     ap.add_argument('--out', required=True)
     ap.add_argument('--include-legacy-nodoc', action='store_true', default=False,
                     help='是否將修改檔中基準分支既有且原本即無 docblock 的 legacy 方法納入 nodoc 檢查（預設排除以避免歷史雜訊）')
+    ap.add_argument('--wip-anchor', default=None,
+                    help='未提交 WIP 的子題 anchor：以 HEAD 為基準檢查工作樹變更，結果寫入 anchor_wip.tsv')
     args = ap.parse_args()
     repo = os.path.abspath(args.repo)
     os.makedirs(args.out, exist_ok=True)
@@ -292,6 +365,7 @@ def main():
         nodoc += a
         nozh += b
         jargon += c
+    wip_rows = check_wip(repo, args.wip_anchor, args.anchor) if args.wip_anchor else []
     counts = [
         ('scope.tsv', write_tsv(args.out, 'scope.tsv', scope)),
         ('anchor_new.tsv', write_tsv(args.out, 'anchor_new.tsv', new_rows)),
@@ -299,6 +373,7 @@ def main():
         ('doc_nodoc.tsv', write_tsv(args.out, 'doc_nodoc.tsv', nodoc)),
         ('doc_nozh.tsv', write_tsv(args.out, 'doc_nozh.tsv', nozh)),
         ('doc_jargon.tsv', write_tsv(args.out, 'doc_jargon.tsv', jargon)),
+        ('anchor_wip.tsv', write_tsv(args.out, 'anchor_wip.tsv', wip_rows)),
     ]
     with open(os.path.join(args.out, 'summary.txt'), 'w', encoding='utf-8') as fh:
         fh.write('base=%s anchor=%s\n' % (base, args.anchor))

@@ -168,6 +168,9 @@ view 檔（含新增檔、新增區段、修改段落）依 anchor 所在位置�
    （`--base` 可覆寫基準）。腳本已處理以下排除：純 docblock、註解或括號的 hunk，develop 帶入的 hunk，
    帶其他功能 anchor 的 hunk，同檔多個 helper class 各一次，namespace／script 層獨立函式，
    以及字串 fixture。逐筆確認腳本結果，誤判在盤點表註明理由後剔除；腳本盲區另行人工補列。
+   `anchor_mod.tsv` 中標「（新方法缺 anchor）」的列，是基準沒有、且方法範圍與 docblock 上方 3 行都無 anchor 的新方法，
+   不受 diff 對齊位移影響。工作樹有未提交 WIP 且帶子題 anchor 時，加 `--wip-anchor '<子題 anchor>'`，
+   以 HEAD 為基準檢查 WIP 變更，結果在 `anchor_wip.tsv`（分支主 anchor 在此模式不算其他功能）。
 2. 輸出表格，每列包含檔案與行號、類型、
    現況、預計調整加內容範例；改名類另列呼叫端數量與涉及檔案，以及其他未合併分支的呼叫情形。
 3. 完成條件：盤點表筆數加剔除筆數，等於 `summary.txt` 各類筆數。讀腳本輸出一律讀整個檔案，
@@ -179,11 +182,19 @@ view 檔（含新增檔、新增區段、修改段落）依 anchor 所在位置�
 - 一次完成使用者確認的全部項目，含改名的所有呼叫端與測試；anchor 行原樣插入，不改既有 anchor。
 - 新方法放檔案最下端，遵守 PHP 5.6 語法。
 - 修正後驗證，任一步失敗即修正後重跑，不得帶著失敗結束：
-  1. 每個變更的 PHP 檔跑 `php -l`。
+  1. 每個變更的 PHP 檔跑 `php -l`。host 的 `php` 是 5.6.40，只能證明 5.6；
+     宣稱 8.4 通過前，須先在 8.4 容器內看到 `php -v` 印出 8.4，例如：
+     `docker run --rm -i -v /home/paul/projects:/home/paul/projects -w "$PWD" zdpos-php84-test:local sh -c 'while read f; do php -l "$f" | grep -v "^No syntax"; done' < 檔案清單`
+     （檔案清單須位於掛載目錄內或經 stdin 傳入）。
   2. 重跑掃描腳本：已核准修正的項目須全數消失，剩餘筆數只能是盤點表中標為保留或剔除的項目。
   3. 有 view 變更時重跑 §1 的 view 偵測，結果須為零。
   4. 以 `rg` 確認舊方法名在程式碼與測試中已無殘留。
-  5. 在容器內跑受影響的測試：
-     依專案 Quick Toolchain 執行 `bash protected/tests/scripts/run-php84-tests.sh fast <測試路徑>`（支援單檔/單案例，環境變數如未設置將自動探測 PHP 8.4 測試容器）；
-     既有且與本次無關的失敗須以基準分支或 commit 歷史證明為既有，並列出。
+  5. 在容器內跑受影響的測試，依分支選 runner：
+     - 分支有 `protected/tests/scripts/run-php84-tests.sh`（PHP 8.4 checkout）：
+       `bash protected/tests/scripts/run-php84-tests.sh fast <測試路徑>`。
+     - 沒有（PHP 5.6 legacy checkout）：`bash protected/tests/scripts/run-tests.sh`（5.6 fast）；
+       動到 Controller、Repository 或拆帳流程時加跑 `run-tests.sh integration`。本機 DB 需帶
+       `ZDPOS_MYSQL_USER=root ZDPOS_MYSQL_PASSWORD=''`，預設的 `develop` 帳號會建庫失敗。
+       此類分支的 vendor PHPUnit 5.7 無法在 8.4 執行，8.4 測試回報 `NOT_RUN`，不可寫成通過。
+     - 既有且與本次無關的失敗須以基準分支或 commit 歷史證明為既有，並列出。
 - 最後列出差異統計摘要、驗證結果與未處理項目。不自動 commit；建議改名類調整與其他調整分成獨立的 `refactor:` commit。
