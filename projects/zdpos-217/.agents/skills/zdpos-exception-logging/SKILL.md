@@ -44,7 +44,14 @@ try { ... } catch (\Exception $e) { /* ignore */ }
 try { ... } catch (\Exception $e) {
     EILogger::error(...);  // 缺少 ExceptionLogHelper::logCaughtExceptionToApplication
 }
+
+// 禁止 4：直接呼叫 \Yii::log 記錄例外（含 PHP 7+／8.4 的 Error）
+try { ... } catch (\Throwable $e) {
+    \Yii::log($e->getMessage(), \CLogger::LEVEL_ERROR, 'application');  // 改用 ExceptionLogHelper（已接受 \Throwable）
+}
 ```
+
+`catch (\Throwable $e)` 在 5.6 語法合法但永不命中；8.4 下同樣交給 `ExceptionLogHelper::logCaughtExceptionToApplication($e)`。
 
 ## 相關
 
