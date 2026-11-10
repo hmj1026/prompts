@@ -5,15 +5,21 @@
   python3 anchor_scan.py --anchor '2026/07/21 paul [v1] 新增拆帳功能0714' --out .scratch/anchor-review-<date>
   可選 --base（預設 origin/master）、--repo（預設目前目錄）。
 
-範圍：相對 merge-base 有變更（含工作樹與 untracked）、且內容含 anchor 的 php/js/html/vue 檔。
+範圍：相對 merge-base 有變更（含工作樹與 untracked，未追蹤目錄逐檔展開）、且內容含 anchor 的 php/js/html/vue 檔。
+rename（git mv）檔視為修改檔，diff 與基準方法清單一律以舊路徑比對。
 輸出（皆 TSV，--out 目錄下）：
   scope.tsv          狀態(A/M) 與檔案
   anchor_new.tsv     新檔：缺 anchor／method 層重複／不在類別層
   anchor_mod.tsv     修改檔：程式段落缺 anchor（已排除純 docblock hunk、develop 帶入、其他功能 anchor）；hunk 逐行歸屬方法，另列基準沒有且缺 anchor 的新方法
+  anchor_dup.tsv     修改檔：同一方法（docblock＋本體）出現本次 anchor 超過一次者（CODING_STANDARDS §12 同方法不重複）
   anchor_wip.tsv     僅 --wip-anchor：工作樹相對 HEAD 的變更缺子題 anchor（新檔／修改段落）
   doc_nodoc.tsv      新檔全部方法＋修改檔本體有程式變更的方法中，缺 docblock 者
   doc_nozh.tsv       同上範圍，docblock 無中文說明者
-  doc_jargon.tsv     同上範圍，docblock 含流程代號（Dnn、task N、Stage X、裁決 X、Ruling X、review-N）
+  doc_jargon.tsv     新增或修改的註解行（含測試檔）含流程代號（Dnn、task N、任務 N、Decision N、Phase N、Stage X、裁決 X、Ruling X、review-N、golden master）
+  doc_terms.tsv      同上範圍，註解含應改用中文的英文術語（CONTEXT.md「實作術語對照」＋ SSOT／facade／Port）
+  style_vars.tsv     新增程式行的變數命名：物件應 PascalCase、陣列應 snake_case（CODING_STANDARDS §8，啟發式）
+  style_tests.tsv    新增的測試方法名不是 test<主題>_<條件>_<結果> 三段式
+  anchor_foreign.tsv 新增的註解行帶同作者、但文字不同的 anchor（疑似開發期佔位 anchor；--wip-anchor 不計）
   summary.txt        各檔筆數；Phase A 盤點表筆數必須與此一致
 """
 import argparse
@@ -33,7 +39,14 @@ FUNC_JS_KEY = re.compile(r'^\s*[\'\"]?(\w+)[\'\"]?\s*:\s*(?:async\s+)?function\b
 FUNC_JS_ES6 = re.compile(r'^\s*(?:(?:async|static)\s+)*(\w+)\s*\([^)]*\)\s*\{')
 JSBLOCK = re.compile(r'\s*(test|it|describe)\(')
 TRIVIAL = re.compile(r'^\s*[{}()\[\];,]*\s*$')
-JARGON = re.compile(r'(\bD\d{1,2}\b|\btask\s*\d+(?:\.\d+)?|\bStage\s*[A-Z]{1,2}\b|裁決\s*[A-Z]\b|Ruling\s*[A-Z]\b|\brulings?\b|review-\d+)', re.I)
+JARGON = re.compile(r'(\bD\d{1,2}\b|\btask\s*\d+(?:\.\d+)?|任務\s*\d+(?:\.\d+)?|\bDecision\s*\d+|\bPhase\s*\d+|\bStage\s*[A-Z]{1,2}\b|裁決\s*[A-Z]\b|Ruling\s*[A-Z]\b|\brulings?\b|review-\d+|golden master)', re.I)
+# CONTEXT.md 對照表沒有、但本專案註解已約定的中文寫法
+EXTRA_TERMS = {'SSOT': '單一來源', 'facade': '轉接層', 'Port': '讀取介面'}
+ANCHOR_LIKE = re.compile(r'((?:19|20)\d{2}[/-]\d{1,2}[/-]\d{1,2})\s+(\S+)\s+\[[^\]]*\][^\n]*')
+OBJ_ASSIGN = re.compile(r'\$([a-z][A-Za-z0-9_]*)\s*=\s*(?:new\s+[\\A-Za-z_]|clone\s|[\\A-Z][\\A-Za-z0-9_]*::model\(\))')
+ARR_ASSIGN = re.compile(r'\$([a-z]+[A-Z][A-Za-z0-9]*)\s*=\s*(?:\[|array\(|array_\w+\(|explode\()')
+DECL_LINE = re.compile(r'^\s*(?:public|protected|private|var|static|const)\b')
+TEST_NAME = re.compile(r'^test[A-Za-z0-9]+_[A-Za-z0-9]+_[A-Za-z0-9]+$')
 
 
 def match_func(line, is_js=False):
@@ -54,6 +67,21 @@ def git(repo, *args):
     return subprocess.check_output(['git', '-C', repo] + list(args)).decode('utf-8', 'replace')
 
 
+RENAMES = {}  # 新路徑 -> 基準上的舊路徑（build_scope 依 git diff -M 填入）
+
+
+def base_path(repo, base, path):
+    """基準上對應的路徑：基準有同路徑就用它，否則用 rename 前的舊路徑。"""
+    if subprocess.call(['git', '-C', repo, 'cat-file', '-e', '%s:%s' % (base, path)],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+        return path
+    return RENAMES.get(path, path)
+
+
+def show_base(repo, base, path):
+    return git(repo, 'show', '%s:%s' % (base, base_path(repo, base, path)))
+
+
 def read_lines(repo, path):
     with open(os.path.join(repo, path), encoding='utf-8', errors='replace') as fh:
         return fh.read().split('\n')
@@ -62,7 +90,9 @@ def read_lines(repo, path):
 def added_lines(repo, base, path):
     """回傳 [(新檔行號, 內容)]。"""
     out, cur = [], None
-    for line in git(repo, 'diff', '-U0', base, '--', path).split('\n'):
+    old = base_path(repo, base, path)
+    specs = [old, path] if old != path else [path]
+    for line in git(repo, 'diff', '-U0', '-M', base, '--', *specs).split('\n'):
         m = re.match(r'@@ -\d+(?:,\d+)? \+(\d+)', line)
         if m:
             cur = int(m.group(1))
@@ -90,18 +120,20 @@ def hunks(repo, base, path):
 
 def build_scope(repo, base, anchor):
     status = {}
-    for line in git(repo, 'diff', '--name-status', base).split('\n'):
+    for line in git(repo, 'diff', '-M', '--name-status', base).split('\n'):
         parts = line.split('\t')
         if len(parts) >= 2 and parts[-1].endswith(EXTS):
             if not parts[-1].startswith(VENDOR_DIRS):
                 status[parts[-1]] = parts[0][0]
+                if parts[0].startswith('R') and len(parts) >= 3:
+                    RENAMES[parts[-1]] = parts[1]
     for path in git(repo, 'ls-files', '--others', '--exclude-standard').split('\n'):
         if path.endswith(EXTS) and not path.startswith(VENDOR_DIRS):
             status[path] = 'A'
 
     # 檢查工作區有變動的檔案（含 staged、unstaged 與 untracked）
     dirty = set()
-    for line in git(repo, 'status', '--porcelain').split('\n'):
+    for line in git(repo, 'status', '--porcelain', '--untracked-files=all').split('\n'):
         if len(line) > 3:
             p = line[3:].strip()
             if ' -> ' in p:
@@ -192,7 +224,7 @@ def span_of(spans, n):
 
 def base_method_names(repo, base, path):
     try:
-        base_src = git(repo, 'show', '%s:%s' % (base, path)).split('\n')
+        base_src = show_base(repo, base, path).split('\n')
     except subprocess.CalledProcessError:
         return set()
     return set(s[0] for s in method_spans(base_src, path))
@@ -281,6 +313,19 @@ def check_new_methods(repo, base, path, anchor, src, spans, reported, not_other=
     return rows
 
 
+def check_dup(repo, path, anchor):
+    """修改檔：同一方法範圍（docblock 起始～本體結束）內本次 anchor 出現超過一次。"""
+    if not path.endswith(('.php', '.js')):
+        return []
+    src = read_lines(repo, path)
+    rows = []
+    for name, decl, doc_start, end in method_spans(src, path):
+        hits = [i + 1 for i in range((doc_start or decl) - 1, end) if anchor in src[i] and COMMENT.match(src[i])]
+        if len(hits) > 1:
+            rows.append((path, hits[0], name, len(hits), ','.join(str(h) for h in hits)))
+    return rows
+
+
 def check_doc(repo, base, path, status, anchor, include_legacy_nodoc=False):
     if not path.endswith('.php') or '/views/' in path or path.startswith(('protected/tests/', 'tests/')):
         return [], [], []  # view 與測試檔不套業務方法層 phpDoc 規範
@@ -292,7 +337,7 @@ def check_doc(repo, base, path, status, anchor, include_legacy_nodoc=False):
     base_no_doc_methods = set()
     if not include_legacy_nodoc and status != 'A':
         try:
-            base_src = git(repo, 'show', '%s:%s' % (base, path)).split('\n')
+            base_src = show_base(repo, base, path).split('\n')
             for b_name, b_decl, b_doc_start, b_end in method_spans(base_src, path):
                 if not b_doc_start:
                     base_no_doc_methods.add(b_name)
@@ -312,8 +357,6 @@ def check_doc(repo, base, path, status, anchor, include_legacy_nodoc=False):
             continue
         if not re.search(r'[一-鿿]', block):
             nozh.append((path, decl, name))
-        for m in JARGON.finditer(block):
-            jargon.append((path, doc_start, name, m.group(0)))
     return nodoc, nozh, jargon
 
 
@@ -326,6 +369,68 @@ def check_wip(repo, wip_anchor, main_anchor):
     for path in git(repo, 'diff', '--name-only', 'HEAD').split('\n'):
         if path.endswith(EXTS) and not path.startswith(VENDOR_DIRS) and os.path.isfile(os.path.join(repo, path)):
             rows += check_mod(repo, 'HEAD', path, wip_anchor, '', (main_anchor,))
+    return rows
+
+
+def load_terms(repo):
+    """英文術語 -> 中文寫法：CONTEXT.md「實作術語對照」表＋ EXTRA_TERMS。"""
+    terms = dict(EXTRA_TERMS)
+    path = os.path.join(repo, 'CONTEXT.md')
+    if os.path.isfile(path):
+        for line in open(path, encoding='utf-8', errors='replace'):
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if len(cells) >= 2 and re.match(r'^[a-z][a-z -]+$', cells[1]) and re.search(r'[一-鿿]', cells[0]):
+                terms[cells[1]] = cells[0]
+    return terms
+
+
+def changed_lines(repo, base, path, status):
+    """[(行號, 內容)]：新檔為全部行，修改檔為 diff 新增行。"""
+    if status == 'A':
+        return list(enumerate(read_lines(repo, path), 1))
+    return added_lines(repo, base, path)
+
+
+def term_pattern(term):
+    flags = 0 if term[:1].isupper() else re.I  # Port／SSOT 區分大小寫，避免撞到 report、import
+    return re.compile(r'(?<![A-Za-z-])' + re.escape(term) + r'(?![A-Za-z-])', flags)
+
+
+def check_lines(repo, base, path, status, anchor, terms, wip_anchor=None):
+    """逐行檢查新增／修改內容：流程代號、英文術語、變數命名、佔位 anchor。"""
+    jargon, term_rows, var_rows, foreign = [], [], [], []
+    author = anchor.split()[1] if len(anchor.split()) > 1 else None
+    pats = [(t, zh, term_pattern(t)) for t, zh in sorted(terms.items())]
+    is_php = path.endswith('.php')
+    for n, text in changed_lines(repo, base, path, status):
+        if COMMENT.match(text):
+            for m in JARGON.finditer(text):
+                jargon.append((path, n, '<註解>', m.group(0)))
+            for t, zh, pat in pats:
+                if pat.search(text):
+                    term_rows.append((path, n, t, zh))
+            m = ANCHOR_LIKE.search(text)
+            if m and author and m.group(2) == author and anchor not in text and not (wip_anchor and wip_anchor in text):
+                foreign.append((path, n, m.group(0).split(' - ')[0].strip()))
+            continue
+        if not is_php or DECL_LINE.match(text):
+            continue
+        for m in OBJ_ASSIGN.finditer(text):
+            var_rows.append((path, n, '$' + m.group(1), '物件應 PascalCase'))
+        for m in ARR_ASSIGN.finditer(text):
+            var_rows.append((path, n, '$' + m.group(1), '陣列應 snake_case'))
+    return jargon, term_rows, var_rows, foreign
+
+
+def check_test_names(repo, base, path):
+    """測試檔中基準沒有的 test 方法，名稱須為三段式。"""
+    if '/tests/' not in '/' + path or not path.endswith('.php'):
+        return []
+    base_names = base_method_names(repo, base, path)
+    rows = []
+    for name, decl, doc_start, end in method_spans(read_lines(repo, path), path):
+        if name.startswith('test') and name not in base_names and not TEST_NAME.match(name):
+            rows.append((path, decl, name))
     return rows
 
 
@@ -351,28 +456,41 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     base = git(repo, 'merge-base', args.base, 'HEAD').strip()
     scope = build_scope(repo, base, args.anchor)
-    new_rows, mod_rows, nodoc, nozh, jargon = [], [], [], [], []
+    new_rows, mod_rows, dup_rows, nodoc, nozh, jargon = [], [], [], [], [], []
+    term_rows, var_rows, test_rows, foreign_rows = [], [], [], []
+    terms = load_terms(repo)
     for st, path in scope:
         if st == 'A':
             new_rows += check_new(repo, path, args.anchor)
         else:
             try:
-                dev_src = git(repo, 'show', 'origin/develop:' + path)
+                dev_src = git(repo, 'show', 'origin/develop:' + base_path(repo, 'origin/develop', path))
             except subprocess.CalledProcessError:
                 dev_src = ''
             mod_rows += check_mod(repo, base, path, args.anchor, dev_src)
+            dup_rows += check_dup(repo, path, args.anchor)
         a, b, c = check_doc(repo, base, path, st, args.anchor, include_legacy_nodoc=args.include_legacy_nodoc)
         nodoc += a
         nozh += b
-        jargon += c
+        j, t, v, f = check_lines(repo, base, path, st, args.anchor, terms, args.wip_anchor)
+        jargon += j
+        term_rows += t
+        var_rows += v
+        foreign_rows += f
+        test_rows += check_test_names(repo, base, path)
     wip_rows = check_wip(repo, args.wip_anchor, args.anchor) if args.wip_anchor else []
     counts = [
         ('scope.tsv', write_tsv(args.out, 'scope.tsv', scope)),
         ('anchor_new.tsv', write_tsv(args.out, 'anchor_new.tsv', new_rows)),
         ('anchor_mod.tsv', write_tsv(args.out, 'anchor_mod.tsv', mod_rows)),
+        ('anchor_dup.tsv', write_tsv(args.out, 'anchor_dup.tsv', dup_rows)),
         ('doc_nodoc.tsv', write_tsv(args.out, 'doc_nodoc.tsv', nodoc)),
         ('doc_nozh.tsv', write_tsv(args.out, 'doc_nozh.tsv', nozh)),
         ('doc_jargon.tsv', write_tsv(args.out, 'doc_jargon.tsv', jargon)),
+        ('doc_terms.tsv', write_tsv(args.out, 'doc_terms.tsv', term_rows)),
+        ('style_vars.tsv', write_tsv(args.out, 'style_vars.tsv', var_rows)),
+        ('style_tests.tsv', write_tsv(args.out, 'style_tests.tsv', test_rows)),
+        ('anchor_foreign.tsv', write_tsv(args.out, 'anchor_foreign.tsv', foreign_rows)),
         ('anchor_wip.tsv', write_tsv(args.out, 'anchor_wip.tsv', wip_rows)),
     ]
     with open(os.path.join(args.out, 'summary.txt'), 'w', encoding='utf-8') as fh:

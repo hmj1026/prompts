@@ -16,7 +16,8 @@ allowed-tools: Read, Edit, Write, Grep, Glob, Bash(git *), Bash(rg *), Bash(grep
 
 - 以技能參數傳入本次開發分支 anchor，全字串比對。
   範例格式為日期加作者加方括號主題加描述。
-- 若參數為空，停下來問使用者要檢查哪個 anchor，不得自行臆測。
+- 若參數為空，先讀本分支 OpenSpec change 的 `tasks.md` 開頭 `> Anchor：` 行，提出後請使用者確認；
+  沒有這行時停下來問使用者要檢查哪個 anchor，不得自行臆測。
 - 比對基準預設為 origin master，可用 BASE 參數覆寫。
 - 新物件定義為在基準分支不存在、本分支新增的檔案，
   以 diff-filter A 的新增檔案清單判定。
@@ -171,6 +172,14 @@ view 檔（含新增檔、新增區段、修改段落）依 anchor 所在位置�
    `anchor_mod.tsv` 中標「（新方法缺 anchor）」的列，是基準沒有、且方法範圍與 docblock 上方 3 行都無 anchor 的新方法，
    不受 diff 對齊位移影響。工作樹有未提交 WIP 且帶子題 anchor 時，加 `--wip-anchor '<子題 anchor>'`，
    以 HEAD 為基準檢查 WIP 變更，結果在 `anchor_wip.tsv`（分支主 anchor 在此模式不算其他功能）。
+   `anchor_dup.tsv` 列出修改檔中同一方法帶本次 anchor 超過一次者（§2.3），保留第一個，其餘去掉 anchor 前綴、說明保留。
+   git mv 搬移的檔案以舊路徑比對基準；未追蹤目錄內的新檔逐檔納入 scope。
+   `anchor_foreign.tsv` 是新增註解中同作者、文字不同的 anchor：開發期佔位 anchor 換成正式 anchor，
+   刻意獨立的 anchor（如測試基建）在盤點表註明後保留。
+   逐行檢查（新檔全部行、修改檔 diff 新增行，含測試檔）另輸出：`doc_jargon.tsv` 流程代號、
+   `doc_terms.tsv` 英文術語與建議中文（來源 CONTEXT.md 實作術語對照）、
+   `style_vars.tsv` 變數命名（§4 第 5 條，啟發式）、`style_tests.tsv` 測試名非三段式（§4 第 16 條）。
+   style 類以這兩份為起點，人工再補啟發式抓不到的參數與條件式賦值。
 2. 輸出表格，每列包含檔案與行號、類型、
    現況、預計調整加內容範例；改名類另列呼叫端數量與涉及檔案，以及其他未合併分支的呼叫情形。
 3. 完成條件：盤點表筆數加剔除筆數，等於 `summary.txt` 各類筆數。讀腳本輸出一律讀整個檔案，
@@ -186,6 +195,8 @@ view 檔（含新增檔、新增區段、修改段落）依 anchor 所在位置�
      宣稱 8.4 通過前，須先在 8.4 容器內看到 `php -v` 印出 8.4，例如：
      `docker run --rm -i -v /home/paul/projects:/home/paul/projects -w "$PWD" zdpos-php84-test:local sh -c 'while read f; do php -l "$f" | grep -v "^No syntax"; done' < 檔案清單`
      （檔案清單須位於掛載目錄內或經 stdin 傳入）。
+     先跑 `docker image inspect zdpos-php84-test:local`；映像不存在時，8.4 lint 與測試一律回報 `NOT_RUN（本機無 8.4 映像）`。
+     建置來源不在任何 repo（2026-11-10 確認 `~/.local/state/zdpos-php84/` 下的 Dockerfile 已不在），重建須另案。
   2. 重跑掃描腳本：已核准修正的項目須全數消失，剩餘筆數只能是盤點表中標為保留或剔除的項目。
   3. 有 view 變更時重跑 §1 的 view 偵測，結果須為零。
   4. 以 `rg` 確認舊方法名在程式碼與測試中已無殘留。
