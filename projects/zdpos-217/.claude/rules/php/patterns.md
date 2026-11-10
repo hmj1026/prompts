@@ -9,17 +9,21 @@ paths:
 
 ## Repository / Service
 
-Inject `IXxxRepository` into Domain Service (not AR model directly). Service Layer owns transaction / validation / external API / rollback.
+Inject a Domain `Contracts/` role-noun interface (e.g. `ItemReportReader`, no `I` prefix / `Interface` suffix; ADR 0027 Decision B) into Domain Service, implemented by the Repository (not AR model directly). Service Layer owns transaction / validation / external API / rollback.
 
 ## DB Query Layering (SQL location SSOT)
 
 1. **Builder priority**: prefer `Infrastructure\Database\Query\Builder` via `$repo->queryBuilder()->where()->get()/first()/value()/count()/update()`; fall back to Yii `createCommand()` only when the toolkit doesn't fit.
-2. **Location**: all SQL lives in Repository. Controller / Domain service / trait / **`protected/views/**`** SHALL NOT call `Yii::app()->db->createCommand()` directly or build SQL strings. View-layer SQL（e.g. `views/pos/saleorder7.php` 既有 5 段 inline query）須上移：Controller 呼叫 Repository 取資料 → 經 `render()` 的 `configs` 傳入 view；view 只消費已備妥資料。
+2. **Location**: SQL strings only in `infrastructure/Repositories`, `infrastructure/Database`, `protected/models` (`CODING_STANDARDS.md` §0 / ADR 0027 Decision C). Controller / Domain service / trait / **`protected/views/**`** SHALL NOT call `Yii::app()->db->createCommand()` directly or build SQL strings. View-layer SQL（e.g. `views/pos/saleorder7.php` 既有 5 段 inline query）須上移：Controller 呼叫 Repository 取資料 → 經 `render()` 的 `configs` 傳入 view；view 只消費已備妥資料。
 3. **Naming**: business semantics + explicit required columns (`createWeatherContext($storeNo, ...)`). Forbidden: `insertRow($row)` / `updateBy($where, $set)` / `executeRaw($sql)`.
 4. **Migration cadence**: new code follows 1+2 immediately; existing inline SQL only pushed down when its section is being modified.
 5. **No mirror-existing escape hatch**: neighbor using `createCommand()` is not justification — create a **V2 parallel method** with `queryBuilder()` if upgrading is impractical, and annotate the legacy method `@see xxxV2`.
 
 Toolkit prerequisite (unfamiliarity is not a fallback reason): read `docs/guides/query-toolkit-cookbook.md` + `docs/guides/query-toolkit-migration-guide.md`. Date helpers (`BuildsDateWheres` trait): `->whereDate('col', '>=|<=', 'YYYY-MM-DD')`. Spec: `infrastructure/AGENTS.md` "Database Query Toolkit".
+
+## Legacy UI Helper Freeze
+
+No new `new Ztool(` / `new Zaid(` / `new SelectOption(` / `new Zfilter(` / `extends ZbaseModule`. Option data → Repository `fetchXxxOptions()` or `AbstractEnum::toSelectOptions()`; input → `AbstractFormRequest`. `ZaidEx` (Path B sticky tables) is the only exception. See `docs/adr/0028-legacy-ui-helper-retirement.md`.
 
 ## Batch Mark-Processed Race (snapshot-then-blanket-UPDATE)
 
@@ -77,6 +81,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 - Validation 規則 SSOT：`public function rules()` 內宣告；**禁止** 在 controller 端 inline 重複規則。
 - ValidationException catch 端用 `$e->getErrors()` 取 `[field => string[]]` 結構（對齊 Laravel `errors()->all()`）。
 - 命名偏離 Laravel：用 `validateOrFail()`（不是 Laravel 的 `validate()`），因既有 `protected function validate()` 與 20 個子類 override 在 PHP 5.6 下無法被 widen — 詳見 `openspec/specs/form-request-abstract/spec.md`。
+- **Controller 取值走 Yii（2026-11-09）**：新碼不直接讀 `$_POST`／`$_GET` 組 Request；用 `XxxRequest::fromHttp(Yii::app()->getRequest())`（`AbstractFormRequest`，白名單＝`schema()` 鍵 ∪ `mappings()` 外部鍵；前提：`schema()`／`mappings()` 須回傳靜態字面值、不讀實例狀態（`fromHttp()` 以 newInstanceWithoutConstructor 建立實例），`$source` 可為 `post`／`query`／`param`）或 `Yii::app()->getRequest()->getPost('x')`。**陷阱**：`ZadminController::getRequest()`（`protected/zdnbase/control/zadmin/ZadminController.php`）被覆寫成回傳 baseUrl **字串**，ReportController 等 Zadmin 系勿用 `$this->getRequest()`（ReportController 可用自有 `$this->Request`）。**例外**：Ztool `$_POST = $tool->filter($_POST)` 寫回（`setColumn()` 讀 `$_POST` 產生 searchHtml），寫回後同一 action 改用區域變數，不再讀 `$_POST`。範例：`ReportController::actionItem`。
 - **禁止** 引入 Symfony Validator / Respect Validation / illuminate/validation（皆需 PHP 7+）。Validator engine 為自製 `Infrastructure\Validation\Validator`。
 - Authorize 走 Yii ACL：子類覆寫 `requiredPermission()` 回 ACL operation 字串；複雜邏輯 override `authorize()`。**禁止** 在 controller 端複製一次同樣的 `Yii::app()->user->checkAccess()` 檢查。Constructor **不自動** 跑 authorize（避免改變既有 `new XxxRequest()` 不 throw 的契約）；ACL 須顯式呼叫 `validateOrFail()` / `passes()` 觸發。
 
@@ -115,7 +120,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 > Triggers `Policy / 決策類 / gate / 授權判定 / shouldHide / passes / decide` → 新增 policy 前先讀本節。
 
-**落點（hard rule）**：Domain 層 policy 一律放 `domain/Policies/`，namespace `Domain\Policies`——**不**依模組再切子目錄（`Domain\Documents\Sticker\Policies` 之類一律不開）。policy 常跨模組被重用（欄位遮蔽被 Stock + ColumnUtility 共用即為例），依模組切分會讓「這條規則歸誰」變成偽問題。
+**落點（hard rule）**：Domain 層 policy 一律放 `domain/Policies/`（只收「放行判定」；回傳欄位／資料／分類者不叫 Policy，例：`Domain\Reports\Support\ItemReportColumns`），namespace `Domain\Policies`——**不**依模組再切子目錄（`Domain\Documents\Sticker\Policies` 之類一律不開）。policy 常跨模組被重用（欄位遮蔽被 Stock + ColumnUtility 共用即為例），依模組切分會讓「這條規則歸誰」變成偽問題。
 
 | 類型 | 落點 | 現況 |
 |---|---|---|
@@ -140,7 +145,7 @@ class XxxPolicy
 }
 ```
 
-- **決策動詞一律 `passes()`**，語意固定為 **true = 放行**；不放行訊息用 `message()`（對齊 Laravel Rule 物件，於 `passes()` 之後呼叫）。命名對齊原則見 `CODING_STANDARDS.md` §14。
+- **決策動詞一律 `passes()`**，語意固定為 **true = 放行**；不放行訊息用 `message()`（對齊 Laravel Rule 物件，於 `passes()` 之後呼叫）。命名對齊與介面命名原則見 `docs/adr/0027-report-refactor-exemplar-and-namespace-taxonomy.md` Decision B（`CODING_STANDARDS.md` §14 Naming Alignment 僅存在於 split-bill 分支 `feature/add-split-bill-checkout_0723`，master 尚無）。
 - **環境參數不進決策方法**：目前 DB 名稱、`$use_name`、使用者等級這類「一次 request 內固定」的值放 constructor。決策方法的引數只留被判定的標的——各 policy 的方法簽名才對得齊，日後才抽得出共同介面。
 - **instance-based，不寫 static**：static 無法實作介面，等於預先封死抽象化。
 
@@ -152,6 +157,10 @@ class XxxPolicy
 | `MenuAccessPolicy::decide()` | static + 全域 namespace + 動詞不同 | Yii component 層 legacy |
 | `DebugControllerPolicy::isAllowedForCurrentEnv()` | static + 讀 `$GLOBALS` | 同上 |
 | `StickerOrderTypePolicy::passes($table, array $items)` | 第二參數為必填業務資料而非 `$context` | 抽共同介面前需改為 `passes($subject, array $context = [])` 形狀 |
+| `KdsItemGroupRoutingPolicy::evaluate()` | 回結構化陣列（valid/count/conflicts/message），非 bool | 抽介面前拆成 `passes()` + 取結果的 accessor |
+| `SalesTempRoutingPolicy::route()`（`domain/Policies/`，目前只在拆帳分支） | `passes()` 寫入狀態供 `route()` 讀取 | 回傳分類者依 ADR 0008 應改名 Classifier |
+| `domain/Models/CreditCard/Q80SeniorPolicy.php` | 不在 `Domain\Policies`、全 static、混入 `EILogger` 寫檔副作用 | 搬遷前先拆出純判定與 log |
+| `protected/models/Delivery/Resources/Config/AuthPolicies.php` | 設定陣列誤用 Policy 名 | 非決策類，勿當 policy 範本 |
 
 ## Class Constants
 

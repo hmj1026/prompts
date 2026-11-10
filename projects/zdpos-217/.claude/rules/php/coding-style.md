@@ -9,7 +9,7 @@ paths:
 
 ## Scope Rule（新增 / 觸碰碼，避免無意義 sweep）
 
-下列**風格 / 重構類**規則（Array Syntax、Method Name Length、Magic Values 常數化、字串常數化，以及 `php/view-architecture.md` 的 view 架構）一律套用此範圍定義；**語言硬限制（PHP 5.6 syntax / polyfills）不在此列，恆久適用**。
+下列**風格 / 重構類**規則（Array Syntax、Method Name Length、Magic Values 常數化、字串常數化，以及 `php/view-architecture.md` 的 view 架構）一律套用此範圍定義；**語言硬限制（PHP 5.6 syntax / polyfills）不在此列，持續適用；新程式另須符合 8.4 子集（`CODING_STANDARDS.md` §2「雙執行期子集」）**。
 
 - **IN scope（MUST）**：本次新增的方法 / 檔案、diff 內出現或新命名的程式碼。
 - **OUT scope（不主動改）**：本次未觸碰的既有碼——勿為「順手」擴張 blast radius。

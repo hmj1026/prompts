@@ -10,7 +10,7 @@ Framework source: `~/projects/yii_framework/`.
 ## DDD Call Chain
 
 ```
-Controller → $this->app()->{service}->fetchXxx() → Repository->forXxx()
+Controller → $this->app()->{service}->fetchXxx() → Repository->forXxx()（legacy；新 Report 方法用 `getXxxReportData()`，ADR 0027）
 ```
 
 `$this->app()` defined in `protected/controllers/traits/DomainApplicable.php`.
