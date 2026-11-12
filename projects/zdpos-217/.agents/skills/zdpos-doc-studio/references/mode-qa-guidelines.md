@@ -1,52 +1,72 @@
 # `qa` 模式指引：QA 手動測試驗收手冊 (`docs/qa/<module>/QA-<slug>-manual.*`)
 
-本文件為 `zdpos-doc-studio` 在 **`qa`（QA 手動測試黑箱手冊）** 或 **`both`（雙軌產出）** 模式下的專屬撰寫規範。詳細案例筆法請一併參考 [`qa-case-guidelines.md`](qa-case-guidelines.md) 與範本 [`qa-doc-template.md`](qa-doc-template.md)。
+`qa`（或 `both`）模式的撰寫規範。案例筆法見 [`qa-case-guidelines.md`](qa-case-guidelines.md)，範本見 [`qa-doc-template.md`](qa-doc-template.md)。
 
 ---
 
-## 1. 產出目標與黑箱邊界鐵律
+## 1. 產出與定位
 
-- **目標受眾**：執行門市 POS 前台與管理後台驗收的 QA 測試人員。
-- **產出檔案**：
-  1. `docs/qa/<module>/QA-<slug>-manual.md`（Markdown 單一事實來源 SSOT）
-  2. `docs/qa/<module>/QA-<slug>-manual.html`（由 `doc_studio.py compile` 自動編譯之高對比離線互動版）
-  3. 同步登錄路由表至 [`docs/qa/README.md`](../../../../../../zdpos-217/docs/qa/README.md) 的「模組分流導覽 (Domain Routing Matrix)」。
-- **畫面字串來源**：手冊裡每個 `「…」` 字串都從 [`ui-label-sources.md`](ui-label-sources.md) 列的來源查到後才寫。後台列表欄位先確認不是 `notShow`；版面位置沒用瀏覽器看過就寫「視窗內」。
-- **實機核對狀態**：metadata 表必須有 `ui-verified` 列，值依序為 `none`（依程式碼推測）、`source`（字串已對照原始碼與選單表，未開瀏覽器）、`browser`（實機逐條看過）。`partial`／`full` 視同 `browser`。填 `none` 時 `compile` 在頁首加紅色橫幅；每次 `compile` 另跑 `verify_labels.py`，列出原始碼找不到的字串。填完附日期與環境。
-- **前台操作唯一邊界（零容忍）**：
-  - 測試步驟一律描述「畫面看得見、點得到」的操作（門市、機號、選單路徑、按鈕名稱、Toast／燈號／單據變化）。
-  - **嚴禁**要求 QA 手動修改 PHP 設定檔、執行 SQL 查詢或檢查資料庫底層欄位；底層資料完整性與併發鎖定一律歸入「**§0 本文不測清單（底層由開發測試覆蓋）**」。
+- **受眾**：執行驗收的 QA 測試人員，不是開發者。
+- **產出**：
+  1. `docs/qa/<module>/QA-<slug>-manual.md`（SSOT）
+  2. `docs/qa/<module>/QA-<slug>-manual.html`（`compile` 產生）
+  3. 登錄 [`docs/qa/README.md`](../../../../../../zdpos-217/docs/qa/README.md) 的模組分流表。
+- **實機核對狀態**：metadata 要有 `ui-verified`：`none`（依程式碼推測，`compile` 加紅色橫幅）、`source`（字串已對照原始碼與選單表）、`browser`（實機逐條看過）。填完附日期與環境。
 
 ---
 
-## 2. 標準章節與四段式測試案例結構
+## 2. 三條寫作鐵律（QA 讀得懂、不增加負擔）
 
-1. **§0 測試前必讀：環境座標、測試資料與本文不測清單**
-   - 測試網址、測試門市／機號、測試帳號、前置測試商品／會員資料表。
-   - **本文不測清單**：明確列出哪些底層邏輯已由 PHPUnit／Jest 單元測試覆蓋，免除 QA 無效操作。
-   - **業務流程與狀態轉換圖**：使用 `flowchart TD` 或 `sequenceDiagram` 視覺化測試路徑。
-2. **§1～§3 測試案例分組（Phase Banners & 四段式 `TC-xx` 卡片）**
-   - 每個測試案例 `### TC-01：<案例標題> [⭐ 核心必測]` 必須嚴格包含四個段落：
-     - **適用條件**：哪家門市、哪台收銀機、哪個畫面初始狀態。
-     - **在確認什麼**：用一句白話文說明此案例驗證的使用者可見行為。
-     - **操作**：`1. -> 2. -> 3.` 一步一動及每步預期畫面反應。
-     - **Pass / Fail 判定**：明確的 **Pass** 條件與 **Fail** 條件。
-3. **§4 驗收簽核總表、§5 缺陷回報範本、§6 已知限制與免責、§7 開發技術依據**
-   - 編譯器會自動將所有 `TC-xx` 連結至頂部「🧭 案例快速導覽 Chips」與「✍️ §4 即時同步驗收簽核總表」。
+### 2.1 名詞必須與實際畫面一致
+
+- 手冊裡每個 `「…」`（選單、欄位、按鈕、視窗標題、提示）都要從 [`ui-label-sources.md`](ui-label-sources.md) 的來源查到才寫；`compile` 會跑 `verify_labels.py` 列出找不到的字串。
+- 用**畫面上的字**，不用程式或資料表名稱。頁面用「選單路徑」或「頁面標題」稱呼（例如「紀錄查詢 → 交易明細查詢」），不寫 `record/saleslist`、商家代號或 action 名。
+- 查不到選單路徑的頁面，只寫頁面標題並註明「只有部分商家有，沒有就 N/A」，不要猜路徑。
+- 程式會動態拼出的字（例如「最多 N 天」），引號只引固定的前段，其餘用白話描述，避免 `verify_labels.py` 誤報或寫成畫面沒有的句子。
+- 版面位置、顏色沒用瀏覽器看過就不寫（寫「視窗內」即可）。
+
+### 2.2 不使用程式面術語
+
+QA 看不懂的詞一律換成白話，不得出現在手冊正文：
+
+| 避免 | 改寫 |
+|---|---|
+| placeholder | 欄位空白時的灰色提示字 |
+| 前綴比對、萬用字元、regex | 輸入前 7 碼、輸入 8 個 `%` 字元（直接講操作） |
+| DevTools／Console／Network | 除非案例就是要看，否則不提；必要時寫「按 F12 看有沒有紅字」 |
+| EXPLAIN、索引、SQL、row、CAS、交易鎖 | 不寫（屬開發驗證，見 2.3） |
+| action／route／controller／商家代號（如 oklao） | 畫面頁面標題 |
+| 單號例外、守門、攔截、豁免 | 描述使用者看到的結果（「可以不填日期」「會被擋」） |
+
+### 2.3 資訊只放「需要測試的範疇」
+
+- 手冊只放 QA **會動手做或會看到**的內容：這次改了什麼、準備什麼、案例、簽核、開單格式、看到不用開單的現象。
+- **不放**：資料庫、索引、API、測試檔名、ADR／OpenSpec 編號、程式類別名、實作位置表、自動化測試紀錄附錄、與測試無關的歷史背景。這些放協作者手冊。
+- 「本文不測清單」**預設不寫**；只有 QA 可能誤以為該測、而且會浪費時間時，才用一兩行說明（例如「直接送請求繞過畫面」），不列檔名。
+- 「最重要的事」最多 3 條；案例能合併就合併（同頁同流程的小檢查放同一個 TC）；一個 TC 不超過約 5 步。
+- 不寫 Mermaid 以外的長篇原理說明；流程圖只在判定分支多於兩個時才放，且一張為限。
 
 ---
 
-## 3. QA 手冊專屬命令
+## 3. 黑箱邊界
+
+- 步驟一律是「畫面看得見、點得到」的操作。**嚴禁**要求 QA 改設定檔、下 SQL 或檢查資料庫欄位。
+- 需要特定資料時：由 §2「開始前準備」註明「由開發提供」，或寫出在畫面上建立的步驟。
+- 底層正確性（結果相同、併發、索引）若 QA 只能以「前後金額／筆數相同」驗證，就寫成與基準比對的案例，並在適用條件註明需要事先記下的基準。
+
+---
+
+## 4. 章節（與範本一致）
+
+「先記住這幾件事」→「怎麼讀」→「畫面上的名稱」→ §1 要測什麼 → §2 準備（含容易測錯）→ §3 案例（`### TC-xx`，★核心）→ §4 簽核 → §5 缺陷回報 → §6 看到不用開單。其餘章節不加。
+
+---
+
+## 5. QA 專屬命令
 
 ```bash
-# 1. 建立 QA 手冊 Markdown SSOT 草稿
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold \
-  --mode qa --module <module> --slug <slug> --title "<功能中文名稱>"
-
-# 2. 撰寫完 QA-<slug>-manual.md 後，無損編譯並執行靜態 + Playwright Headless 驗收
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile \
-  --mode qa docs/qa/<module>/QA-<slug>-manual.md
-
-# 3. 批次重新編譯與驗證全站 QA 手冊
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode qa
+python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold --mode qa --module <module> --slug <slug> --title "<功能中文名稱>"
+python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode qa docs/qa/<module>/QA-<slug>-manual.md
 ```
+
+交付前自查：把手冊讀一遍，任何一個詞若 QA 無法在畫面上找到或看不懂，就改掉或刪掉。
