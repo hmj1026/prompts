@@ -14,6 +14,8 @@ Referenced from `rules/tool-routing.md`. Sub-agents do NOT inherit project rules
 
 > "Read-only. Pipe everything back: `ssh <host> 'bash -s' < script.sh` or `ssh <host> 'sudo -n awk -f /dev/stdin <log>' < prog.awk`; never write a file on the remote host, `/tmp` included. Never read a config or credential file whole: extract DB coordinates only with `grep -o \"mysql:host=[^;]*;dbname=[^;\\\"']*\"`. The local shell is zsh: quote every glob (`--include='*.php'`). Report every command you ran. Log paths and thresholds: `zdpos-environment` skill → `references/prod-observability.md`."
 
+> 計數若要寫進對外或決策報告：必須由存檔的腳本產生（放在 `.scratch/<task>/`），並在回報中寫明時區、時間區間、資料來源與計數規則。主控或 sonnet 依同一支腳本重跑一次，結果一致才能寫進報告。帳號或 IP 的歸屬要有直接對照才能下結論，否則標 `UNKNOWN`。只用於內部探索的數字不受此限。
+
 ## DEV QA tasks (live browser execution of QA-manual cases)
 
 > 派給 `dhpk:qa-executor`，Agent 呼叫帶 `model: "haiku"`。不用 `general-purpose` 代替：qa-executor 會逐案記錄判定與證據，回報格式才一致。
