@@ -14,6 +14,10 @@ Referenced from `rules/tool-routing.md`. Sub-agents do NOT inherit project rules
 
 > "Read-only. Pipe everything back: `ssh <host> 'bash -s' < script.sh` or `ssh <host> 'sudo -n awk -f /dev/stdin <log>' < prog.awk`; never write a file on the remote host, `/tmp` included. Never read a config or credential file whole: extract DB coordinates only with `grep -o \"mysql:host=[^;]*;dbname=[^;\\\"']*\"`. The local shell is zsh: quote every glob (`--include='*.php'`). Report every command you ran. Log paths and thresholds: `zdpos-environment` skill → `references/prod-observability.md`."
 
+## DEV QA tasks (live browser execution of QA-manual cases)
+
+> 派給 `dhpk:qa-executor`，Agent 呼叫帶 `model: "haiku"`。不用 `general-purpose` 代替：qa-executor 會逐案記錄判定與證據，回報格式才一致。
+
 ## Extended anti-pattern reference
 
 - `Read --offset/--limit` as a substitute for `cx overview` on files >200 lines — first tool call MUST be `cx overview`. Exception: current session already ran `cx overview` / `cx definition` for the file and needed content is within the listed range.
@@ -35,14 +39,17 @@ Referenced from `rules/tool-routing.md`. Sub-agents do NOT inherit project rules
 3. 分支新增或未提交的符號，impact 結果不可信，改用 `cx references --name X` 找呼叫者。
 4. 跨目錄搜尋用 Grep 工具；Bash 裡的 `grep -r`／`rg` 沒為每個憑證檔名加 `--exclude` 會被 bash-guard 擋下。
 5. 盤點 OpenSpec change 是否實作或發布：先跑 `node scripts/openspec-release-status.js [change ...]`；它會一併查 `archive/*` tag，刪掉的分支常封存在那裡，只搜分支會誤判「沒實作」。
+6. 大檔分給多個代理時，依 diff hunk 或方法分工，不依固定行號切。跨越交界的 hunk 由負責檔案較前段的代理處理，並在回報中列出交界 hunk。
 
 ### 權限與 Git 邊界
 - 禁止 commit、push、checkout、stash、reset、rebase。
 - 只修改任務指定的檔案；寫入型任務只在指定 worktree 內進行。
+- 改檔一律用 Edit／Write 工具，不用 `sed -i`、heredoc 或重導向寫入 repo 檔案；用 shell 寫檔會跳過改檔後的 PHP 檢查。無法避免時，在回報的「變更檔」逐一標註。此規則不取代改既有符號前的 GitNexus impact。
 - 新增行為或修 bug：先寫失敗測試（RED），再做最小實作（GREEN）。
 
 ### 驗證（只跑與改動相關的最小集合）
 - 語法：`php -l <file>`
+- 改到 `.php`：checkout 內有 `scripts/lint-php.sh` 時加跑 `bash scripts/lint-php.sh --working`，0 Error 才算通過（用法見 `scripts/lint/README.md`）；沒有這支腳本時，在「未驗證與風險」註明 N/A。
 - PHP：`bash protected/tests/scripts/run-tests.sh`
 - JS：`npm run test:js`；型別與 lint：`npm run typecheck`、`npm run lint`
 - 未跑的驗證必須明說，不可宣稱通過。
