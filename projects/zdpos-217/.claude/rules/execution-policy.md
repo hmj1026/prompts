@@ -10,6 +10,7 @@
 - **OpenSpec workflow**: zdpos uses OpenSpec extensively. `/opsx:*` invocations take precedence over generic skill priorities when explicitly typed by user.
 - **Sentinel directory**: zdpos sentinels live in `.claude/artifacts/sessions/.pending-*` (project-local path). Sentinels are written by the dhpk plugin's `post-edit-remind.sh`（經 `post-edit-dispatch.sh`）and cleared by `${CLAUDE_PLUGIN_ROOT}/scripts/hooks/clear-sentinel.sh` invoked from each reviewer agent's Closing hook.
 - **Git pipeline (zdpos branch flow)**: `feat|fix|docs|refactor/*` → `develop` → `master`。no-auto-commit 規範以 canonical `${CLAUDE_PLUGIN_ROOT}/rules/execution-policy.md` §Git pipeline 為準（invoke `/dhpk:smart-commit` / `/dhpk:precommit`）。
+- **PHP Linter 驗證節點**（僅當 checkout 內存在 `scripts/lint-php.sh`；用法 SSOT 為 `scripts/lint/README.md`）：改動 `.php` 後、回報完成前必跑 `bash scripts/lint-php.sh --working`；合併或發 PR 前必跑 `bash scripts/lint-php.sh --diff develop`，兩者皆須 0 Error（Warning 列出即可，不擋）。實質改寫整個方法或整檔時，改用指定檔案模式做整檔檢查。改到 linter 本身（`scripts/lint-php.sh`、`scripts/lint/`、`scripts/git-hooks/`、`scripts/install-hooks.sh`）時，依 README §5 跑 pipeline test、`LintPhpRulesTest` 與 `lint-runtime-parity.sh`。host `php -l` 是 5.6，不能當 8.4 證據。
 - **Anti-rationalization**: see `${CLAUDE_PLUGIN_ROOT}/rules/anti-rationalization.md`; load on-demand when tempted to skip a reviewer / TDD / sentinel mandated step.
 
 ## Cross-references
