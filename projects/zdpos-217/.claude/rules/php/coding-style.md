@@ -24,7 +24,6 @@ paths:
 | `intdiv()` | `(int)($a / $b)` |
 | `dirname(__FILE__, N)` | nested `dirname()` |
 | `str_contains` / `str_starts_with` | `strpos` / `substr` |
-| `array_column($a, null, $key)` reindex | pass explicit value key |
 | `preg_replace_callback_array` | sequential `preg_replace_callback` |
 
 ## Array Syntax (PHP 5.4+ short array only)
