@@ -11,6 +11,7 @@
   1. `docs/qa/<module>/QA-<slug>-manual.md`（SSOT）
   2. `docs/qa/<module>/QA-<slug>-manual.html`（`compile` 產生）
   3. 登錄 [`docs/qa/README.md`](../../../../../../zdpos-217/docs/qa/README.md) 的模組分流表。
+- **環境前提**：按鈕、選單或流程要靠 DB 設定才出現時（例：桌位「補印」只在 `system_config.ScanOrderOpenTableSeatMode` 為 1／2 時出現），metadata `env-preconditions` 記設定名與值；正文的「開始前準備」用白話寫畫面上怎麼確認，「容易測錯的地方」寫看不到時勾 Blocked 並通知開發。
 - **實機核對狀態**：metadata 要有 `ui-verified`：`none`（依程式碼推測，`compile` 加紅色橫幅）、`source`（字串已對照原始碼與選單表）、`browser`（實機逐條看過）。填完附日期與環境。
 
 ---

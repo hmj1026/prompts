@@ -8,6 +8,7 @@
 | `canonical-source` | 本文件 |
 | `sensitivity` | `git-safe` |
 | `retention` | `current-until-superseded` |
+| `env-preconditions` | `none`／`system_config.<config_name>=<value>; …`（畫面行為依賴的 DB 設定；交付與每輪開測前以唯讀 MCP 對 DEV 核對，見 SKILL Step 3.6） |
 | `ui-verified` | `none`（依程式碼推測）／`source YYYY-MM-DD <分支或 commit>`（畫面字串已對照原始碼與選單表，未開瀏覽器）／`browser YYYY-MM-DD <環境> TC-xx…`（實機看過） |
 
 > 對象：QA 測試人員。全部在畫面操作，不改設定、不下 SQL。

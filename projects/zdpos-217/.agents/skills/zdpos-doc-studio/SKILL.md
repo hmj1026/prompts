@@ -56,6 +56,9 @@ python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold \
 ### Step 3.5：畫面字串查證（`qa` 模式）
 手冊引號內的選單、按鈕、欄位、提示字串，依 [`references/ui-label-sources.md`](references/ui-label-sources.md) 查到來源才寫；`compile` 會執行 `verify_labels.py` 列出找不到的字串，全部處理完（改真名，或確認只存在 DB 後登記）再交付。
 
+### Step 3.6：環境前提核對（`qa` 模式）
+畫面行為依賴 DB 設定的案例，依 [`references/mode-qa-guidelines.md`](references/mode-qa-guidelines.md)「環境前提」把設定名與值記進 metadata `env-preconditions`。交付前、以及每輪 QA 開測或判讀 N/A／Blocked 前，用唯讀 MCP（DEV＝`mysql-dev-remote`）查 `SELECT config_value, uby, udate FROM <db>.system_config WHERE config_name IN (...)` 逐項比對；值不符時先回報（含 `uby`／`udate`），不改手冊判定。完成條件：每個 `env-preconditions` 項目都有本輪查詢結果。
+
 ### Step 4：執行無損確定性編譯 (`compile`)
 ```bash
 # 編譯單一檔案（自動識別 feature 或 qa）
