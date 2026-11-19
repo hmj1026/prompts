@@ -110,6 +110,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Agent|Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/dhpk/scripts/hooks/pre-agent-warmstart.sh\"",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
