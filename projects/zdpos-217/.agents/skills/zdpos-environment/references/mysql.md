@@ -28,6 +28,25 @@
 - 工具須**重啟 session** 後才掛載（scope local 可跨重啟存活）。
 - 📝 線上問題與 Bug 調查的唯讀權限調製 SOP，請見 [Playbook：MCP 資料庫唯讀權限調製與線上問題排查 SOP](../../../../docs/operations/playbooks/mcp-database-investigation-grant.md)。
 
+### DEV 設定寫入（`system_config` 等測試前提；2026-11-19 實測）
+
+唯讀 MCP 不能寫。要改 DEV 測試前提（例：QA 手冊 metadata `env-preconditions`）時，經 `ssh dev` 在遠端 shell 內取密碼，只放進 `MYSQL_PWD`，不輸出到對話：
+
+```bash
+ssh dev 'cd /var/www/www.zdpos.tw/zdpos_develop \
+  && export MYSQL_PWD="$(grep -E "^\\\$db_pass" protected/config/dev.php | tail -1 | sed -E "s/.*\"([^\"]*)\".*/\1/")" \
+  && mysql -h 192.168.2.254 -u root zdpos_dev -e "
+     SELECT config_value, uby, udate FROM system_config WHERE config_name=\"<name>\";
+     UPDATE system_config SET config_value=\"<new>\", udate=NOW(), uby=\"<帳號>\"
+       WHERE config_name=\"<name>\" AND config_value=\"<old>\";
+     SELECT ROW_COUNT() AS affected;"'
+```
+
+- `dev.php` 有被註解掉的舊 `$db_pass`：以 `^\$db_pass` 錨定行首、取最後一筆（`tail -1`），勿用固定行號。
+- UPDATE 帶 `AND config_value=<old>`：他人已改過時 `affected=0`，先回報、不覆蓋。
+- 寫入前記下舊值、`uby`、`udate`，寫進手冊修訂紀錄或回報；`uby` 不是自己時先告知使用者。
+- `SystemConfig::getValue()` 無快取，下一個請求即生效。
+
 ### 含帳密欄位的表
 
 查這些表時明列欄位。`SELECT *`（含 `t.*`）會被 PreToolUse hook `.claude/hooks/pre-mysql-sensitive-select.sh` 擋下；新增表時同步改該 hook 的 `SENSITIVE_TABLES`。
