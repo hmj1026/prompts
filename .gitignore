@@ -1,5 +1,8 @@
 # Environment (contains actual paths, do not commit)
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 # Backup files
 *.bak
@@ -29,6 +32,9 @@ __pycache__/
 
 # Scratch & ephemeral directories
 **/.scratch/
+
+# Generated skill evaluation workspace
+/projects/zdpos-217/.agents/skills/zdpos-source-bound-verification-workspace/
 
 # OpenSpec working directory
 /openspec
