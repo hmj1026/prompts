@@ -1,6 +1,6 @@
 ---
 name: zdpos-env-builder
-description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標（DEV 或 Local）、商戶標識、來源與目標資料庫、功能分支。涵蓋資料庫安全複製、獨立碼基與設定配置、Web 薄入口、Nginx 靜態資產連結與端到端隔離驗證。
+description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標（DEV、Local，或 vm1 上複製正式商家庫的隔離站）、商戶標識、來源與目標資料庫、功能分支。涵蓋資料庫安全複製、正式庫複本的外部整合隔離（發票佇列、字軌、_develop 旗標）、獨立碼基與設定配置、Web 薄入口、Nginx 靜態資產連結與端到端隔離驗證。
 ---
 
 # ZDPOS 隔離商戶測試環境建立指南
@@ -50,6 +50,7 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
    - Web 薄入口根目錄：`~/projects/www.posdev/`。
 3. **PROD / UAT (Env #1, #2, #3)**：
    - 本技能專注於測試環境隔離，嚴禁在正式環境（CPOS217、ZCPOS217）自動套用本流程。
+   - 例外：在 vm1 架設「複製正式商家庫」的隔離測試站（例 `/sb84/`）可沿用本技能，但必須加做 Phase 2.5。vm1 的網域、碼基、PHP pool、migration（走 pms-yii）與發票佇列見 `/home/paul/projects/zdpos-217-docs/docs/operations/vm1-architecture-overview.md`。
 
 ---
 
@@ -137,6 +138,25 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
 6. **完成條件（Completion Criterion）**：
    - `protected/config/${MERCHANT_NAME}.php` 與 `protected/config/console.php` 經 `php -l` 檢驗無語法錯誤。
    - `git status -s` 工作區保持乾淨，無未預期的未追蹤異動。
+
+---
+
+### Phase 2.5: 正式庫複本隔離（來源是正式商家庫時必做，開放登入前完成）
+
+正式庫複本帶著真實統編、真實字軌與正式 API 設定。`_develop` 旗標只切換部分 API 端點；開票、作廢、折讓的 XML 由 `EI::XMLCreate()` 直接寫到 `\GLOB\INVOICE_BASE_PATH`，**沒有環境閘門**，而 vm1 各碼基預設指向正式上傳佇列 `/var/glob-storage/invoices/`。
+
+1. **發票輸出隔離**：碼基 `Glob.php` 的 `INVOICE_BASE_PATH` 改到隔離目錄（例 `/var/glob-storage/invoices-<站>/`），先建 `temp/{blank,invalid,invoice,allocate}` 與 `bak/{blank,invalid,invoice,allocate}`；備份後單行 sed，`php -l`。
+2. **字軌改 `OO`**：目標庫 `invoice_maintain` 當期 `used=1` 的每一列，以「帶原值條件的 UPDATE」改為 `OO` 測試字軌並設新號段（先確認號段在 `invoice_record` 無資料、原列備份）。
+3. **`_develop` 旗標**：`eiic`／`linepay`／`jkospay`／`pipay`／`taiwanpay`／`liff`／`api` 的 `*_develop` 設 1。
+4. **程式無法隔離者，列入測試禁止清單**：藝FUN 券（`EFunPayApi::IS_DEVELOP` 寫死 `false`）、`external_order` 模組（外送平台）、`zdn_api_url`、SMTP／簡訊／webhook。
+
+完整步驟與實例回執：`/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §3.2、§3.3 步驟 5／5b。
+
+**完成條件**：在 vm1 執行
+```bash
+php8.4 /home/paul/projects/zdpos-217-docs/scripts/ops/check-site-isolation.php --codebase=<碼基> --config=<碼基內 config 相對路徑>
+```
+（先 `scp` 到 vm1）輸出 `ISOLATION_OK`、結束碼 0；WARN 項已轉成給測試者的禁止清單。開第一張發票後，再確認 XML 只出現在隔離目錄。
 
 ---
 
@@ -239,4 +259,5 @@ Yii 架構將網頁入口與程式碼主體分離（Thin-entry）。
 3. **Git 工作區大量 modified 檔案**：目錄 `chmod` 會變更 filemode，必須執行 `git config core.filemode false`。
 4. **Session 互相覆蓋**：商戶設定檔必須指定獨立的 `sessionName`（如 `ZPOS${MERCHANT_NAME}`），防止與主開發站共用 Session。
 5. **瀏覽器外掛干擾報錯**：主控台出現 `content_main.js` 報錯通常為 Chrome 擴充套件（如翻譯工具）引起，使用無痕視窗開啟即可排除干擾。
-6. **唯讀 MCP 無法執行 DDL**：`claude_ro` 僅具唯讀權限，建立資料庫或執行 Dump/Restore 必須以具備權限之帳號於伺服器內網執行，完成後再授權 `claude_ro`。
+6. **vm1 的 migration 不走碼基 console**：vm1 各碼基的 `protected/config/console.php` 是失效舊檔（連線資訊過期、`demo_retail`），不要修它；migration 由 pms 呼叫 pms-yii，migration 檔放在 pms-yii 自己的 `protected/migrations/<資料夾>`。只給特定商家的 migration 放專用資料夾。細節見 vm1 架構總覽 §8。
+7. **唯讀 MCP 無法執行 DDL**：`claude_ro` 僅具唯讀權限，建立資料庫或執行 Dump/Restore 必須以具備權限之帳號於伺服器內網執行，完成後再授權 `claude_ro`。
