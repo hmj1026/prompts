@@ -29,6 +29,7 @@ allowed-tools: Read, Bash(ls *), Bash(cat *), Bash(docker exec *), Bash(grep *),
 | playwright-cli 登入 dev4 / dev / cpos218 / 總店(HQ)·分店(Branch) 帳號 / 機號選取 / keyboardDiv overlay / 機號重複 RepeatAction / 遠端 dev4 前台登入 | `references/pos-login.md`（`## POS UI Login (playwright-cli)`：`### Step 0` / `### Step 2.5` / `### 遠端 dev4 前台登入`） |
 | PROD 慢請求／慢查詢調查 / vm1·vm2 slow log 路徑與門檻 / 站台的 DB 在哪台（Cloud SQL `10.8.202.2` 或 vm2 XAMPP）/ 有沒有 SQL 文字可查 | `references/prod-observability.md` |
 | POS 操作步驟 / 功能鍵在哪一頁·做什麼（`data_button`＋`data_action`）/ 桌位模式開桌·收單·續單·作廢 / 清測試暫存單 | `references/pos-operations.md` |
+| **vm1 全貌**：網域→docroot→PHP pool／nginx runtime map、`cpos.zdn.tw` 入口對應碼基、**migration 走 pms／pms-yii**（不用碼基 console）、**正式發票佇列** `glob-storage/invoices`、cron／systemd、Samba | `/home/paul/projects/zdpos-217-docs/docs/operations/vm1-architecture-overview.md`（2026-11-24 盤點；§8 migration、§9 共用儲存、§10 陷阱） |
 
 > PROD (CPOS217 / ZCPOS217) **嚴禁** 由 AI 自動登入；playwright-cli 登入只支援 local / DEV / UAT(cpos218)。
 
