@@ -1,0 +1,59 @@
+{
+  "skill_name": "zdpos-context-router",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我要在 protected/controllers/ 新增一個報表 action 並接一個新的 Repository 查詢多筆門市資料，專案對 SQL 落點、Repository 介面命名、PHPDoc @throws、View 註冊和雙執行期 PHP 語法有哪些規範要先看？請列出查到的規則重點與文件路徑。",
+      "expected_output": "透過 router 直接路由至 CODING_STANDARDS.md 與 .claude/rules/php/（patterns.md、view-architecture.md、coding-style.md），不靠全庫 ls/find/rg 暴力搜尋，正確說明 SQL 落點、Contracts 命名、PHPDoc @throws、AssetHelper 與雙執行期語法。",
+      "files": [],
+      "expectations": [
+        "Direct routing in transcript: after reading SKILL.md in Step 1, Step 2 directly reads CODING_STANDARDS.md and .claude/rules/php/ files without running ls/find/rg directory-discovery commands to locate PHP rules or docs/agents/domain.md",
+        "Output cites CODING_STANDARDS.md and .claude/rules/php/ (patterns.md and view-architecture.md)",
+        "States SQL strings belong only in infrastructure/Repositories, infrastructure/Database, or protected/models (not Controller/Domain/View) and prefers queryBuilder()",
+        "States Domain Contracts interface uses role-noun naming without I prefix or Interface suffix",
+        "States Controller action PHPDoc requires @return void and @throws CException (plus QueryException if using query toolkit)",
+        "States JS/CSS assets must be registered in controller via AssetHelper (not inline tags or registerScriptFile in view)",
+        "Notes the dual-runtime PHP 5.6 + 8.4 subset constraint (CODING_STANDARDS.md)"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "我要查 POS.checkout 或 PosController::doAjax 裡 case \"customerPoint\": 的前後端呼叫端，順便幫一個剛建立還沒 commit 的 branch 新類別找 caller；在這個專案用 GitNexus 和 grep 要注意哪些盲區、替代工具和排除目錄？請列出依據文件路徑。",
+      "expected_output": "透過 router 在 Step 2 直接讀取 .claude/rules/tool-routing.md（及 .claude/docs/subagent-prompt-template.md），不經由 ls/find 探索目錄，指出圖譜盲區、cx references 替代與固定排除項。",
+      "files": [],
+      "expectations": [
+        "Direct routing in transcript: after reading SKILL.md in Step 1, Step 2 directly reads .claude/rules/tool-routing.md and .claude/docs/subagent-prompt-template.md without ls/find/rg directory-discovery loops",
+        "Output cites .claude/rules/tool-routing.md",
+        "Identifies zdpos graph blind spots that go straight to git grep (POS.*/self.x, ajaxPromise/doAjax case strings, Yii actionXxx, svc->m(), plus js/zpos.js vs js/zpos/*.js and protected/extensions/zpos)",
+        "States gitnexus_impact and detect_changes are unreliable for branch-new or uncommitted symbols and instructs using cx references --name X instead",
+        "Lists mandatory git grep exclusions ':!protected/tests/coverage' and ':!*.min.js'"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我剛改完幾支 .php 檔，準備用 simplify 整理再送 code-review。請問專案規定改完 PHP 後回報前要跑什麼 PHP linter 指令、simplify 角度該用什麼 subagent 角色與模型，以及有哪些 sentinel 或 handoff 關卡要過？請附上依據文件路徑。",
+      "expected_output": "透過 router 直接讀取 .claude/rules/execution-policy.md、docs/workflow/execution-policy.md、.scratch/local-dev/docs/skill-adapters.md 與 .scratch/local-dev/docs/LOCAL_VERIFICATION.md，指出 lint-php.sh、simplify 四角度 sonnet、dhpk v0.57.0+ .pending-* 機制變更與 check:handoff。",
+      "files": [],
+      "expectations": [
+        "Direct routing in transcript: after reading SKILL.md in Step 1, Step 2 directly reads .claude/rules/execution-policy.md, docs/workflow/execution-policy.md, .scratch/local-dev/docs/skill-adapters.md, and .scratch/local-dev/docs/LOCAL_VERIFICATION.md without ls/find/rg discovery loops",
+        "Output cites .claude/rules/execution-policy.md, .scratch/local-dev/docs/skill-adapters.md, and .scratch/local-dev/docs/LOCAL_VERIFICATION.md",
+        "Specifies exact PHP linter commands bash scripts/lint-php.sh --working and --diff develop (0 Error required)",
+        "Specifies simplify dispatches 4 angles (reuse, simplification, efficiency, altitude) in parallel using general-purpose with explicit model sonnet (no Explore/haiku/opus)",
+        "Describes the 6 active sentinel slots (.pending-review/db/security/frontend/migration/doc; polyfill N/A) AND notes dhpk v0.57.0+ retired .pending-* hook marker files (.claude/dhpk-versions.json) so reviewers are dispatched proactively in parallel, plus writer handoff check:handoff (.status PASS / completeHandoff true)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我要開一個拆帳相關的新功能，開始探索前要看哪幾份領域詞彙表與 ADR 原則？如果發現設計跟既有 ADR 衝突該怎麼處理？另外若我要派 subagent 做程式碼搜尋和架構評估，不同層級的模型該怎麼選？請附上依據文件路徑。",
+      "expected_output": "透過 router 直接讀取 docs/agents/domain.md、CONTEXT.md、GLOSSARY.md、openspec/specs/split-bill-glossary/spec.md、docs/workflow/model-routing.md 與 model-economics 規則，不靠全庫搜尋，並釐清 model-routing vs model-economics 差異。",
+      "files": [],
+      "expectations": [
+        "Direct routing in transcript: after reading SKILL.md in Step 1, Step 2 directly reads docs/agents/domain.md, docs/workflow/model-routing.md, and model-economics (.cursor/rules/model-economics.mdc or plugin model-economics.md) without find/ls/rg brute-force discovery",
+        "Output cites docs/agents/domain.md, docs/workflow/model-routing.md, and model-economics",
+        "Lists domain glossary sources: CONTEXT.md, GLOSSARY.md, openspec/specs/split-bill-glossary/spec.md (and/or vocabulary-drift.md), plus docs/adr/",
+        "States ADR conflict rule: surface the conflict explicitly instead of silently overriding it",
+        "Explains 3-tier model routing AND notes the discrepancy between docs/workflow/model-routing.md and model-economics (fast-worker is sonnet, quick-worker is haiku @ medium, Explore is haiku @ low, architect is fable @ medium, Opus never used for lookup/file-reading)"
+      ]
+    }
+  ]
+}
