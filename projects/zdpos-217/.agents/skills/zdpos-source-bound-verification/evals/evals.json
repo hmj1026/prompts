@@ -1,0 +1,45 @@
+{
+  "skill_name": "zdpos-source-bound-verification",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我剛改了 domain/Sales/SplitBill/ 的程式跟 unit test，但同時還有另一個 subagent 在動同目錄其他檔案。我想先只跑一次 npm run test:js 並用 check:record 把這次測試綁定在我的來源清單上交給 reviewer，請檢查這個 checkout（/home/paul/projects/zdpos-217）能不能直接跑 check:record、給我確切前置條件與指令；如果測試中途清單內的檔案被改過，證據狀態跟後續動作該怎麼處理？（請勿修改 repo 或寫入 .scratch/local-dev/evidence/，將完整分析與操作建議輸出到指定檔案）",
+      "expected_output": "辨識出 .scratch 連到 zdpos-217-docs、check:record 的 ROOT_DIR 寫死為 realpath(__dirname/../../../..) 而無法綁定 zdpos-217（應記為 BLOCKED），說明並行 writer 需先固定來源、說明 check:record 需要 JSON array（不含自身與輸出目錄）、且中途變動會產出 PARTIAL + needsRecheck: true 並要求保留原證據後重跑。",
+      "files": [],
+      "assertions": [
+        "Identifies that .scratch in /home/paul/projects/zdpos-217 is a symlink to zdpos-217-docs/.scratch, causing check:record (run-with-source-manifest.js ROOT_DIR) to resolve to zdpos-217-docs rather than zdpos-217",
+        "Marks direct check:record execution in this checkout as BLOCKED (or unusable for binding zdpos-217 sources) instead of claiming check:record can directly bind zdpos-217",
+        "States that concurrent writer edits to listed inputs must be frozen/stopped before verification because pre/post hashes only check two sampling points",
+        "Explains that check:record requires a non-empty JSON array of repo-relative regular file paths (excluding symlinks, the manifest file itself, and a fresh output directory)",
+        "States that mid-run modification of listed sources produces status PARTIAL with needsRecheck: true (and non-zero exit) while retaining original evidence and requiring re-run after freezing sources",
+        "Explicitly notes uncovered scope (e.g., files outside the manifest or transitive/runtime dependencies not listed in --files)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我等一下要改 protected/controllers/PosController.php 和 js/zpos.js，最後要跑 check:handoff 並把另外在 PHP84 owned DB 容器跑完的 integration PHPUnit 結果也一起交給 reviewer。請檢查目前這個 checkout（/home/paul/projects/zdpos-217），說明該怎麼先留編輯前 baseline、最後交接要設哪些環境變數與參數、以及我能不能直接拿 capture:baseline 產出的 source-files.json 餵給 check:handoff --files？（請勿修改 repo 或寫入 .scratch/local-dev/evidence/，將完整分析與操作建議輸出到指定檔案）",
+      "expected_output": "說明編輯前執行 capture:baseline 保留當下工作樹（而非事後當成 baseline）、說明 check:handoff 須設定 ZDPOS_HANDOFF_REPO_ROOT 及 PHP84 的 ZDPOS_PHP84_PHP_CONTAINER / ZDPOS_PHP84_WORKDIR、使用 --external-execution 納入外部 PHPUnit receipt（需前後 captureSourceSnapshot 與 owned tuple），並指出 capture:baseline 的 source-files.json 是 {sourceFiles: [...]} 物件，不能直接餵給只接受頂層陣列的 check:handoff --files。",
+      "files": [],
+      "assertions": [
+        "Instructs running capture:baseline before editing (preserving current worktree state rather than substituting HEAD or treating post-edit capture as baseline)",
+        "Specifies setting ZDPOS_HANDOFF_REPO_ROOT (and checking stderr 'handoff root=...') plus PHP84 coordinates ZDPOS_PHP84_PHP_CONTAINER and ZDPOS_PHP84_WORKDIR for check:handoff",
+        "Identifies --external-execution <manifest> as the mechanism to bind the PHP84 owned DB integration PHPUnit run into check:handoff (requiring pre/post captureSourceSnapshot and owned php84_<runId> / container / workdir tuple)",
+        "Correctly states that capture:baseline's source-files.json ({sourceFiles: [...]}) CANNOT be fed directly to check:handoff --files, which requires a JSON array ([...])",
+        "States that check:handoff still executes the full seven-stage worktree gate even when --files narrows sourceScope, and distinguishes sourceScope / testInventory / completeHandoff"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我手上已經有單元測試 raw log 跟 Standards／Spec 兩份審查報告，但剛才又補改了一行 protected/models/Device.php，而 Standards 的 finding 裡還有一筆標成 OPEN。請說明怎麼在 /home/paul/projects/zdpos-217 產生並驗證 reviewer sidecar、組出 review packet，以及目前能不能靠更新 digest 就讓 verify:review 過關？（請勿修改 repo 或寫入 .scratch/local-dev/evidence/，將完整分析與操作建議輸出到指定檔案）",
+      "expected_output": "說明使用 review:template 與 review:validate 建立與驗證 Standards (APPROVE) / Spec (PASS) 四欄位 sidecar、collect:review 組裝 packet 與 verify:review 檢查 packet_integrity（runtimeStatus 仍為 NOT_RUN），並明確拒絕只改 sidecar digest（來源變動須重新凍結 manifest 與重跑受影響檢查及 review）且指出 status: OPEN 會阻擋 verify:review。",
+      "files": [],
+      "assertions": [
+        "Explains using review:template and review:validate to generate and verify four-field Standards (verdict: APPROVE) and Spec (verdict: PASS) reviewer sidecars against source.sha256",
+        "Explains using collect:review to assemble the packet (source.sha256, receipt.json, delivery-status.json) and verify:review to validate packet integrity",
+        "Rejects merely updating the digest in review sidecars after editing protected/models/Device.php, requiring re-freezing the source manifest, re-running affected checks, and obtaining fresh review",
+        "Identifies that a Standards finding with status: OPEN blocks packet assembly/verification even if the review verdict is APPROVE",
+        "Clarifies that verify:review PASS only validates packet_integrity and keeps runtimeStatus as NOT_RUN (not proving runtime or command re-execution)"
+      ]
+    }
+  ]
+}
