@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # agent-browser 操作 zdpos POS 前台的共用子命令。
+# 分工：login、logout 只在這支（登入前與登出後沒有攔截器可裝）；登入後在 UAT／vm1 的所有操作改走 pos-guard.sh，
+# 它會在每次 click、iframe-click、dismiss 前後確認攔截器已武裝，再呼叫本檔。直接用本檔等於沒有攔截保護。
 # 用法：
 #   pos-ab.sh <session> login <vault-profile> <base-url> <station> [kick]
-#   pos-ab.sh <session> click <按鈕文字> [first|last]       # POS 主頁面葉節點（商品格、功能鍵、數字鍵）
+#   pos-ab.sh <session> click <按鈕文字> [first|last]       # POS 主頁面葉節點（商品格、功能鍵、數字鍵）；找不到時改找 label 與 jQuery UI 分頁（徽章文字不計）
 #   pos-ab.sh <session> iframe-click <文字>                  # 桌況 iframe 內的廳別分頁或桌位（文字開頭比對）
 #   pos-ab.sh <session> dismiss                              # 關閉 sweetalert（取消）與所有可見的 jQuery UI dialog
 #   pos-ab.sh <session> logout <base-url>
@@ -35,8 +37,9 @@ case "$CMD" in
     esac
     ;;
   click)
-    TEXT="$1"; WHICH="${2:-first}"
-    ab eval "(() => { const want = $(js_quote "$TEXT").replace(/\\s/g, ''); const els = Array.from(document.querySelectorAll('div,td,span,button,a,li,input')).filter(e => e.offsetWidth > 0 && Array.from(e.children).every(c => c.tagName === 'BR')).filter(e => ((e.innerText || e.value || '')).replace(/\\s/g, '') === want); if (!els.length) return 'not found: ' + want; const el = '$WHICH' === 'last' ? els[els.length - 1] : els[0]; ['mousedown', 'mouseup', 'click'].forEach(t => el.dispatchEvent(new MouseEvent(t, {bubbles: true, cancelable: true, view: window}))); return 'clicked ' + want + ' (' + els.length + ')'; })()"
+    TEXT="$1"; WHICH="${2-first}"
+    case "$WHICH" in first|last) ;; *) echo "click 的第 2 參數只接受 first 或 last，收到：$WHICH" >&2; exit 2 ;; esac
+    ab eval "(() => { const want = $(js_quote "$TEXT").replace(/\\s/g, ''); const els = Array.from(document.querySelectorAll('div,td,span,button,a,li,input')).filter(e => e.offsetWidth > 0 && Array.from(e.children).every(c => c.tagName === 'BR')).filter(e => ((e.innerText || e.value || '')).replace(/\\s/g, '') === want); if (!els.length) { const own = e => Array.from(e.childNodes).filter(n => n.nodeType === 3).map(n => n.data).join('').replace(/\\s/g, ''); els.push(...Array.from(document.querySelectorAll('label,.ui-tabs-anchor')).filter(e => e.offsetWidth > 0 && (own(e) === want || (e.innerText || '').replace(/\\s/g, '') === want))); } if (!els.length) return 'not found: ' + want; const el = '$WHICH' === 'last' ? els[els.length - 1] : els[0]; ['mousedown', 'mouseup', 'click'].forEach(t => el.dispatchEvent(new MouseEvent(t, {bubbles: true, cancelable: true, view: window}))); return 'clicked ' + want + ' (' + els.length + ')'; })()"
     ;;
   iframe-click)
     TEXT="$1"
