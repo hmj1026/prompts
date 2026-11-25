@@ -154,7 +154,7 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
 7. **連 DB 的探針腳本一律 try/catch**：PDO 連線失敗的未攔截例外堆疊會把連線帳密印到輸出（2026-11-24 曾外洩進 session transcript）；腳本捕捉例外後只印「連線失敗」與錯誤代碼，不印堆疊與 DSN。
 8. **vm1 命名**：vm1 新測試站碼基一律 `zdpos_218_<站>`，發票隔離目錄一律 `invoices-<站>`（`zdpos_217_*` 保留給正式商家碼基；例：186 prod canary 專用 `zdpos_217_sb84`，UAT `/sb84/` 為 `zdpos_218_sb84`）。
 
-完整步驟與實例回執：`/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §3.2、§3.3 步驟 5／5b。
+完整步驟：`/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §4.2、§4.4、§4.5。
 
 **完成條件**：在 vm1 執行
 ```bash
@@ -170,7 +170,7 @@ Yii 架構將網頁入口與程式碼主體分離（Thin-entry）。
 
 **先判斷站台跑哪個 PHP runtime**：
 - **5.6**（現行預設）：照下方步驟 1 的模板建立。
-- **8.4**：碼基須為含 8.4 修正的分支。薄入口與 console 入口改用 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/dev-php84-site-deployment.md` 附錄 A 的標準模板，該模板使用 `yii_framework-fork` 與 `config/runtime-bootstrap.php`，是 8.4 模板的唯一出處。另在 nginx map 加一行，見該文件 §12。
+- **8.4**：碼基須為含 8.4 修正的分支。薄入口與 console 入口改用 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/dev-php84-site-deployment.md` 附錄 A 的標準模板，該模板使用 `yii_framework-fork` 與 `config/runtime-bootstrap.php`，是 DEV 8.4 模板的出處。另在 nginx map 加一行，見該文件 §12。**vm1** 的 8.4 站不用此模板：由來源商家的 5.6 `index.php` 只換 `$name`、`$yii`、`$config`，config 只換 `$use_name`、`$version`，`sessionName` 不改，見 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §4.2、§4.8（碼基須含 `bootPhp84LegacyEntry`）。
 
 步驟 2、3 的 symlink 佈局兩種 runtime 相同。
 
