@@ -1,9 +1,3 @@
----
-name: zdpos-legacy-js-refactor
-description: extraction：把 js/zpos、pos_core、mpos、main、jqPlug 巨檔拆成 leaf。Use when 規劃抽出或寫 design.md 邊界清單。Not for 已抽出 leaf 的 @ts-check（zdpos-js-static-check-strategy）或改 eslint tier（zdpos-js-lint-config）。
-allowed-tools: Read, Bash(rg *), Bash(grep *), Bash(awk *), Bash(find *), Bash(wc *), Bash(ls *), Bash(git *)
----
-
 # zdpos Legacy JS Refactor Playbook
 
 ## 1. 共通契約
@@ -21,7 +15,7 @@ allowed-tools: Read, Bash(rg *), Bash(grep *), Bash(awk *), Bash(find *), Bash(w
   })(window, jQuery);
   ```
 - **保留看似 dead 的程式碼**：legacy JS 經常透過 `window.X` 隱式被 inline `<script>` 或 PHP 模板 callback；mechanical extraction 階段一律保留。
-- **No build step**：leaf 由 `<script src>` 載入。不引入 import/export、TypeScript runtime、bundler 產物到 production load chain。靜態檢查契約見 [`.claude/rules/js/static-checks.md`](../../rules/js/static-checks.md)；新 leaf 的 `@ts-check` 節奏走 skill `zdpos-js-static-check-strategy`。
+- **No build step**：leaf 由 `<script src>` 載入。不引入 import/export、TypeScript runtime、bundler 產物到 production load chain。靜態檢查契約見 `.claude/rules/js/static-checks.md`；新 leaf 的 `@ts-check` 節奏走 [ts-check-cleanup.md](ts-check-cleanup.md)。
 
 ## 2. Audit-grep-first design
 
@@ -49,7 +43,7 @@ rg -nE '(^|\s)var\s+items\s*=|(^|\s)var\s+state\s*=' <target.js>
 # (f) jQuery widget pattern（jqPlug 抽出時不可漏；widget 註冊本身就是 closure 公開 API）
 rg -nE '\$\.widget\s*\(' <target.js>
 
-# (g) IIFE / 既有模組邊界（未遵守本 skill 模板的會在拆出時暴露 'use strict' / arrow fn）
+# (g) IIFE / 既有模組邊界（未遵守本 playbook 模板的會在拆出時暴露 'use strict' / arrow fn）
 rg -nE ';\s*\(function\s*\(|use strict' <target.js>
 ```
 
@@ -64,10 +58,10 @@ rg -nE ';\s*\(function\s*\(|use strict' <target.js>
 PR description 三項齊備才算例外成立：
 
 1. 明示「LOC 超過 800 但內含 closure private state / prototype 集中區塊」
-2. 引用本條款（`zdpos-legacy-js-refactor` SKILL.md §3）
+2. 引用本條款（`zdpos-js-modernization` `references/legacy-extraction.md` §3）
 3. 附 grep 證據：closure 變數命中數 + `window.X` / `prototype.X` 公開方法命中數比對（原始檔 vs 新 leaf，必須完全相等）
 
-zpos Stage C Item ~1,800 行、POS facade ~2,577 行、Stage D List ~14,724 行皆走此例外。具體成因 → `references/zpos-stage-a-d-case-study.md`。
+zpos Stage C Item ~1,800 行、POS facade ~2,577 行、Stage D List ~14,724 行皆走此例外。具體成因 → [zpos-stage-a-d-case-study.md](zpos-stage-a-d-case-study.md)。
 
 ## 4. Verification（leaf 切分後三段）
 
@@ -75,13 +69,14 @@ zpos Stage C Item ~1,800 行、POS facade ~2,577 行、Stage D List ~14,724 行�
 |---|---|---|
 | Golden fixtures 比對 | 鎖死 fixture（zpos 是 `protected/tests/fixtures/golden-cart-pre-refactor.json`）跑 leaf 與原始檔產出 JSON diff | 任何欄位不等 → 切分有行為改動 |
 | Leaf 單元測試 | 直接呼叫 `window.X` 公開 API，斷言回傳值 / 狀態 | API 名稱反直覺（zpos.list 的 `setDiscount` / `setAllowance` / `removeItem` 等），grep 確認再寫 |
-| E2E spec | 走 dispatch + rendering 雙斷言 | 偽綠：dialog 沒開但 `called=true` 仍 pass → 看 `references/e2e-antipatterns.md` |
+| E2E spec | 走 dispatch + rendering 雙斷言 | 偽綠：dialog 沒開但 `called=true` 仍 pass → 看 [e2e-antipatterns.md](e2e-antipatterns.md) |
 
 完成條件：三段都跑過，golden diff 為空，E2E 沒有 probe-and-pass loop。
 
 ## 5. References
 
-- 完整成功案例 → [references/zpos-stage-a-d-case-study.md](references/zpos-stage-a-d-case-study.md)
-- E2E spec anti-patterns → [references/e2e-antipatterns.md](references/e2e-antipatterns.md)
+- 完整成功案例 → [zpos-stage-a-d-case-study.md](zpos-stage-a-d-case-study.md)
+- E2E spec anti-patterns → [e2e-antipatterns.md](e2e-antipatterns.md)
 - Worktree 跑 phpunit / E2E 前置 → skill `zdpos-git-worktree`
-- per-leaf `@ts-check` → skill `zdpos-js-static-check-strategy`
+- per-leaf `@ts-check` → [ts-check-cleanup.md](ts-check-cleanup.md)
+- ESLint tier 與白名單 → [lint-tiers.md](lint-tiers.md)

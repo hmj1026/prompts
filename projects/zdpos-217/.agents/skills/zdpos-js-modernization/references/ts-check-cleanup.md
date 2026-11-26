@@ -1,11 +1,6 @@
----
-name: zdpos-js-static-check-strategy
-description: "@ts-check：單支 leaf 的 cleanup playbook。Use when 寫或驗收 per-leaf @ts-check PR，或判斷該檔走 strict 還是 tsconfig exclude。Not for eslint tier（zdpos-js-lint-config）或巨檔抽出（zdpos-legacy-js-refactor）。"
----
+# per-leaf `@ts-check` Cleanup Playbook
 
-# zdpos-js-static-check-strategy
-
-> Capability：`zpos-static-check-gate`。SSOT rule：[`.claude/rules/js/static-checks.md`](../../rules/js/static-checks.md)
+> Capability：`zpos-static-check-gate`。SSOT rule：`.claude/rules/js/static-checks.md`
 
 ## 1. 先分類再動手
 
@@ -14,7 +9,7 @@ description: "@ts-check：單支 leaf 的 cleanup playbook。Use when 寫或驗�
 | 判準 | Exit path |
 |---|---|
 | 檔在 `tsconfig.json` `exclude`（現況：`list.js`、`pos-init-helpers.js`、`pos-runtime-helpers.js`；以實檔為準） | 永久 exclude，不是 cleanup PR |
-| 檔首已是恰好一行 `// @ts-check` | 本 skill 不適用；改業務邏輯走 `.claude/rules/frontend.md` |
+| 檔首已是恰好一行 `// @ts-check` | 本 playbook 不適用；改業務邏輯走 `.claude/rules/frontend.md` |
 | 其餘 `js/zpos/**/*.js`（含 `features/`） | per-leaf cleanup，目標檔首恰好 `// @ts-check` |
 
 `exclude` 內的 helpers 是跨 leaf late-init 根源，typedef 拓寬解決不了；`list.js` 走抽出小檔（抽出檔受 Tier 1），不是翻回 strict。
@@ -64,4 +59,5 @@ Ambient typedef 在 `js/zpos/jsdoc-globals.js`。leaf 用 JSDoc `@type` / `@para
 ## 相關
 
 - SSOT rule：`.claude/rules/js/static-checks.md`
-- eslint tier 為何這樣分：skill `zdpos-js-lint-config`
+- eslint tier 為何這樣分：[lint-tiers.md](lint-tiers.md)
+- legacy 巨檔抽出：[legacy-extraction.md](legacy-extraction.md)

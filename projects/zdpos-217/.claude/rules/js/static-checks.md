@@ -29,6 +29,6 @@ SSOT 在 dhpk js module 的 `modules/js/hooks/_lib/js-tier-detect.sh`（`detect_
 
 | 場景 | Skill |
 |---|---|
-| eslint tier／新檔落哪一層 | skill `zdpos-js-lint-config` |
-| @ts-check per-leaf cleanup | skill `zdpos-js-static-check-strategy` |
+| eslint tier／新檔落哪一層 | skill `zdpos-js-modernization` → `references/lint-tiers.md` |
+| @ts-check per-leaf cleanup | skill `zdpos-js-modernization` → `references/ts-check-cleanup.md` |
 | 改 leaf 業務邏輯 | rule `.claude/rules/frontend.md` |

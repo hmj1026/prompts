@@ -1,8 +1,3 @@
----
-name: zdpos-js-lint-config
-description: eslint tier：為何有 Tier 1 / 1.5 / 1.6 / 1.7，新檔或新全域該落哪一層。Use when 改 eslint.config.js 或 tsconfig.json，或判斷新路徑的 tier。Not for per-leaf @ts-check（zdpos-js-static-check-strategy）或巨檔抽出（zdpos-legacy-js-refactor）。
----
-
 # zdpos JS 靜態檢查 — 為何有這些 tier
 
 檔案名單與規則值以 `eslint.config.js` 為準。本檔只回答「為什麼這樣分」。
@@ -59,9 +54,10 @@ vendor、`list.js`（抽出小檔才進 Tier 1）、既有 ES2022 技術債。�
 - POS state runtime（writable）
 - Admin DataTables editor
 
-新全域同步步驟 → skill `zdpos-js-static-check-strategy`。
+新全域同步步驟 → [ts-check-cleanup.md](ts-check-cleanup.md) §2。
 
 ## 相關
 
 - SSOT rule：`.claude/rules/js/static-checks.md`
-- per-leaf `@ts-check` 執行：skill `zdpos-js-static-check-strategy`
+- per-leaf `@ts-check` 執行：[ts-check-cleanup.md](ts-check-cleanup.md)
+- legacy 巨檔抽出：[legacy-extraction.md](legacy-extraction.md)

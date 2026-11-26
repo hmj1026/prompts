@@ -1,6 +1,6 @@
 # Case Study: zpos.js Stage A/B/C/D Modular Refactor (completed 2026-05-15)
 
-> 本檔為 2026-05-15 完成的 zpos.js 拆分完整案例，供未來其他 legacy JS extraction 參考具體執行細節與數字。**通用方法論已升級至 SKILL.md §2-5，不在此重複**；本檔只留 zpos 專屬細節。
+> 本檔為 2026-05-15 完成的 zpos.js 拆分完整案例，供未來其他 legacy JS extraction 參考具體執行細節與數字。**通用方法論已升級至 [legacy-extraction.md](legacy-extraction.md) §2–5，不在此重複**；本檔只留 zpos 專屬細節。
 
 ## 規模數字
 
@@ -38,11 +38,11 @@
 | C | Item / POS facade（命中 800 LOC 例外） | `openspec/changes/archive/2026-05-14-refactor-zpos-js-stage-c-*/` |
 | D | List（最大例外，主要 closure state） | `openspec/changes/archive/2026-05-14-refactor-zpos-js-stage-d-*/` |
 
-## Stage D 規劃漏抽教訓（→ 升級為 SKILL.md §3 audit-grep）
+## Stage D 規劃漏抽教訓（→ 升級為 legacy-extraction.md §2 audit-grep）
 
 Stage D design.md 漏抽 `async function ajaxQuery` 與 `getSysTem(...)` boot 呼叫，原因是只用 (a) 抓 `var|const|function` 而沒涵蓋 (a') `async function`，也沒跑 (b) top-level statements。事後補救成本大。
 
-正因此教訓，SKILL.md §3 的 grep 範本擴成 (a)-(e) 共 5 條，覆蓋：
+正因此教訓，[legacy-extraction.md](legacy-extraction.md) §2 的 grep 範本先擴成 (a)-(e) 共 5 條（後續再補 (f)-(g)），覆蓋：
 - async function（漏抽元兇）
 - 非 declaration 的 top-level 執行碼（getSysTem 漏抽元兇）
 - nested const within objects（避免類似 SelectionPackage 內含 PackageItem + Packages 結構被漏掉）

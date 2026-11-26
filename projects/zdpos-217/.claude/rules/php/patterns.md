@@ -49,7 +49,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 ## Exception Logging (catch convention)
 
-> catch → skill `zdpos-exception-logging`
+> catch → skill `zdpos-php-patterns`（Exception Logging）
 
 **Hard rule**: every `catch (\Exception $e)` SHALL call both `ExceptionLogHelper::logCaughtExceptionToApplication()` and a domain logger; never empty / `// ignore`.
 
@@ -89,7 +89,7 @@ grep -rl "<target_table>" infrastructure/Repositories/
 
 ## IN / NOT IN Queries
 
-> IN → skill `zdpos-in-queries`
+> IN → skill `zdpos-php-patterns`（IN / NOT IN Queries）
 
 **Hard rule**: query-builder path → `whereIn()` / `whereNotIn()`; `CDbCriteria` path → `addInCondition()` / `addNotInCondition()`. Never string interpolation; always `array_values($ids)`; guard empty arrays before building the condition.
 
