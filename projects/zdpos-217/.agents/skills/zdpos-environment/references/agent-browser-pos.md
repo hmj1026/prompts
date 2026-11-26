@@ -46,7 +46,7 @@ POS_GUARD_ISOLATED=<核准清單檔> bash $G $S isolated-ok sb84         # 隔�
 1. **挑機號**：以 `SELECT station_no, invoice_track, invoice_current, remain FROM <schema>.invoice_maintain WHERE store_name='<店號>' AND year=<民國年> AND month=<雙月期>` 查字軌；程式比對的是 `store_name`，不是 `store_no`。查得到就代表結帳會開票。
 2. **記基準**：`invoice_record` 筆數、各機號字軌號碼、`sales_receipt` 與 `invalid_receipt` 筆數。
 3. **每張單**：按「不印發票」，跑 `guard` 確認 `invoice_flag` 是 `false` 再結帳。新單與續單載回都會恢復 `true`。
-4. **隔離站（目前只有 `sb84`）**：發票寫隔離目錄且字軌為 OO 的站，主控核准後以 `isolated-ok` 登記，該站的 `splitBill*` 動作（不含 `splitBillWriteOff`）與 ajax `checkOut` 開票放行；作廢、折讓、`/pos/checkOut` 路由、發票類頁面仍照原規則。`guard` 輸出的 `isolated` 顯示目前登記；頁面重載後為空，須重跑。新增隔離站要先讀回該站 `INVOICE_BASE_PATH` 與字軌，再改 `pos-guard.js` 的 `ISOLATED_SITES` 並跑測試。
+4. **隔離站（目前只有 `sb84`）**：發票寫隔離目錄且字軌為 OO 的站，主控核准後以 `isolated-ok` 登記，該站的 `splitBill*` 動作（不含 `splitBillWriteOff`）、ajax `checkOut` 開票、清帳（`cleardebt`、`cleardebt_complement`）與 `handleAllowance` 放行；折讓事件（`MakeAllowances`、`VoidedAllowances`）與一般作廢一樣須先 `void-ok` 登記單號；`/pos/checkOut` 路由、發票類頁面仍照原規則。`guard` 輸出的 `isolated` 顯示目前登記；頁面重載後為空，須重跑。新增隔離站要先讀回該站 `INVOICE_BASE_PATH` 與字軌，再改 `pos-guard.js` 的 `ISOLATED_SITES` 並跑測試。
 5. **作廢**：先停下回報單號；主控核對 DB（是自己建的、沒有發票）後才寫入核准清單。核准以單號登記，只涵蓋一般作廢，送出一次即消耗；同單號再作廢須重新核准。「作廢單號」鍵要輸入完整 10 碼單號。
 5. **擋下時**（exit 10）：停止並回報擋下紀錄（開頭是 action 或路徑名稱），之後的點擊會持續 exit 10。主控判斷後以 `ack` 清除紀錄（被擋的請求從未送出）；要放行新動作時，先讀該 case 確認不開票、不寫佇列，再加入 `pos-guard.js` 的允許清單並跑 `node --test <skill>/scripts/pos-guard.test.js`。
 6. **收尾**：與基準比對，發票筆數與字軌不變，再登出釋放機號。

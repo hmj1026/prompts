@@ -331,7 +331,19 @@ test('隔離站放行只限 ISOLATED_SITES 且請求在同一站', () => {
   assert.ok(!ISOLATED_SITES.has('demo218'));
 });
 
-test('隔離站仍擋認損、作廢、折讓與 /pos/checkOut 路由', () => {
+test('隔離站放行清帳；折讓事件需單號核准，未知 event 仍擋', () => {
+  for (const action of ['cleardebt', 'cleardebt_complement', 'handleAllowance']) {
+    assert.strictEqual(sbPost(action, {}, 'sb84'), '', action);
+    assert.notStrictEqual(sbPost(action, {}, ''), '', action);
+  }
+  const allow = (event, approved) => decide(parseRequest('POST', SB84, form({ ajax: 'delReceipt', data: JSON.stringify({ salno: NO, event }) }), SB84), approved, 'sb84');
+  assert.strictEqual(allow('MakeAllowances', [NO]), '');
+  assert.notStrictEqual(allow('MakeAllowances', []), '');
+  assert.notStrictEqual(allow('UnknownEvent', [NO]), '');
+  assert.notStrictEqual(decide(parseRequest('POST', BASE, form({ ajax: 'delReceipt', data: JSON.stringify({ salno: NO, event: 'MakeAllowances' }) }), BASE), [NO], 'sb84'), '');
+});
+
+test('隔離站仍擋認損、未核准作廢與 /pos/checkOut 路由', () => {
   assert.notStrictEqual(sbPost('splitBillWriteOff', {}, 'sb84'), '');
   assert.notStrictEqual(sbPost('delReceipt', { salno: NO }, 'sb84'), '');
   assert.notStrictEqual(sbPost('create_invoice_xml', {}, 'sb84'), '');
@@ -349,4 +361,8 @@ test('isolated-ok 拒絕未設定核准檔、清單外的站與不合法站名',
   assert.strictEqual(run(['demo218'], { POS_GUARD_ISOLATED: list }).status, 8);
   assert.strictEqual(run(['SB84;x'], { POS_GUARD_ISOLATED: list }).status, 2);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('統編抬頭查詢放行（只查稅籍 API，不開票）', () => {
+  assert.strictEqual(verdict('lookupTaxTitle', { tax_id: '12345671' }), '');
 });

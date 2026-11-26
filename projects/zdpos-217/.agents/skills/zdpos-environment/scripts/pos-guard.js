@@ -12,8 +12,8 @@
  *   6. 其餘非 GET（沒有 ajax 參數的 POST 等）：預設擋下。GET 頁面載入放行。
  *
  * 隔離站放行（isolated-ok）：只限 ISOLATED_SITES 內、發票寫隔離目錄且用 OO 測試字軌的站。由 pos-guard.sh isolated-ok 依主控核准
- * 檔登記；登記後該站的 splitBill* 動作（不含 splitBillWriteOff）與 ajax checkOut 放行（含開票）。作廢、折讓、/pos/checkOut 路由、
- * 發票類頁面導覽仍照原規則。頁面重載後攔截器狀態重建，須重新登記。
+ * 檔登記；登記後該站的 splitBill* 動作（不含 splitBillWriteOff）、ajax checkOut（含開票）、清帳（cleardebt、cleardebt_complement）、
+ * handleAllowance 放行；折讓事件（MakeAllowances、VoidedAllowances）仍需單號核准。一般作廢核准、/pos/checkOut 路由、發票類頁面導覽照原規則。頁面重載後攔截器狀態重建，須重新登記。
  *
  * 作廢核准：以單號登記，只涵蓋一般作廢（event 為空）。送出一次即消耗，同單號再送須重新核准。
  * 折讓事件（MakeAllowances、VoidedAllowances）與任何未知 event 一律擋，UAT 開折讓須另取使用者核准，不在本工具範圍。
@@ -44,6 +44,8 @@
     // 桌況 iframe（TableSeatsController::actionAjax）：checklock 純讀；ordering 只寫桌位與暫存單的鎖欄
     'checklock', 'ordering',
     'storeType', 'takeAwayServiceCheck', 'toCashSwitch', 'unlockTable',
+    // 統編查公司抬頭：只呼叫財政部稅籍 API（FiaTaxTitleApiService），不開票、不寫單據
+    'lookupTaxTitle',
   ]);
   // get* 前綴放行；見檔頭說明（getSalesTemp、getSaleNo 不是純讀）。
   const READ_PREFIX = /^get/;
@@ -51,6 +53,9 @@
   // 新增站前須讀回該站 Glob.php 的 INVOICE_BASE_PATH 與字軌，確認不寫正式上傳佇列。
   const ISOLATED_SITES = new Set(['sb84']);
   const ISOLATED_ACTION = /^splitbill(?!writeoff$)[a-z]+$/i;
+  // 隔離站額外放行：清帳（含補清）與折讓處理。折讓事件仍經 delReceipt，須單號核准（void-ok）。
+  const ISOLATED_EXTRA = new Set(['cleardebt', 'cleardebt_complement', 'handleallowance']);
+  const ALLOWANCE_EVENTS = new Set(['MakeAllowances', 'VoidedAllowances']);
   const VOID_ACTION = /^(delreceipt|delorder)$/i;
   const VOID_ROUTES = new Set(['delreceipt', 'delorder']);
   // 非 GET 且沒有 ajax 參數時唯一放行的路由（取最後兩段，小寫）。逐一對照 v26.11.7.1：
@@ -69,18 +74,18 @@
     const { method, path, action, data, unreadable } = request;
     if (unreadable) return path + ': unreadable body';
     const name = request.routeName;
+    const onIsolated = ISOLATED_SITES.has(isolated) && request.site === isolated;
 
-    if (request.segments.some((s) => VOID_ROUTES.has(s))) return voidRoute(request, approvals);
+    if (request.segments.some((s) => VOID_ROUTES.has(s))) return voidRoute(request, approvals, onIsolated);
     if (request.segments.includes('checkout')) return name + ': checkOut route is always blocked';
     if (isReadMethod(method)) return '';
     // login-form 是 Yii 登入表單的 ajax 驗證，不是 doAjax 動作
     if ((!action || action === 'login-form') && POST_ROUTES.has(request.routeKey)) return '';
     if (!action) return name + ': non-ajax ' + method + ' not allowed';
 
-    const onIsolated = ISOLATED_SITES.has(isolated) && request.site === isolated;
     if (action.toLowerCase() === 'checkout') return onIsolated ? isolatedCheckOut(action, data) : checkOutRule(action, data);
-    if (VOID_ACTION.test(action)) return voidDecision(action, voidOrderNo(data), data ? [data.event] : [], approvals);
-    if (onIsolated && ISOLATED_ACTION.test(action)) return '';
+    if (VOID_ACTION.test(action)) return voidDecision(action, voidOrderNo(data), data ? [data.event] : [], approvals, onIsolated);
+    if (onIsolated && (ISOLATED_ACTION.test(action) || ISOLATED_EXTRA.has(action.toLowerCase()))) return '';
     return ALLOWED.has(action) || READ_PREFIX.test(action) ? '' : action + ': action not allowed';
   };
 
@@ -97,18 +102,19 @@
   const voidOrderNo = (data) => (data && typeof data.salno === 'string' ? [data.salno] : []);
 
   /** 非 ajax 的 delReceipt／delOrder 路由：salno 與 event 取自 query、body、Yii path 參數。 */
-  const voidRoute = (request, approvals) => {
+  const voidRoute = (request, approvals, onIsolated = false) => {
     const pairs = request.params;
     const key = (k) => pairs.filter(([name]) => name === k).map(([, v]) => v);
     const arrayKeys = pairs.filter(([name]) => /^(salno|event)\[/.test(name));
     const events = key('event').concat(arrayKeys.length ? ['[]'] : []);
-    return voidDecision(request.routeName, key('salno'), events, approvals);
+    return voidDecision(request.routeName, key('salno'), events, approvals, onIsolated);
   };
 
   /** 作廢的共同規則：event 必須空、salno 唯一且已核准；放行即消耗該核准。 */
-  const voidDecision = (name, salnos, events, approvals) => {
+  const voidDecision = (name, salnos, events, approvals, onIsolated = false) => {
     const event = events.find((e) => e !== undefined && e !== null && e !== '');
-    if (event !== undefined) return name + ': allowance or unknown event blocked (' + event + ')';
+    const isolatedAllowance = onIsolated && events.length === 1 && ALLOWANCE_EVENTS.has(event);
+    if (event !== undefined && !isolatedAllowance) return name + ': allowance or unknown event blocked (' + event + ')';
     const distinct = Array.from(new Set(salnos));
     if (distinct.length !== 1 || distinct[0] === '') return name + ': void needs exactly one salno';
     const index = approvals.indexOf(distinct[0]);
