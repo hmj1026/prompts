@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
-const { decide, parseRequest, navDecide, ALLOWED } = require('./pos-guard.js');
+const { decide, parseRequest, navDecide, ALLOWED, ISOLATED_SITES } = require('./pos-guard.js');
 
 const BASE = 'https://cpos.zdn.tw/demo218/pos/index';
 const NO = '0200000004';
@@ -308,4 +308,45 @@ test('桌況 iframe 的鎖桌動作與掃碼加品項放行；未查證的寫入
   for (const action of ['chgTable', 'clearTable', 'updateSelling', 'openCasher', 'verifyButtonPassword']) {
     assert.notStrictEqual(decide(post(action, {}), []), '', action);
   }
+});
+
+const SB84 = 'https://cpos.zdn.tw/sb84/pos/index';
+const sbPost = (action, data, isolated, base = SB84) =>
+  decide(parseRequest('POST', base, form({ ajax: action, data: JSON.stringify(data) }), base), [], isolated);
+
+test('隔離站登記後放行 splitBill* 與開票的 checkOut，未登記時照常擋', () => {
+  for (const action of ['splitBillPrepareSource', 'splitBillStart', 'splitBillAllocate', 'splitBillChildCheckout', 'splitBillCancel']) {
+    assert.strictEqual(sbPost(action, {}, 'sb84'), '', action);
+    assert.notStrictEqual(sbPost(action, {}, ''), '', action);
+  }
+  assert.strictEqual(sbPost('checkOut', { list: { invoice_flag: true } }, 'sb84'), '');
+  assert.notStrictEqual(sbPost('checkOut', { list: { invoice_flag: true } }, ''), '');
+  assert.notStrictEqual(sbPost('checkOut', {}, 'sb84'), '');
+});
+
+test('隔離站放行只限 ISOLATED_SITES 且請求在同一站', () => {
+  assert.notStrictEqual(sbPost('splitBillStart', {}, 'sb84', BASE), '');
+  assert.notStrictEqual(sbPost('splitBillStart', {}, 'demo218', BASE), '');
+  assert.notStrictEqual(sbPost('checkOut', { list: { invoice_flag: true } }, 'demo218', BASE), '');
+  assert.ok(!ISOLATED_SITES.has('demo218'));
+});
+
+test('隔離站仍擋認損、作廢、折讓與 /pos/checkOut 路由', () => {
+  assert.notStrictEqual(sbPost('splitBillWriteOff', {}, 'sb84'), '');
+  assert.notStrictEqual(sbPost('delReceipt', { salno: NO }, 'sb84'), '');
+  assert.notStrictEqual(sbPost('create_invoice_xml', {}, 'sb84'), '');
+  assert.notStrictEqual(decide(parseRequest('POST', '/sb84/pos/checkOut', form({ a: 1 }), SB84), [], 'sb84'), '');
+  assert.notStrictEqual(navDecide('/sb84/invoice/index', SB84), '');
+});
+
+test('isolated-ok 拒絕未設定核准檔、清單外的站與不合法站名', () => {
+  const sh = path.join(__dirname, 'pos-guard.sh');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pos-guard-iso-'));
+  const list = path.join(dir, 'isolated.txt');
+  fs.writeFileSync(list, 'sb84\r\n');
+  const run = (args, env) => spawnSync('bash', [sh, 's', 'isolated-ok', ...args], { env: { ...process.env, ...env }, encoding: 'utf8' });
+  assert.strictEqual(run(['sb84'], { POS_GUARD_ISOLATED: '' }).status, 8);
+  assert.strictEqual(run(['demo218'], { POS_GUARD_ISOLATED: list }).status, 8);
+  assert.strictEqual(run(['SB84;x'], { POS_GUARD_ISOLATED: list }).status, 2);
+  fs.rmSync(dir, { recursive: true, force: true });
 });

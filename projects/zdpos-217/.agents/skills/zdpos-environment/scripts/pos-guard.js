@@ -11,6 +11,10 @@
  *   5. 帶 ajax 參數：依 doAjax 動作判斷（允許清單、get* 前綴、checkOut 的 invoice_flag、作廢核准）。
  *   6. 其餘非 GET（沒有 ajax 參數的 POST 等）：預設擋下。GET 頁面載入放行。
  *
+ * 隔離站放行（isolated-ok）：只限 ISOLATED_SITES 內、發票寫隔離目錄且用 OO 測試字軌的站。由 pos-guard.sh isolated-ok 依主控核准
+ * 檔登記；登記後該站的 splitBill* 動作（不含 splitBillWriteOff）與 ajax checkOut 放行（含開票）。作廢、折讓、/pos/checkOut 路由、
+ * 發票類頁面導覽仍照原規則。頁面重載後攔截器狀態重建，須重新登記。
+ *
  * 作廢核准：以單號登記，只涵蓋一般作廢（event 為空）。送出一次即消耗，同單號再送須重新核准。
  * 折讓事件（MakeAllowances、VoidedAllowances）與任何未知 event 一律擋，UAT 開折讓須另取使用者核准，不在本工具範圍。
  *
@@ -43,6 +47,10 @@
   ]);
   // get* 前綴放行；見檔頭說明（getSalesTemp、getSaleNo 不是純讀）。
   const READ_PREFIX = /^get/;
+  // 隔離站：發票 XML 寫隔離目錄（/var/glob-storage/invoices-sb84/）且字軌為 OO，見 docs repo release-26.11.8-php84-canary.md §2。
+  // 新增站前須讀回該站 Glob.php 的 INVOICE_BASE_PATH 與字軌，確認不寫正式上傳佇列。
+  const ISOLATED_SITES = new Set(['sb84']);
+  const ISOLATED_ACTION = /^splitbill(?!writeoff$)[a-z]+$/i;
   const VOID_ACTION = /^(delreceipt|delorder)$/i;
   const VOID_ROUTES = new Set(['delreceipt', 'delorder']);
   // 非 GET 且沒有 ajax 參數時唯一放行的路由（取最後兩段，小寫）。逐一對照 v26.11.7.1：
@@ -57,7 +65,7 @@
   const isReadMethod = (method) => method === 'GET' || method === 'HEAD';
 
   /** @returns {string} 空字串＝放行；否則為擋下原因（開頭是 action 或路徑名稱） */
-  const decide = (request, approvals) => {
+  const decide = (request, approvals, isolated = '') => {
     const { method, path, action, data, unreadable } = request;
     if (unreadable) return path + ': unreadable body';
     const name = request.routeName;
@@ -69,10 +77,16 @@
     if ((!action || action === 'login-form') && POST_ROUTES.has(request.routeKey)) return '';
     if (!action) return name + ': non-ajax ' + method + ' not allowed';
 
-    if (action.toLowerCase() === 'checkout') return checkOutRule(action, data);
+    const onIsolated = ISOLATED_SITES.has(isolated) && request.site === isolated;
+    if (action.toLowerCase() === 'checkout') return onIsolated ? isolatedCheckOut(action, data) : checkOutRule(action, data);
     if (VOID_ACTION.test(action)) return voidDecision(action, voidOrderNo(data), data ? [data.event] : [], approvals);
+    if (onIsolated && ISOLATED_ACTION.test(action)) return '';
     return ALLOWED.has(action) || READ_PREFIX.test(action) ? '' : action + ': action not allowed';
   };
+
+  /** 隔離站的 checkOut：允許開票，但 payload 必須可讀。 */
+  const isolatedCheckOut = (action, data) =>
+    (!data || typeof data.list !== 'object' || data.list === null ? action + ': payload unreadable' : '');
 
   const checkOutRule = (action, data) => {
     if (!data || typeof data.list !== 'object' || data.list === null) return action + ': payload unreadable';
@@ -165,7 +179,8 @@
     const params = toParams(body);
     const routeKey = route.routeSegments.slice(-2).join('/').toLowerCase();
     const routeName = route.routeSegments.slice(-2).join('/') || route.path;
-    const common = { method: verb, path: route.path, segments: route.segments, routeKey, routeName };
+    const site = (route.pathSegments[0] || '').toLowerCase();
+    const common = { method: verb, path: route.path, segments: route.segments, routeKey, routeName, site };
     if (params === null) return { ...common, action: '', data: undefined, params: [], unreadable: true };
     let data;
     try { data = JSON.parse(params.get('data') || 'null'); } catch (e) { data = undefined; }
@@ -174,11 +189,11 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { decide, parseRequest, navDecide, ALLOWED };
+    module.exports = { decide, parseRequest, navDecide, ALLOWED, ISOLATED_SITES };
     return undefined;
   }
 
-  const state = window.__posGuard || (window.__posGuard = { blocked: [], log: [], voidOK: [] });
+  const state = window.__posGuard || (window.__posGuard = { blocked: [], log: [], voidOK: [], isolated: '' });
   const block = (reason) => { state.blocked.push(reason); return reason; };
   const mark = (fn) => { fn.__posGuard = true; return fn; };
   const OPAQUE = { size: 0 };
@@ -188,7 +203,7 @@
     const gate = (method, url, body) => {
       const request = parseRequest(method, url, body, win.location.href);
       if (request.action) state.log.push(request.action);
-      const reason = decide(request, state.voidOK);
+      const reason = decide(request, state.voidOK, state.isolated || '');
       return reason ? block(reason) : '';
     };
     const X = win.XMLHttpRequest.prototype;
@@ -284,6 +299,7 @@
     crossOriginFrames: skipped,
     blocked: state.blocked,
     pendingVoidApprovals: state.voidOK.length,
+    isolated: state.isolated || '',
     log: state.log.slice(-30),
     invoice_flag: pos && pos.list ? pos.list.invoice_flag : null,
     sale: (document.getElementById('sale') || {}).innerText || null,
