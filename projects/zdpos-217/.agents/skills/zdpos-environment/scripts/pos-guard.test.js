@@ -332,7 +332,7 @@ test('隔離站放行只限 ISOLATED_SITES 且請求在同一站', () => {
 });
 
 test('隔離站放行清帳；折讓事件需單號核准，未知 event 仍擋', () => {
-  for (const action of ['cleardebt', 'cleardebt_complement', 'handleAllowance']) {
+  for (const action of ['cleardebt', 'cleardebt_complement', 'handleAllowance', 'chgTable', 'CarrierConfirm']) {
     assert.strictEqual(sbPost(action, {}, 'sb84'), '', action);
     assert.notStrictEqual(sbPost(action, {}, ''), '', action);
   }
@@ -341,6 +341,16 @@ test('隔離站放行清帳；折讓事件需單號核准，未知 event 仍擋'
   assert.notStrictEqual(allow('MakeAllowances', []), '');
   assert.notStrictEqual(allow('UnknownEvent', [NO]), '');
   assert.notStrictEqual(decide(parseRequest('POST', BASE, form({ ajax: 'delReceipt', data: JSON.stringify({ salno: NO, event: 'MakeAllowances' }) }), BASE), [NO], 'sb84'), '');
+});
+
+test('隔離站放行刷卡指令產生與回應解析路由；其他站與其餘 CreditCard/* 仍擋', () => {
+  const at = (url, isolated) => decide(parseRequest('POST', url, form({ type: 'esun600', value: '1' }), SB84), [], isolated);
+  for (const route of ['CreditCard/genCommand', 'creditCard/analysisRes']) {
+    assert.strictEqual(at('/sb84/' + route, 'sb84'), '', route);
+    assert.notStrictEqual(at('/sb84/' + route, ''), '', route);
+    assert.notStrictEqual(decide(parseRequest('POST', '/demo218/' + route, form({ a: 1 }), BASE), [], 'sb84'), '', route);
+  }
+  assert.notStrictEqual(at('/sb84/CreditCard/insertRecord', 'sb84'), '');
 });
 
 test('隔離站仍擋認損、未核准作廢與 /pos/checkOut 路由', () => {

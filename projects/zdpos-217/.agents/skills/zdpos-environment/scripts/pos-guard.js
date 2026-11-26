@@ -55,8 +55,15 @@
   const ISOLATED_SITES = new Set(['sb84', 'sb56']);
   const ISOLATED_ACTION = /^splitbill(?!writeoff$)[a-z]+$/i;
   // 隔離站額外放行：清帳（含補清）與折讓處理。折讓事件仍經 delReceipt，須單號核准（void-ok）。
-  const ISOLATED_EXTRA = new Set(['cleardebt', 'cleardebt_complement', 'handleallowance']);
-  const ALLOWANCE_EVENTS = new Set(['MakeAllowances', 'VoidedAllowances']);
+  // chgtable（換桌）：8cb9897e PosController case 'chgTable' 只更新 sales_temp／data_table、寫 slog、可回廚印指令，不開票、不寫發票佇列（2026-11-26 讀碼）。
+  // carrierconfirm（載具驗證）：8cb9897e EI::checkCarriers 只做本地 regex 與 data_store.store_taxid 檢查，curl 全在註解內（2026-11-26 token 掃描）。
+  const ISOLATED_EXTRA = new Set(['cleardebt', 'cleardebt_complement', 'handleallowance', 'chgtable', 'carrierconfirm']);
+  // 隔離站額外放行的非 ajax POST 路由（取最後兩段，小寫）。8cb9897e CreditCardController（2026-11-26 讀碼）：
+  //   creditcard/gencommand：只組刷卡機指令字串與 DataDev IP、寫 slog，回給瀏覽器經 ws 送本機刷卡機；無對外連線、不寫 DB
+  //   creditcard/analysisres：只解碼瀏覽器回傳的卡機回應、寫 slog；僅 nccc400／nccc400esvc 成功時寫 record_nccc；無對外連線
+  // 付款列由後續 ajax checkOut 寫入。insertRecord 等其餘 CreditCard/* 仍擋。
+  const ISOLATED_POST_ROUTES = new Set(['creditcard/gencommand', 'creditcard/analysisres']);
+  const ALLOWANCE_EVENTS =new Set(['MakeAllowances', 'VoidedAllowances']);
   const VOID_ACTION = /^(delreceipt|delorder)$/i;
   const VOID_ROUTES = new Set(['delreceipt', 'delorder']);
   // 非 GET 且沒有 ajax 參數時唯一放行的路由（取最後兩段，小寫）。逐一對照 v26.11.7.1：
@@ -82,6 +89,7 @@
     if (isReadMethod(method)) return '';
     // login-form 是 Yii 登入表單的 ajax 驗證，不是 doAjax 動作
     if ((!action || action === 'login-form') && POST_ROUTES.has(request.routeKey)) return '';
+    if (!action && onIsolated && ISOLATED_POST_ROUTES.has(request.routeKey)) return '';
     if (!action) return name + ': non-ajax ' + method + ' not allowed';
 
     if (action.toLowerCase() === 'checkout') return onIsolated ? isolatedCheckOut(action, data) : checkOutRule(action, data);
