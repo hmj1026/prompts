@@ -43,9 +43,16 @@
         "tech-spec",
         "test-review",
         "yii1-security-audit",
+        "zdpos-anchor-review",
+        "zdpos-context-router",
+        "zdpos-doc-studio",
+        "zdpos-env-builder",
         "zdpos-environment",
-        "zdpos-exception-logging",
-        "zdpos-in-queries"
+        "zdpos-git-worktree",
+        "zdpos-js-modernization",
+        "zdpos-permission-system",
+        "zdpos-php-patterns",
+        "zdpos-source-bound-verification"
       ],
       "commands": [
         "create-dev",
