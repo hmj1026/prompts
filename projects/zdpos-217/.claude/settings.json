@@ -177,61 +177,11 @@
   "pluginConfigs": {
     "dhpk@dhpk": {
       "options": {
-        "modules": [
-          "php-5.6",
-          "yii-1.1",
-          "phpunit-5.7",
-          "js"
-        ],
         "hook_profile": "standard",
-        "docker_containers": [
-          "pos_php",
-          "pos_mysql"
-        ],
         "review_trigger_extra_paths": [
           "db:infrastructure/Repositories/",
           "sec:infrastructure/Configuration/",
           "mig:protected/migrations/"
-        ],
-        "lockfile_sync_commands": [
-          "composer.json:docker exec -i -w /var/www/www.posdev/zdpos-217 pos_php composer update --lock"
-        ],
-        "php_bin": "php",
-        "hot_tables": [
-          "records",
-          "orders",
-          "stock",
-          "inventory",
-          "pay_actions"
-        ],
-        "reap_stale_mcp_processes": true,
-        "completion_evidence_enabled": true,
-        "agent_warmstart_enabled": true,
-        "graduation_scan_enabled": true,
-        "harness_restore_hint": "cd ~/projects/prompts && ./deploy/deploy.sh project zdpos-217",
-        "js_core_files": [
-          "zpos.js",
-          "zpos.v2.js",
-          "mpos.js",
-          "pos_core.js",
-          "main.js"
-        ],
-        "js_vendor_globs": [
-          "js/ckeditor/",
-          "js/ckfinder/",
-          "js/jquery-*",
-          "js/dataTables.*",
-          "js/jqPlug/",
-          "js/ubereats*/",
-          "js/ueditor/",
-          "js/utils/",
-          "js/service*/",
-          "js/omniorder/",
-          "js/oss/",
-          "js/modules/",
-          "js/async/",
-          "js/dashboard/",
-          "js/admin/core/RecordTable.js"
         ]
       }
     }
