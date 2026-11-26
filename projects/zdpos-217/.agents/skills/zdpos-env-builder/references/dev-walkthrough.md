@@ -1,6 +1,6 @@
 # ZDPOS 測試環境建置技能 (zdpos-env-builder) 實作範例
 
-本文件記錄以 **拆帳結帳功能 (Split Bill) 於內部 DEV 伺服器** 建立隔離測試環境的真實完整過程，供 Agent 與開發者參照執行。
+本文件記錄以 **拆帳結帳功能 (Split Bill) 於內部 DEV 伺服器** 建立隔離測試環境的真實完整過程，供 Agent 與開發者參照執行。標準 SOP 見 [SKILL.md](../SKILL.md)。
 
 ---
 

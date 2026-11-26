@@ -85,8 +85,8 @@ QA 看不懂的詞一律換成白話，不得出現在手冊正文：
 ## 5. QA 專屬命令
 
 ```bash
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold --mode qa --module <module> --slug <slug> --title "<功能中文名稱>"
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode qa docs/qa/<module>/QA-<slug>-manual.md
+python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold --mode qa --module <module> --slug <slug> --title "<功能中文名稱>"
+python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode qa docs/qa/<module>/QA-<slug>-manual.md
 ```
 
 交付前自查：把手冊讀一遍，任何一個詞若 QA 無法在畫面上找到或看不懂，就改掉或刪掉。

@@ -174,9 +174,7 @@ def batch_render_mermaid_svgs(mermaid_blocks, script_dir):
         return []
     cli_js = os.path.join(script_dir, "render_mermaid_cli.js")
     if not os.path.exists(cli_js):
-        qa_cli_js = os.path.abspath(os.path.join(script_dir, "..", "..", "zdpos-qa-doc", "scripts", "render_mermaid_cli.js"))
-        if os.path.exists(qa_cli_js):
-            cli_js = qa_cli_js
+        raise FileNotFoundError("找不到 render_mermaid_cli.js: " + cli_js)
 
     sanitized = [sanitize_mermaid_code(b) for b in mermaid_blocks]
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f_in:

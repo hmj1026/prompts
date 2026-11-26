@@ -55,13 +55,13 @@
 
 ```bash
 # 1. 建立協作者手冊草稿並自動註冊 docs/collaborators/index.html
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold \
+python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py scaffold \
   --mode feature --slug <slug> --title "<功能中文名稱>" --anchor "<anchor_string>" [--migration]
 
 # 2. 撰寫完 README.md 後，無損編譯並執行靜態 + Playwright Headless 驗收
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile \
+python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py compile \
   --mode feature docs/collaborators/<slug>/README.md
 
 # 3. 批次重新編譯與驗證全站協作者手冊
-python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode feature
+python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py compile --mode feature
 ```

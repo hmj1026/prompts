@@ -1,19 +1,24 @@
 ---
 name: zdpos-env-builder
-description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標（DEV、Local，或 vm1 上複製正式商家庫的隔離站）、商戶標識、來源與目標資料庫、功能分支。涵蓋資料庫安全複製、正式庫複本的外部整合隔離（發票佇列、字軌、_develop 旗標）、獨立碼基與設定配置、Web 薄入口、Nginx 靜態資產連結與端到端隔離驗證。
+description: zdpos 隔離測試環境建置 SOP。Use when 在 DEV 或 Local 建立獨立商戶測試站（複製 DB、配置碼基／thin-entry／Nginx），或在 vm1 複製正式商家庫架設隔離測試站（含發票與外部整合隔離）。
 ---
 
-# ZDPOS 隔離商戶測試環境建立指南
+# ZDPOS 隔離商戶測試環境建置指南
 
-本技能提供標準化程序，用於在進行大功能驗證（如拆帳結帳、促銷重算、金流重構）時，建立完全獨立的商戶測試環境與資料庫，避免影響主開發環境。
+建立完全獨立的商戶測試資料庫、碼基、Web 薄入口與 Nginx 靜態資源連結，直到端到端 HTTP 與資料庫隔離驗證全數通過。
 
-> 完整實作命令與除錯案例請參見同目錄的 [README.md](./README.md)。
+## 參考文件路由
 
----
+| 情境 | 先讀檔案／技能 |
+|---|---|
+| 來源為正式商家庫（Phase 2.5 完整 8 項隔離規格與驗證指令），或套用 Phase 3 PHP 5.6／DEV 8.4／vm1 8.4 薄入口模板與 symlink 指令 | [references/prod-clone-isolation.md](./references/prod-clone-isolation.md) |
+| 查閱 DEV 完整實作範例與排查手記 | [references/dev-walkthrough.md](./references/dev-walkthrough.md) |
+| 查詢 DEV／Local 基礎設施座標（SSH、DB 主機、Nginx Document Root、唯讀 MCP `mysql-dev-remote`／`claude_ro`） | skill `zdpos-environment` |
+| 查詢 vm1 網域、碼基、PHP pool、migration（走 pms-yii）與發票佇列 | `/home/paul/projects/zdpos-217-docs/docs/operations/vm1-architecture-overview.md` |
 
 ## 1. 變數合約 (Variable Contract)
 
-執行前先依情境解析以下變數。**嚴禁在腳本或文件中硬編碼明文密碼**：
+執行 Phase 1 前先依目標環境解析全部 12 項變數。`DB_PASS` 一律於執行時自現有商戶設定檔（如 `protected/config/dev.php` 的 `$db_pass`）動態讀取，嚴禁以明文寫入腳本、文件或日誌。
 
 | 變數名稱 | 說明 | 範例值 (DEV) | 範例值 (Local) |
 |---|---|---|---|
@@ -30,37 +35,21 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
 | `DB_USER` | 資料庫管理帳號 | `root` | `root` 或 `develop` |
 | `DB_PASS` | 資料庫連線密碼 | 自現有商戶設定檔讀取 | 自現有商戶設定檔讀取 |
 
-> 密碼獲取途徑：直接自現有商戶設定檔（如 `protected/config/dev.php`）讀取 `$db_pass` 變數值，禁止以明文記錄於任何文件或日誌中。
+**完成條件**：全部 12 項變數皆已解析且 `DB_PASS` 來自設定檔動態讀取（無明文落盤）。
 
----
+## 2. 適用範圍與職責邊界 (Scope Boundaries)
 
-## 2. 支援環境與基礎設施座標 (5 Environments Alignment)
+- **適用環境與硬性閘門**：本流程僅用於隔離測試環境建置，嚴禁在正式環境（CPOS217、ZCPOS217）執行。於 vm1 複製正式商家庫架設隔離測試站（例 `/sb84/`）時可沿用本流程，且**必做 Phase 2.5**。
+- **In-Scope（環境建置）**：獨立資料庫複製、碼基與商戶設定配置、正式庫複本外部整合隔離、Web 薄入口、Nginx 靜態資產軟連結、端到端連線與資料庫隔離性驗收。Phase 4 通過即代表環境就緒。
+- **Out-of-Scope（業務部署解耦）**：特定功能的新增資料表（例如 `sales_relation`、`split_bill_*`）、專屬索引定義、功能開關（如 Gate A 的 `available = 0`）與 `yiic migrate new` / `up` 屬應用層業務部署；環境就緒後改依該功能專屬 Playbook 執行，不列為通用建置條件。
 
-對齊專案既有之 5 環境架構：
-
-1. **DEV 伺服器 (Env #4)**：
-   - 遠端主機：SSH 主機別名 `dev`（`192.168.2.231`，使用者 `web`）。
-   - 資料庫主機：`192.168.2.254:3306`（MariaDB 10.1）。
-   - 唯讀 MCP：`mysql-dev-remote`（帳號 `claude_ro`，僅具 SELECT/SHOW VIEW 權限，不可用於 DDL）。
-   - Web 伺服器：Nginx（Web 根目錄為 `/var/www/public/www.zdpos.tw/`）。
-   - 程式碼根目錄：`/var/www/www.zdpos.tw/`。
-2. **Local 環境 (Env #5)**：
-   - 本機主機：`localhost`。
-   - 資料庫主機：`127.0.0.1:3306`（MySQL 5.7）。
-   - Web 薄入口根目錄：`~/projects/www.posdev/`。
-3. **PROD / UAT (Env #1, #2, #3)**：
-   - 本技能專注於測試環境隔離，嚴禁在正式環境（CPOS217、ZCPOS217）自動套用本流程。
-   - 例外：在 vm1 架設「複製正式商家庫」的隔離測試站（例 `/sb84/`）可沿用本技能，但必須加做 Phase 2.5。vm1 的網域、碼基、PHP pool、migration（走 pms-yii）與發票佇列見 `/home/paul/projects/zdpos-217-docs/docs/operations/vm1-architecture-overview.md`。
-
----
-
-## 3. 四階段標準作業程序 (4-Phase SOP)
+## 3. 標準作業程序 (4-Phase + Phase 2.5 SOP)
 
 ### Phase 1: 資料庫安全複製 (Database Safe Replication)
 
-`zdpos_dev` 歷史遺留若干底層表已不存在之失效 View（如 `inform_view`, `laundry_view`, `package_view`, `reservation_table_view`, `reservation_view`, `view_facility_queue`, `visitor_view*`）。使用 `mysqldump` 必須顯式排除，否則會因 MySQL Error 1356 中斷。
+`zdpos_dev` 遺留 9 個底層表已不存在的失效 View（`inform_view`、`laundry_view`、`package_view`、`reservation_table_view`、`reservation_view`、`view_facility_queue`、`visitor_view`、`visitor_view1`、`visitor_view2`），`mysqldump` 必須顯式排除以避免 MySQL Error 1356 中斷。
 
-1. **建立目標資料庫並配置權限**：
+1. **建立目標資料庫並授權 MCP 唯讀帳號**（Local 若無 `claude_ro` 帳號可略過 `GRANT`）：
    ```bash
    mysql -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASS}" -e "
      CREATE DATABASE IF NOT EXISTS \`${TARGET_DB}\` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
@@ -68,9 +57,8 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
      FLUSH PRIVILEGES;
    "
    ```
-   > 說明：`claude_ro` 授權供 DEV MCP 唯讀工具檢測使用；若在 Local 環境無此帳號可略過該授權語句。
 
-2. **安全管線匯入（排除失效 View）**：
+2. **安全管線匯入（排除 9 個失效 View）**：
    ```bash
    mysqldump -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASS}" \
      --single-transaction --skip-lock-tables --routines --triggers \
@@ -86,21 +74,16 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
      "${SOURCE_DB}" | mysql -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASS}" "${TARGET_DB}"
    ```
 
-3. **完成條件（Completion Criterion）**：
-   - 目標資料庫 `${TARGET_DB}` 存在，且 Base Tables 總數與來源庫相符（基礎表通常 > 240 張）。
-   - 核心業務表（如 `data_action`、`sales_receipt`、`data_station`）筆數與來源庫完全相符。
-
----
+**完成條件**：`${TARGET_DB}` 已建立（DEV 已完成 `claude_ro` 授權）、匯入全程無 Error 1356、Base Tables 總數與 `${SOURCE_DB}` 一致（通常 > 240 張），且核心業務表（`data_action`、`sales_receipt`、`data_station`）筆數與來源庫完全相符。
 
 ### Phase 2: 獨立碼基與商戶設定配置 (Codebase & Config)
 
-1. **設定碼基目錄與分支**：
+1. **切換目標分支並關閉 filemode 追蹤**（避免後續權限調整造成 Git 誤判 modified）：
    ```bash
    cd "${WEB_ROOT}/${CODEBASE_DIR}"
    git checkout "${BRANCH_NAME}"
    git config core.filemode false
    ```
-   > 說明：`git config core.filemode false` 防止 Linux 目錄權限調整導致 Git 誤判檔案異動。
 
 2. **複製基礎環境檔案**：
    ```bash
@@ -108,8 +91,7 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
    cp -p "${WEB_ROOT}/zdpos_develop/.env" ./.env
    ```
 
-3. **建立商戶設定檔** `protected/config/${MERCHANT_NAME}.php`：
-   以現有 `dev.php` 為基底衍生配置：
+3. **由 `dev.php` 衍生商戶設定檔** `protected/config/${MERCHANT_NAME}.php`：
    ```bash
    CONFIG_FILE="protected/config/${MERCHANT_NAME}.php"
    cp protected/config/dev.php "${CONFIG_FILE}"
@@ -120,8 +102,7 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
    sed -i "s/'sessionName' => 'ZPOSDEV'/'sessionName' => 'ZPOS' . strtoupper('${MERCHANT_NAME}')/g" "${CONFIG_FILE}"
    ```
 
-4. **建立 Console 設定檔** `protected/config/console.php`：
-   確保 `yiic` 命令行工具指向新建的目標資料庫：
+4. **更新 Console 設定檔** `protected/config/console.php`（確保 `yiic` 指向目標庫；vm1 保持原狀不改，見避坑原則 #6）：
    ```bash
    CONSOLE_FILE="protected/config/console.php"
    if [ -f "${CONSOLE_FILE}" ]; then
@@ -129,95 +110,30 @@ description: 建立與配置 zdpos 獨立測試環境。支援自訂環境座標
    fi
    ```
 
-5. **確保 Runtime 目錄可寫**：
+5. **建立並開放 Runtime 目錄**：
    ```bash
    mkdir -p protected/runtime/tracy
    chmod -R 777 protected/runtime
    ```
 
-6. **完成條件（Completion Criterion）**：
-   - `protected/config/${MERCHANT_NAME}.php` 與 `protected/config/console.php` 經 `php -l` 檢驗無語法錯誤。
-   - `git status -s` 工作區保持乾淨，無未預期的未追蹤異動。
+**完成條件**：分支位於 `${BRANCH_NAME}` 且 `core.filemode=false`；`Glob.php`、`.env`、`protected/config/${MERCHANT_NAME}.php`（含獨立 `sessionName`）皆就位；`protected/config/${MERCHANT_NAME}.php` 與 `protected/config/console.php`（非 vm1）經 `php -l` 零語法錯誤；`protected/runtime/tracy` 可寫；`git status -s` 無非預期異動。
 
----
+### Phase 2.5: 正式庫複本隔離（來源為正式商家庫時必做，開放登入前完成）
 
-### Phase 2.5: 正式庫複本隔離（來源是正式商家庫時必做，開放登入前完成）
+正式庫複本含真實統編、字軌與正式 API 設定，且 `EI::XMLCreate()` 直接寫入 `\GLOB\INVOICE_BASE_PATH`、**沒有環境閘門**。開放登入前先讀並逐項完成 [references/prod-clone-isolation.md](./references/prod-clone-isolation.md) 的全部 8 項隔離規格：
+- 獨立碼基改寫 `Glob.php` 的 `INVOICE_BASE_PATH` 到隔離目錄（共用碼基無法隔離，嚴禁開立／作廢／折讓發票並列入禁止清單）；
+- 目標庫 `invoice_maintain` 當期 `used=1` 改為 `OO` 測試字軌與新號段、`*_develop` 旗標設 `1`、程式無法隔離項目（藝FUN 券、`external_order`、`zdn_api_url`、SMTP／簡訊／webhook）列入測試禁止清單；
+- 建立獨立受限 DB 帳號（含 `MAX_USER_CONNECTIONS`，禁止共用 superuser）、新靜態目錄加入 nginx `.php` 403 deny（443／80）、DB 探針腳本一律 `try/catch` 不洩露帳密／DSN，並遵循 vm1 命名 `zdpos_218_<站>` 與 `invoices-<站>`（保留 `zdpos_217_*` 給正式商家）。
 
-正式庫複本帶著真實統編、真實字軌與正式 API 設定。`_develop` 旗標只切換部分 API 端點；開票、作廢、折讓的 XML 由 `EI::XMLCreate()` 直接寫到 `\GLOB\INVOICE_BASE_PATH`，**沒有環境閘門**，而 vm1 各碼基預設指向正式上傳佇列 `/var/glob-storage/invoices/`。
-
-1. **發票輸出隔離**：碼基 `Glob.php` 的 `INVOICE_BASE_PATH` 改到隔離目錄（例 `/var/glob-storage/invoices-<站>/`），先建 `temp/{blank,invalid,invoice,allocate}` 與 `bak/{blank,invalid,invoice,allocate}`；備份後單行 sed，`php -l`。**共用碼基的租戶站做不到**：`INVOICE_BASE_PATH` 是該碼基 `Glob.php` 的常數，租戶 config 無法覆寫；與正式或其他站共用碼基（例 `/sb56/` 與 `/demo218/` 共用 `zdpos_218`）時，`check-site-isolation.php` 必為 `ISOLATION_FAIL`，該站**禁止開立、作廢、折讓發票**，並列入測試禁止清單；要開票只能另建碼基與獨立 `Glob.php`。
-2. **字軌改 `OO`**：目標庫 `invoice_maintain` 當期 `used=1` 的每一列，以「帶原值條件的 UPDATE」改為 `OO` 測試字軌並設新號段（先確認號段在 `invoice_record` 無資料、原列備份）。
-3. **`_develop` 旗標**：`eiic`／`linepay`／`jkospay`／`pipay`／`taiwanpay`／`liff`／`api` 的 `*_develop` 設 1。
-4. **程式無法隔離者，列入測試禁止清單**：藝FUN 券（`EFunPayApi::IS_DEVELOP` 寫死 `false`）、`external_order` 模組（外送平台）、`zdn_api_url`、SMTP／簡訊／webhook。
-5. **獨立受限 DB 帳號**：建立只授權該測試庫、帶 `MAX_USER_CONNECTIONS` 的專用 DB 帳號，測試站碼基的 `dbConnectParams.php` 改用它；測試站不得與正式站共用 superuser 帳號。`check-site-isolation.php` 會 FAIL 共用 superuser 帳號。帳號名稱與密碼不寫入文件或對話。共用碼基的租戶站不改 `dbConnectParams.php`（會影響同碼基其他站），而是在租戶 config 讀入 `dbConnectParams` 後覆寫 `$db_name` 與受限帳號；因此**該 config 同樣含受限帳密，不得貼進對話或文件**。
-6. **靜態目錄 deny**：新增任何靜態目錄（例 `zdpos_218_sb84`）時，把它加入該站 nginx `.php` deny regex（`BEGIN <站>-uat` 區塊，443／80 兩份），reload 後以該目錄下 `.php` 回 403 驗證。
-7. **連 DB 的探針腳本一律 try/catch**：PDO 連線失敗的未攔截例外堆疊會把連線帳密印到輸出（2026-11-24 曾外洩進 session transcript）；腳本捕捉例外後只印「連線失敗」與錯誤代碼，不印堆疊與 DSN。
-8. **vm1 命名**：vm1 新測試站碼基一律 `zdpos_218_<站>`，發票隔離目錄一律 `invoices-<站>`（`zdpos_217_*` 保留給正式商家碼基；例：186 prod canary 專用 `zdpos_217_sb84`，UAT `/sb84/` 為 `zdpos_218_sb84`）。
-
-完整步驟：`/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §4.2、§4.4、§4.5。
-
-**完成條件**：在 vm1 執行
-```bash
-php8.4 /home/paul/projects/zdpos-217-docs/scripts/ops/check-site-isolation.php --codebase=<碼基> --config=<碼基內 config 相對路徑>
-```
-（先 `scp` 到 vm1）輸出 `ISOLATION_OK`、結束碼 0；WARN 項已轉成給測試者的禁止清單。開第一張發票後，再確認 XML 只出現在隔離目錄。
-
----
+**完成條件（Completion Gate）**：於 vm1 執行 `check-site-isolation.php` 輸出 `ISOLATION_OK`（exit 0），所有 WARN 項已轉為測試禁止清單；開立第一張測試發票後確認 XML 僅出現在隔離目錄。
 
 ### Phase 3: Web 薄入口與 Nginx 靜態資源配置 (Web Entry & Symlinks)
 
-Yii 架構將網頁入口與程式碼主體分離（Thin-entry）。
+依目標 PHP runtime 至 [references/prod-clone-isolation.md](./references/prod-clone-isolation.md) 取得完整模板與指令並執行：
+1. **建立薄入口**：PHP 5.6 用標準 `index.php` 模板並建 `{assets,log,upload,images,download}`；DEV 8.4 改用 `dev-php84-site-deployment.md` 附錄 A（`yii_framework-fork` + `config/runtime-bootstrap.php`）並加 nginx map（§12）；vm1 8.4 由來源商家 5.6 `index.php` 僅換 `$name`/`$yii`/`$config`、config 僅換 `$use_name`/`$version` 且維持 `sessionName`（碼基須含 `bootPhp84LegacyEntry`）。
+2. **建立 Nginx 軟連結**（5.6／8.4 相同）：連結 `${PUBLIC_ROOT}/${MERCHANT_NAME}` 指向薄入口；於 `${PUBLIC_ROOT}/${CODEBASE_DIR}/` 僅連結 `assets`、`ckeditor`、`css`、`images`、`js`、`media` 6 個靜態資源目錄以隔離後端程式碼。
 
-**先判斷站台跑哪個 PHP runtime**：
-- **5.6**（現行預設）：照下方步驟 1 的模板建立。
-- **8.4**：碼基須為含 8.4 修正的分支。薄入口與 console 入口改用 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/dev-php84-site-deployment.md` 附錄 A 的標準模板，該模板使用 `yii_framework-fork` 與 `config/runtime-bootstrap.php`，是 DEV 8.4 模板的出處。另在 nginx map 加一行，見該文件 §12。**vm1** 的 8.4 站不用此模板：由來源商家的 5.6 `index.php` 只換 `$name`、`$yii`、`$config`，config 只換 `$use_name`、`$version`，`sessionName` 不改，見 `/home/paul/projects/zdpos-217-docs/docs/operations/playbooks/release-26.11.8-php84-canary.md` §4.2、§4.8（碼基須含 `bootPhp84LegacyEntry`）。
-
-步驟 2、3 的 symlink 佈局兩種 runtime 相同。
-
-1. **建立薄入口目錄與入口腳本**：
-   ```bash
-   ENTRY_DIR="${WEB_ROOT}/${MERCHANT_NAME}"
-   mkdir -p "${ENTRY_DIR}"
-   cat << 'PHP_EOF' > "${ENTRY_DIR}/index.php"
-   <?php
-   $version = "develop-MERCHANT_NAME_PLACEHOLDER";
-   $destination = strlen($version) > 0 ? "zdpos_".$version : "zdpos";
-   $yii = '../yii_framework/yii.php';
-   $config = '../' . $destination . '/protected/config/MERCHANT_NAME_PLACEHOLDER.php';
-   $uploadPath = dirname(__FILE__);
-
-   date_default_timezone_set("Asia/Taipei");
-   require_once($yii);
-   $app = Yii::createWebApplication($config);
-   $app->run();
-   PHP_EOF
-   sed -i "s/MERCHANT_NAME_PLACEHOLDER/${MERCHANT_NAME}/g" "${ENTRY_DIR}/index.php"
-
-   mkdir -p "${ENTRY_DIR}"/{assets,log,upload,images,download}
-   chmod -R 777 "${ENTRY_DIR}"
-   ```
-
-2. **建立 Nginx Document Root 軟連結**：
-   ```bash
-   ln -sf "${WEB_ROOT}/${MERCHANT_NAME}" "${PUBLIC_ROOT}/${MERCHANT_NAME}"
-   ```
-
-3. **建立 Nginx 靜態資源對外軟連結**：
-   避免後端程式碼暴露，於 `${PUBLIC_ROOT}/${CODEBASE_DIR}/` 僅連結靜態資源目錄：
-   ```bash
-   PUBLIC_DIR="${PUBLIC_ROOT}/${CODEBASE_DIR}"
-   CODE_DIR="${WEB_ROOT}/${CODEBASE_DIR}"
-   mkdir -p "${PUBLIC_DIR}"
-   for d in assets ckeditor css images js media; do
-     ln -sf "${CODE_DIR}/${d}" "${PUBLIC_DIR}/${d}"
-   done
-   ```
-
-4. **完成條件（Completion Criterion）**：
-   - `${PUBLIC_ROOT}/${MERCHANT_NAME}` 軟連結正確指向薄入口。
-   - `${PUBLIC_ROOT}/${CODEBASE_DIR}` 包含 `assets`、`css`、`js` 等 6 個靜態目錄軟連結。
-
----
+**完成條件**：薄入口目錄與入口腳本就位、`${PUBLIC_ROOT}/${MERCHANT_NAME}` 正確指向薄入口，且 `${PUBLIC_ROOT}/${CODEBASE_DIR}/` 下 6 個靜態目錄軟連結皆有效解析。
 
 ### Phase 4: 端到端連線與隔離性驗證 (E2E Verification Gate)
 
@@ -240,28 +156,14 @@ Yii 架構將網頁入口與程式碼主體分離（Thin-entry）。
    # 輸出確認包含：資料庫:${TARGET_DB}
    ```
 
-4. **完成條件（Completion Criterion）**：
-   - 入口頁面 HTTP 回應碼為 200。
-   - 核心 CSS 與 JS 靜態資源回應碼為 200（無 404）。
-   - 頁首顯示之連線資料庫名稱明確為 `${TARGET_DB}`，確認已完成資料庫隔離。
+**完成條件**：入口頁面與核心 CSS／JS 靜態資源 HTTP 回應碼皆為 `200`（零 404），且頁首連線資料庫明確顯示 `資料庫:${TARGET_DB}`。
 
----
+## 4. 實戰避坑原則 (Traps)
 
-## 4. 職責邊界與業務解耦宣告 (Scope & Decoupling Boundaries)
-
-- **環境建置邊界 (In-Scope)**：
-  本技能的核心職責為基礎設施與隔離環境建置（獨立資料庫複製、碼基配置、Web 薄入口、Nginx 靜態資產軟連結、端到端連線與資料庫隔離性驗收）。Phase 4 驗證通過即代表環境建置就緒。
-- **功能專屬步驟 (Out-of-Scope)**：
-  任何特定功能的新增資料表（例如 `sales_relation`、`split_bill_*`）、專屬索引定義、功能開關（如 Gate A 的 `available = 0`），以及 `yiic migrate new` / `up`，均屬於應用層個別業務部署範疇，**嚴禁**列為通用環境建置之必備條件。環境就緒後，若需套用業務異動，請參照該功能的專屬 Playbook 進行。
-
----
-
-## 5. 實戰避坑原則 (Traps)
-
-1. **Nginx 404**：DEV 的 Document Root 在 `${PUBLIC_ROOT}`，若漏建商戶軟連結會導致 HTTP 404。
-2. **靜態資源 404 與 JS 崩潰**：漏建 `${PUBLIC_ROOT}/${CODEBASE_DIR}/` 靜態目錄軟連結會導致 `login.css` 與 `keyboard.js` 404，進而引發 `$(...).keyboard is not a function` 錯誤。
-3. **Git 工作區大量 modified 檔案**：目錄 `chmod` 會變更 filemode，必須執行 `git config core.filemode false`。
-4. **Session 互相覆蓋**：商戶設定檔必須指定獨立的 `sessionName`（如 `ZPOS${MERCHANT_NAME}`），防止與主開發站共用 Session。
-5. **瀏覽器外掛干擾報錯**：主控台出現 `content_main.js` 報錯通常為 Chrome 擴充套件（如翻譯工具）引起，使用無痕視窗開啟即可排除干擾。
-6. **vm1 的 migration 不走碼基 console**：vm1 各碼基的 `protected/config/console.php` 是失效舊檔（連線資訊過期、`demo_retail`），不要修它；migration 由 pms 呼叫 pms-yii，migration 檔放在 pms-yii 自己的 `protected/migrations/<資料夾>`。只給特定商家的 migration 放專用資料夾。細節見 vm1 架構總覽 §8。
-7. **唯讀 MCP 無法執行 DDL**：`claude_ro` 僅具唯讀權限，建立資料庫或執行 Dump/Restore 必須以具備權限之帳號於伺服器內網執行，完成後再授權 `claude_ro`。
+1. **Nginx 404**：DEV 的 Document Root 在 `${PUBLIC_ROOT}`，務必建立 `${PUBLIC_ROOT}/${MERCHANT_NAME}` 指向薄入口的軟連結。
+2. **靜態資源 404 與 JS 崩潰**：務必建立 `${PUBLIC_ROOT}/${CODEBASE_DIR}/` 的 6 個靜態目錄軟連結，避免 `login.css` 與 `keyboard.js` 404 引發 `$(...).keyboard is not a function`。
+3. **Git 工作區大量 modified 檔案**：`chmod` 會異動 filemode，先設定 `git config core.filemode false` 維持工作區乾淨。
+4. **Session 互相覆蓋**：商戶設定檔指定獨立 `sessionName`（如 `ZPOS${MERCHANT_NAME}`），防止與主開發站共用 Session（vm1 PHP 8.4 例外見 Phase 3）。
+5. **瀏覽器外掛干擾報錯**：Console 出現 `content_main.js` 報錯通常為 Chrome 擴充套件（如翻譯工具）所致，改以無痕視窗驗證。
+6. **vm1 的 migration 走 pms-yii**：vm1 各碼基的 `protected/config/console.php` 為失效舊檔（連線資訊過期、`demo_retail`），保持原狀不修改；migration 由 pms 呼叫 pms-yii，檔案放於 pms-yii 的 `protected/migrations/<資料夾>`（特定商家放專用資料夾，見 vm1 架構總覽 §8）。
+7. **唯讀 MCP 無法執行 DDL**：`claude_ro` 僅具唯讀權限，建庫與 Dump／Restore 一律以具管理權限帳號於伺服器內網執行，完成後再授權 `claude_ro`。

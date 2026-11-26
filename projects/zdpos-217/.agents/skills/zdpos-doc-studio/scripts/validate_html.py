@@ -94,7 +94,7 @@ def validate_single_file(html_path):
 
     if "cdn.jsdelivr.net/npm/mermaid" in content:
         errors.append(
-            "檢測到外部 CDN Mermaid script！請使用 python3 .agent/skills/zdpos-feature-doc/scripts/scaffold_doc.py --compile 進行離線 SVG 預渲染。"
+            "檢測到外部 CDN Mermaid script！請使用 python3 .agents/skills/zdpos-doc-studio/scripts/doc_studio.py compile 進行離線 SVG 預渲染。"
         )
 
     # 3. HTML 標籤結構與閉合檢查

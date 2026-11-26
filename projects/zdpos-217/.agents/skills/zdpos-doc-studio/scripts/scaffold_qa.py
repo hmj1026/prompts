@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-zdpos-qa-doc 雙向腳手架與無損編譯器 (Scaffolder & Lossless Markdown-to-HTML Compiler)
+zdpos-doc-studio (qa 模式) 雙向腳手架與無損編譯器 (Scaffolder & Lossless Markdown-to-HTML Compiler)
 負責：
 1. --init: 初始化產生標準 QA 手動測試手冊 Markdown (SSOT)
 2. --compile: 將已填寫完成的 Markdown SSOT 100% 無損編譯為統一、高對比、離線可用的互動式 HTML 手冊
@@ -878,7 +878,7 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="zdpos-qa-doc 雙向腳手架與無損編譯器")
+    parser = argparse.ArgumentParser(description="zdpos-doc-studio (qa 模式) 雙向腳手架與無損編譯器")
     parser.add_argument("--compile", metavar="MD_PATH", help="將指定的 Markdown 手冊無損編譯為互動式 HTML")
     parser.add_argument("--module", help="模組目錄名稱 (如 pickup, split-bill, point, sticker)")
     parser.add_argument("--slug", help="功能識別短名 (如 cross-store-pickup-close)")
