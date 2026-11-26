@@ -11,8 +11,17 @@
   1. `docs/qa/<module>/QA-<slug>-manual.md`（SSOT）
   2. `docs/qa/<module>/QA-<slug>-manual.html`（`compile` 產生）
   3. 登錄 [`docs/qa/README.md`](../../../../../../zdpos-217/docs/qa/README.md) 的模組分流表。
-- **環境前提**：按鈕、選單或流程要靠 DB 設定才出現時（例：桌位「補印」只在 `system_config.ScanOrderOpenTableSeatMode` 為 1／2 時出現），metadata `env-preconditions` 記設定名與值；正文的「開始前準備」用白話寫畫面上怎麼確認，「容易測錯的地方」寫看不到時勾 Blocked 並通知開發。
-- **實機核對狀態**：metadata 要有 `ui-verified`：`none`（依程式碼推測，`compile` 加紅色橫幅）、`source`（字串已對照原始碼與選單表）、`browser`（實機逐條看過）。填完附日期與環境。
+- **環境前提**：按鈕、選單或流程要靠 DB 設定才出現時（例：桌位「補印」只在 `system_config.ScanOrderOpenTableSeatMode` 為 1／2 時出現），分三處寫：
+  - metadata `env-preconditions`：記設定名與值。
+  - 「開始前準備」：用白話寫畫面上怎麼確認。
+  - 「容易測錯的地方」：寫看不到時勾 Blocked 並通知開發。
+- **實機核對狀態**：metadata 要有 `ui-verified`，填完附日期與環境。
+
+  | 值 | 意義 |
+  |---|---|
+  | `none` | 依程式碼推測；`compile` 加紅色橫幅 |
+  | `source` | 字串已對照原始碼與選單表 |
+  | `browser` | 實機逐條看過 |
 
 ---
 
@@ -54,6 +63,16 @@ QA 看不懂的詞一律換成白話，不得出現在手冊正文：
 - 步驟一律是「畫面看得見、點得到」的操作。**嚴禁**要求 QA 改設定檔、下 SQL 或檢查資料庫欄位。
 - 需要特定資料時：由 §2「開始前準備」註明「由開發提供」，或寫出在畫面上建立的步驟。
 - 底層正確性（結果相同、併發、索引）若 QA 只能以「前後金額／筆數相同」驗證，就寫成與基準比對的案例，並在適用條件註明需要事先記下的基準。
+
+---
+
+## 3.1 可讀性寫法
+
+通用規則（表格與清單的取捨、儲存格長度、一事一處、預期結果表）見 [`mode-feature-guidelines.md`](mode-feature-guidelines.md) §2.1。QA 手冊的差異：
+
+- 停止條件用獨立一行引言，開頭寫「注意：」（編譯器依「注意／務必／不可」關鍵字顯示為黃色提示框），不用 `[!WARNING]`。
+- 步驟的「應該看到」較多時，在操作清單後放 `| 輸入或操作 | 應該看到 |` 表格；每個步驟仍只做一個動作。
+- TC 的四段標籤、`**Pass**`、`**Fail**` 各一行，不併入表格。
 
 ---
 

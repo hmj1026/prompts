@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="light">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('zdpos_qa_theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="doc-slug" content="{{SLUG}}">
 <title>QA 手動功能測試手冊 — {{FEATURE_NAME}} ({{ENV}})</title>
 <style>
   :root {
+    color-scheme: light dark;
     --bg: #f1f5f9;
     --panel: #ffffff;
     --surface: #f8fafc;
@@ -37,40 +40,11 @@
     --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.05);
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0b1120;
-      --panel: #151f32;
-      --surface: #1e293b;
-      --ink: #f8fafc;
-      --ink-secondary: #e2e8f0;
-      --muted: #94a3b8;
-      --line: #334155;
-      --line-strong: #475569;
-      --accent: #3b82f6;
-      --accent-soft: #172554;
-      --accent-border: #2563eb;
-      --accent-ink: #dbeafe;
-      --pass: #16a34a;
-      --pass-soft: #052e16;
-      --pass-border: #22c55e;
-      --pass-ink: #dcfce7;
-      --fail: #dc2626;
-      --fail-soft: #450a0a;
-      --fail-border: #ef4444;
-      --fail-ink: #fee2e2;
-      --warn: #d97706;
-      --warn-soft: #451a03;
-      --warn-border: #f59e0b;
-      --warn-ink: #fef3c7;
-      --star: #fbbf24;
-      --code: #0f172a;
-      --code-ink: #f1f5f9;
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    }
-  }
-
-  [data-theme="dark"] {
+  /* @dark-theme：深色規則只寫一次；編譯器把 __DARK__ 展開為
+     @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) ... } 與 :root[data-theme="dark"] ...，
+     未覆寫時跟隨系統（不靠 JS），使用者切換時以 data-theme 覆寫。 */
+  __DARK__ {
+    color-scheme: dark;
     --bg: #0b1120;
     --panel: #151f32;
     --surface: #1e293b;
@@ -99,10 +73,22 @@
     --code: #0f172a;
     --code-ink: #f1f5f9;
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --link: #93c5fd;
   }
+  __DARK__ .mermaid-container,
+  __DARK__ .mermaid {
+    border-color: #64748b !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+  /* @end-dark-theme */
+  :root[data-theme="light"] { color-scheme: light; }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
   body {
     margin: 0;
     background: var(--bg);
@@ -112,8 +98,7 @@
     line-height: 1.65;
   }
 
-  a { color: var(--accent); text-decoration: none; font-weight: 500; }
-  [data-theme="dark"] a { color: #93c5fd; }
+  a { color: var(--link, var(--accent)); text-decoration: none; font-weight: 500; }
   a:hover { text-decoration: underline; }
 
   code {
@@ -520,11 +505,6 @@
     overflow: hidden !important;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
   }
-  [data-theme="dark"] .mermaid-container,
-  [data-theme="dark"] .mermaid {
-    border-color: #64748b !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
-  }
   .mermaid-toolbar {
     display: flex;
     align-items: center;
@@ -625,6 +605,7 @@
   .mermaid svg {
     display: block;
     margin: 0 auto;
+    max-width: 100%;
     height: auto !important;
     line-height: 1.35 !important;
     font-size: 14px !important;
@@ -682,26 +663,24 @@
     margin-top: 6px;
   }
   /* 全螢幕圖表互動燈箱 (Mermaid Fullscreen Lightbox Modal) */
-  .lightbox-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.82);
-    z-index: 1050;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
+  dialog.lightbox-dialog {
+    width: 96vw;
+    height: 92vh;
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
-  .lightbox-backdrop.open {
-    display: flex;
-  }
+  dialog.lightbox-dialog[open] { display: flex; }
+  dialog.lightbox-dialog::backdrop { background: rgba(15, 23, 42, 0.82); }
   .lightbox-box {
     background: #ffffff !important;
     color: #0f172a !important;
     border: 2px solid #64748b;
     border-radius: 12px;
-    width: 96vw;
-    height: 92vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -882,6 +861,9 @@
     border: 1px solid var(--line);
   }
   .tc-pre h4 { margin: 0 0 8px; color: var(--ink); }
+  details.tc-prep { margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  details.tc-prep > summary { cursor: pointer; padding: 8px 12px; font-weight: 600; color: var(--ink); }
+  details.tc-prep > .tc-prep-body { padding: 0 14px 10px; }
   .tc-goal {
     background: var(--accent-soft);
     border: 1px solid var(--accent-border);
@@ -1115,31 +1097,55 @@
   }
 
   /* 彈出式視窗 (Export / Reset Modal) */
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.65);
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    backdrop-filter: blur(2px);
+  /* 原生 <dialog>：showModal() 提供焦點圈限、Esc 關閉與焦點歸還；dialog 本身即外框，點外側（::backdrop）可關閉 */
+  dialog.modal-dialog {
+    width: calc(100% - 32px);
+    max-width: 780px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
   }
-  .modal-backdrop.hidden { display: none !important; }
+  dialog.modal-dialog.modal-sm { max-width: 480px; }
+  dialog:modal { overscroll-behavior: contain; }
+  dialog::backdrop {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(2px);
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
   .modal-box {
     background: var(--panel);
     border: 1px solid var(--line-strong);
     border-radius: 12px;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
     width: 100%;
-    max-width: 780px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-  .modal-box.modal-sm { max-width: 480px; }
+  .modal-title-danger { color: var(--fail-ink); }
+  .modal-hint { color: var(--muted); font-size: 13px; }
+  .section-hint { color: var(--muted); }
+  .section-hint.spaced { margin-bottom: 14px; }
+  .heading-hint { font-weight: 500; color: var(--muted); font-size: 13px; }
+  .legend-item .lg-pass { color: var(--pass-ink); }
+  .legend-item .lg-fail { color: var(--fail-ink); }
+  .legend-item .lg-warn { color: var(--warn-ink); }
+  .legend-item .lg-na { color: var(--accent-ink); }
+  .legend-item .lg-notrun { color: var(--muted); }
+  .col-id { width: 110px; }
+  .col-role { width: 140px; }
+  .ui-unverified-banner {
+    background: #cf222e;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+  .callout.callout-flush { margin: 0; }
   .modal-header {
     padding: 14px 20px;
     border-bottom: 1px solid var(--line);
@@ -1245,7 +1251,9 @@
     transition: opacity 0.25s ease, transform 0.25s ease;
     pointer-events: none;
   }
-  .toast.hidden { opacity: 0; transform: translate(-50%, 15px); }
+  .toast:empty { opacity: 0; transform: translate(-50%, 15px); }
+  .toast.toast-danger { background: var(--fail); }
+  .toast.toast-info { background: var(--accent); }
 
   .hidden { display: none !important; }
 
@@ -1255,7 +1263,7 @@
     .top-header { padding: 10px 14px; }
   }
   @media print {
-    .top-header, nav.sidebar, .toolbar-help, .modal-backdrop, .toast { display: none !important; }
+    .top-header, nav.sidebar, .toolbar-help, dialog, .toast { display: none !important; }
     .layout { display: block; padding: 0; }
     details.tc { break-inside: avoid; }
     body { background: #ffffff; color: #000000; }
@@ -1327,17 +1335,17 @@
       <h1>QA 手動功能測試 SOP — {{FEATURE_NAME}}（{{ENV}}）</h1>
       {{META_HTML}}
       <div class="legend-grid">
-        <div class="legend-item"><strong style="color:var(--pass-ink)">✅ Pass</strong>實際畫面與行為符合 Pass 判定條件</div>
-        <div class="legend-item"><strong style="color:var(--fail-ink)">❌ Fail</strong>前置齊備但結果不符預期，請依 §5 開立缺陷單</div>
-        <div class="legend-item"><strong style="color:var(--warn-ink)">⚠️ Blocked</strong>環境、權限、設定或前置資料尚未備妥</div>
-        <div class="legend-item"><strong style="color:var(--accent-ink)">➖ N/A</strong>該門市或模式不適用此測試案例</div>
-        <div class="legend-item"><strong style="color:var(--muted)">⏳ NOT_RUN（未填）</strong>尚未實際操作驗證（初始預設狀態）</div>
+        <div class="legend-item"><strong class="lg-pass">✅ Pass</strong>實際畫面與行為符合 Pass 判定條件</div>
+        <div class="legend-item"><strong class="lg-fail">❌ Fail</strong>前置齊備但結果不符預期，請依 §5 開立缺陷單</div>
+        <div class="legend-item"><strong class="lg-warn">⚠️ Blocked</strong>環境、權限、設定或前置資料尚未備妥</div>
+        <div class="legend-item"><strong class="lg-na">➖ N/A</strong>該門市或模式不適用此測試案例</div>
+        <div class="legend-item"><strong class="lg-notrun">⏳ NOT_RUN（未填）</strong>尚未實際操作驗證（初始預設狀態）</div>
       </div>
     </section>
 
     <!-- 案例快速導覽 Chips -->
     <section class="card" id="sec-overview">
-      <h2>🧭 案例快速導覽 <small style="font-weight:500;color:var(--muted);font-size:13px">點擊編號跳至該案例；金框代表 ★ 核心必測；顏色隨判定即時更新</small></h2>
+      <h2>🧭 案例快速導覽 <small class="heading-hint">點擊編號跳至該案例；金框代表 ★ 核心必測；顏色隨判定即時更新</small></h2>
       <div class="overview-chips">
         {{OVERVIEW_CHIPS_HTML}}
       </div>
@@ -1349,7 +1357,7 @@
     <!-- §3 測試案例清單 -->
     <section class="card" id="sec-3">
       <h2>3. 測試案例清單</h2>
-      <p style="color:var(--muted);margin-bottom:14px">每完成一項案例，請於卡片底部點選判定狀態並填寫實際結果備註。標示 <span class="pill-core">★ 核心</span> 為出場必過案例。</p>
+      <p class="section-hint spaced">每完成一項案例，請於卡片底部點選判定狀態並填寫實際結果備註。標示 <span class="pill-core">★ 核心</span> 為出場必過案例。</p>
       {{TC_INTRO_HTML}}
       <div id="tc-container">
         {{TC_CARDS_HTML}}
@@ -1359,16 +1367,16 @@
     <!-- §4 簽核與出場判定總表 -->
     <section class="card" id="sec-4">
       <h2>4. 驗收簽核與判定總表</h2>
-      <p style="color:var(--muted)">下方總表隨各測試案例之點選結果與備註<strong>即時同步更新</strong>，亦可透過頂部「📤 匯出結果」匯出完整 Markdown 或 Excel 表格。</p>
+      <p class="section-hint">下方總表隨各測試案例之點選結果與備註<strong>即時同步更新</strong>，亦可透過頂部「📤 匯出結果」匯出完整 Markdown 或 Excel 表格。</p>
       {{SIGNOFF_EXTRA_HTML}}
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width:110px">案例編號</th>
-              <th>測試案例名稱</th>
-              <th style="width:110px">判定結果</th>
-              <th>實際結果與備註（首行摘要）</th>
+              <th scope="col" class="col-id">案例編號</th>
+              <th scope="col">測試案例名稱</th>
+              <th scope="col" class="col-id">判定結果</th>
+              <th scope="col">實際結果與備註（首行摘要）</th>
             </tr>
           </thead>
           <tbody id="signoff-summary-tbody">
@@ -1381,19 +1389,19 @@
         <table>
           <thead>
             <tr>
-              <th style="width:140px">角色</th>
-              <th>姓名</th>
-              <th>日期</th>
-              <th>整輪結論</th>
+              <th scope="col" class="col-role">角色</th>
+              <th scope="col">姓名</th>
+              <th scope="col">日期</th>
+              <th scope="col">整輪結論</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>QA 執行</strong></td>
-              <td><input type="text" class="signoff-input" data-signoff-field="qa_name" placeholder="請輸入 QA 執行人員姓名"></td>
-              <td><input type="text" class="signoff-input" data-signoff-field="qa_date" placeholder="YYYY-MM-DD"></td>
+              <th scope="row">QA 執行</th>
+              <td><input type="text" class="signoff-input" data-signoff-field="qa_name" aria-label="QA 執行姓名" placeholder="請輸入 QA 執行人員姓名"></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="qa_date" aria-label="QA 執行日期" placeholder="YYYY-MM-DD"></td>
               <td>
-                <select class="signoff-input" data-signoff-field="qa_verdict">
+                <select class="signoff-input" data-signoff-field="qa_verdict" aria-label="QA 執行整輪結論">
                   <option value="">— 請選擇結論 —</option>
                   <option value="PASS">✅ PASS（准予放行）</option>
                   <option value="FAIL">❌ FAIL（退回修正）</option>
@@ -1402,11 +1410,11 @@
               </td>
             </tr>
             <tr>
-              <td><strong>開發覆核</strong></td>
-              <td><input type="text" class="signoff-input" data-signoff-field="dev_name" placeholder="請輸入開發覆核人員姓名"></td>
-              <td><input type="text" class="signoff-input" data-signoff-field="dev_date" placeholder="YYYY-MM-DD"></td>
+              <th scope="row">開發覆核</th>
+              <td><input type="text" class="signoff-input" data-signoff-field="dev_name" aria-label="開發覆核姓名" placeholder="請輸入開發覆核人員姓名"></td>
+              <td><input type="text" class="signoff-input" data-signoff-field="dev_date" aria-label="開發覆核日期" placeholder="YYYY-MM-DD"></td>
               <td>
-                <select class="signoff-input" data-signoff-field="dev_verdict">
+                <select class="signoff-input" data-signoff-field="dev_verdict" aria-label="開發覆核整輪結論">
                   <option value="">— 請選擇結論 —</option>
                   <option value="PASS">✅ PASS（准予放行）</option>
                   <option value="FAIL">❌ FAIL（退回修正）</option>
@@ -1425,7 +1433,7 @@
 </div>
 
 <!-- 匯出結果視窗 (Export Modal) -->
-<div id="export-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+<dialog id="export-modal" class="modal-dialog" aria-labelledby="export-modal-title" closedby="any">
   <div class="modal-box">
     <div class="modal-header">
       <h3 id="export-modal-title">📤 匯出測試結果</h3>
@@ -1437,7 +1445,7 @@
         <button type="button" class="tab-btn" id="tab-md">Markdown 簽核表（適用 PR / 簽核文件）</button>
       </div>
       <p class="export-desc" id="export-desc">以 Tab 分隔格式（TSV），點擊「複製到剪貼簿」後可直接在 Excel 或 Google 試算表中按 Ctrl+V 貼上成完整表格。</p>
-      <textarea id="export-textarea" readonly spellcheck="false"></textarea>
+      <textarea id="export-textarea" aria-label="匯出內容" readonly spellcheck="false"></textarea>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-primary" id="copy-export-btn">📋 複製到剪貼簿</button>
@@ -1445,31 +1453,31 @@
       <button type="button" class="btn-secondary" id="close-export-btn">關閉</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- 清空全部確認視窗 (Reset Modal) -->
-<div id="reset-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
-  <div class="modal-box modal-sm">
+<dialog id="reset-modal" class="modal-dialog modal-sm" aria-labelledby="reset-modal-title" closedby="any">
+  <div class="modal-box">
     <div class="modal-header">
-      <h3 id="reset-modal-title" style="color:var(--fail-ink)">⚠️ 確認清空全部測試紀錄？</h3>
+      <h3 id="reset-modal-title" class="modal-title-danger">⚠️ 確認清空全部測試紀錄？</h3>
       <button type="button" class="modal-close" id="reset-modal-close" aria-label="關閉">✕</button>
     </div>
     <div class="modal-body">
       <p>此動作將會清除本瀏覽器中保存的<strong>所有測試案例判定、實際結果備註與簽核欄紀錄</strong>，並將整份手冊恢復為初始未填（0%）狀態。</p>
-      <p style="color:var(--muted);font-size:13px">提示：若僅需重置單一案例，請點擊該案例卡片內的 <code>[↺ 重置未填]</code> 按鈕，或再次點擊已選中的判定按鈕即可。</p>
+      <p class="modal-hint">提示：若僅需重置單一案例，請點擊該案例卡片內的 <code>[↺ 重置未填]</code> 按鈕，或再次點擊已選中的判定按鈕即可。</p>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn-danger" id="confirm-reset-btn">確定清空全部</button>
-      <button type="button" class="btn-secondary" id="cancel-reset-btn">取消</button>
+      <button type="button" class="btn-secondary" id="cancel-reset-btn" autofocus>取消</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- 浮動提示 Toast -->
-<div id="toast" class="toast hidden" role="status" aria-live="polite">已複製到剪貼簿！</div>
+<div id="toast" class="toast" role="status"></div>
 
 <!-- 全螢幕圖表互動檢視燈箱 Modal -->
-<div class="lightbox-backdrop" id="mermaid-lightbox-modal" role="dialog" aria-modal="true">
+<dialog class="lightbox-dialog" id="mermaid-lightbox-modal" aria-labelledby="lightbox-title" closedby="any">
   <div class="lightbox-box">
     <div class="lightbox-header">
       <div class="mermaid-toolbar-left">
@@ -1490,7 +1498,7 @@
       <div class="lightbox-stage" id="mermaid-lightbox-stage"></div>
     </div>
   </div>
-</div>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <script>
@@ -1538,22 +1546,64 @@
     return verdict;
   }
 
+  var lastToastMsg = '';
+
+  /* 提示訊息：#toast 為 role=status 常駐節點（空白時隱藏），改文字即由螢幕閱讀器朗讀；
+     有 modal 開啟時先移入該 dialog，避免被 inert 的背景頁蓋住；同訊息重複時補 U+00A0 以重新朗讀 */
   function showToast(msg, type) {
     var toast = document.getElementById('toast');
     if (!toast) return;
-    toast.textContent = msg;
-    if (type === 'danger') {
-      toast.style.background = 'var(--fail)';
-    } else if (type === 'info') {
-      toast.style.background = 'var(--accent)';
-    } else {
-      toast.style.background = 'var(--pass)';
-    }
-    toast.classList.remove('hidden');
+    var host = document.querySelector('dialog[open]') || document.body;
+    if (toast.parentNode !== host) host.appendChild(toast);
+    if (msg === lastToastMsg) msg += '\u00a0';
+    lastToastMsg = msg;
+    toast.classList.toggle('toast-danger', type === 'danger');
+    toast.classList.toggle('toast-info', type === 'info');
+    toast.textContent = '';
+    requestAnimationFrame(function() { toast.textContent = msg; });
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function() {
-      toast.classList.add('hidden');
+      toast.textContent = '';
+      lastToastMsg = '';
     }, 2200);
+  }
+
+  /* 原生 <dialog>：showModal() 處理焦點圈限、Esc 與焦點歸還；不支援 closedby 的瀏覽器以指標位置判斷點擊外側 */
+  var supportsClosedBy = typeof HTMLDialogElement !== 'undefined' && 'closedBy' in HTMLDialogElement.prototype;
+
+  function bindLightDismiss(dlg) {
+    if (!dlg || supportsClosedBy) return;
+    var downOutside = false;
+    var isOutside = function(e) {
+      var r = dlg.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    dlg.addEventListener('pointerdown', function(e) { downOutside = e.target === dlg && isOutside(e); });
+    dlg.addEventListener('click', function(e) {
+      if (downOutside && e.target === dlg && isOutside(e)) dlg.close();
+      downOutside = false;
+    });
+  }
+
+  function openDialog(id) {
+    var dlg = document.getElementById(id);
+    if (dlg && !dlg.open) dlg.showModal();
+    return dlg;
+  }
+
+  function closeDialog(id) {
+    var dlg = document.getElementById(id);
+    if (dlg && dlg.open) dlg.close();
+  }
+
+  /* 只有實際可水平捲動的表格外框才成為可聚焦的捲動區 */
+  function markScrollableTables() {
+    document.querySelectorAll('.tbl-wrap').forEach(function(w) {
+      if (w.scrollWidth <= w.clientWidth + 1) return;
+      w.tabIndex = 0;
+      w.setAttribute('role', 'region');
+      w.setAttribute('aria-label', '表格（可水平捲動）');
+    });
   }
 
   /**
@@ -1837,13 +1887,11 @@
 
   function openExportModal() {
     renderExportContent();
-    var m = document.getElementById('export-modal');
-    if (m) m.classList.remove('hidden');
+    openDialog('export-modal');
   }
 
   function closeExportModal() {
-    var m = document.getElementById('export-modal');
-    if (m) m.classList.add('hidden');
+    closeDialog('export-modal');
   }
 
   function switchExportTab(format) {
@@ -1855,21 +1903,18 @@
     renderExportContent();
   }
 
-  function copyExportContent() {
+  async function copyExportContent() {
     var area = document.getElementById('export-textarea');
     if (!area) return;
-    var val = area.value;
-    var done = function() { showToast('已複製到剪貼簿！', 'pass'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(val).then(done, function() {
-        area.select();
-        document.execCommand('copy');
-        done();
-      });
-    } else {
+    try {
+      await navigator.clipboard.writeText(area.value);
+      showToast('已複製到剪貼簿！', 'pass');
+    } catch (e) {
+      area.focus();
       area.select();
-      document.execCommand('copy');
-      done();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e2) {}
+      showToast(ok ? '已複製到剪貼簿！' : '複製失敗，已選取文字，請按 Ctrl+C 複製', ok ? 'pass' : 'danger');
     }
   }
 
@@ -1891,13 +1936,11 @@
   }
 
   function openResetModal() {
-    var m = document.getElementById('reset-modal');
-    if (m) m.classList.remove('hidden');
+    openDialog('reset-modal');
   }
 
   function closeResetModal() {
-    var m = document.getElementById('reset-modal');
-    if (m) m.classList.add('hidden');
+    closeDialog('reset-modal');
   }
 
   function confirmResetAll() {
@@ -1933,12 +1976,32 @@
     if (btn) btn.textContent = allExpanded ? '收合全部' : '展開全部';
   }
 
-  function toggleTheme() {
-    var html = document.documentElement;
-    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
-    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  /* 主題：未覆寫時由 CSS 跟隨系統；data-theme 只在使用者明確覆寫時出現（<head> 內腳本已先套用） */
+  var sysDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function applyTheme(theme) {
+    if (theme === 'dark' || theme === 'light') {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
   }
+
+  /* 兩態：切到目前畫面的相反；與系統相同就清除覆寫，回到跟隨系統 */
+  function toggleTheme() {
+    var sys = sysDark && sysDark.matches ? 'dark' : 'light';
+    var cur = document.documentElement.getAttribute('data-theme') || sys;
+    var target = cur === 'dark' ? 'light' : 'dark';
+    try {
+      if (target === sys) localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, target);
+    } catch (e) {}
+    applyTheme(target === sys ? null : target);
+  }
+
+  window.addEventListener('storage', function(e) {
+    if (e.key === THEME_KEY) applyTheme(e.newValue);
+  });
 
   function initClientMermaid() {
     var rawNodes = document.querySelectorAll('pre.mermaid:not([data-processed="true"]), div.mermaid:not([data-processed="true"])');
@@ -2080,7 +2143,7 @@
       titleEl.textContent = '🔍 ' + (title || '架構與流程圖全螢幕檢視');
     }
 
-    modal.classList.add('open');
+    if (!modal.open) modal.showModal();
     var availW = Math.max(800, (viewport ? viewport.clientWidth : window.innerWidth) - 72);
     var initScale = dims.width <= availW ? 1.0 : Math.max(0.88, availW / dims.width);
     applyLightboxScale(initScale);
@@ -2091,11 +2154,7 @@
   }
 
   function closeLightbox() {
-    var modal = document.getElementById('mermaid-lightbox-modal');
-    var stage = document.getElementById('mermaid-lightbox-stage');
-    if (modal) modal.classList.remove('open');
-    if (stage) stage.innerHTML = '';
-    lightboxState.svg = null;
+    closeDialog('mermaid-lightbox-modal');
   }
 
   function initMermaidViewers() {
@@ -2228,14 +2287,16 @@
     if (lbReset) lbReset.addEventListener('click', function () { applyLightboxScale(1.0); });
     if (lbClose) lbClose.addEventListener('click', closeLightbox);
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var lb = document.getElementById('mermaid-lightbox-modal');
-        if (lb && lb.classList.contains('open')) {
-          closeLightbox();
-        }
-      }
-    });
+    var lb = document.getElementById('mermaid-lightbox-modal');
+    if (lb) {
+      bindLightDismiss(lb);
+      /* 任何關閉途徑（按鈕、Esc、點外側）都清空燈箱內容 */
+      lb.addEventListener('close', function () {
+        var stage = document.getElementById('mermaid-lightbox-stage');
+        if (stage) stage.innerHTML = '';
+        lightboxState.svg = null;
+      });
+    }
   }
 
   // 匯出全域 API 相容函式（供舊版呼叫或自動化腳本直接調用）
@@ -2256,14 +2317,7 @@
   window.openLightbox = openLightbox;
   window.closeLightbox = closeLightbox;
 
-  // 啟動初始化
-  try {
-    var savedTheme = localStorage.getItem(THEME_KEY);
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  } catch (e) {}
-
+  // 啟動初始化（已儲存的主題覆寫由 <head> 內腳本在繪製前套用）
   loadStorage();
   initCaseEvents();
   syncAllUI();
@@ -2312,6 +2366,17 @@
   if (resetClose) resetClose.addEventListener('click', closeResetModal);
   if (cancelReset) cancelReset.addEventListener('click', closeResetModal);
   if (confirmReset) confirmReset.addEventListener('click', confirmResetAll);
+  bindLightDismiss(document.getElementById('export-modal'));
+  bindLightDismiss(document.getElementById('reset-modal'));
+  /* 提示若曾移入某個 dialog，關閉後移回 body，避免隨 dialog 一起隱藏 */
+  ['export-modal', 'reset-modal', 'mermaid-lightbox-modal'].forEach(function(id) {
+    var dlg = document.getElementById(id);
+    if (!dlg) return;
+    dlg.addEventListener('close', function() {
+      var toast = document.getElementById('toast');
+      if (toast && dlg.contains(toast)) document.body.appendChild(toast);
+    });
+  });
 
   // 點擊 #TC-xx 錨點時自動展開該卡片
   document.querySelectorAll('a[href^="#"]').forEach(function(link) {
@@ -2334,6 +2399,7 @@
 
   initClientMermaid();
   initMermaidViewers();
+  markScrollableTables();
 })();
 </script>
 </body>

@@ -18,6 +18,9 @@ import subprocess
 import sys
 import tempfile
 
+# 深色規則展開與行尾空白清理與協作者手冊編譯器共用同一實作
+from scaffold_doc import expand_dark_theme, strip_trailing_whitespace
+
 
 def protect_pipes_in_line(line):
     """保護表格列中的跳脫直線 \\| 以及行內程式碼 `...` 內的直線 |，避免拆欄時破版。"""
@@ -206,6 +209,9 @@ def batch_render_mermaid_blocks(mermaid_codes):
                 stderr=subprocess.PIPE,
                 timeout=60,
             )
+            if proc.returncode != 0:
+                # 渲染器失敗（例如找不到 playwright）時把原因印出
+                print(f"⚠️ Mermaid 預渲染器結束碼 {proc.returncode}: {proc.stderr.decode('utf-8', 'replace').strip()}")
             if proc.returncode == 0 and os.path.exists(tmp_out_path):
                 with open(tmp_out_path, "r", encoding="utf-8") as f_out:
                     results = json.load(f_out)
@@ -253,7 +259,7 @@ def render_table_html(table_lines):
 
     out = ['<div class="tbl-wrap"><table><thead><tr>']
     for h in headers:
-        out.append(f"<th>{render_inline_markdown(h)}</th>")
+        out.append(f'<th scope="col">{render_inline_markdown(h)}</th>')
     out.append("</tr></thead><tbody>")
     for r in body_rows:
         # 補齊或對齊欄數
@@ -285,6 +291,34 @@ def render_markdown_blocks(lines, mermaid_iter, as_steps=False, start_step_num=1
 
         if not s or s == "---":
             i += 1
+            continue
+
+        # 0. 原生 <details> 摺疊區塊：收集到對應的 </details>（支援巢狀），<summary> 行轉為標題，內文遞迴渲染
+        if s.startswith("<details"):
+            depth, j, inner, summary_html = 0, i, [], ""
+            while j < n:
+                t = lines[j].strip()
+                if t.startswith("<details"):
+                    depth += 1
+                    if depth == 1:
+                        j += 1
+                        continue
+                if t.startswith("</details>"):
+                    depth -= 1
+                    if depth == 0:
+                        break
+                m_sum = re.match(r"^<summary>(.*)</summary>$", t)
+                if depth == 1 and m_sum and not summary_html:
+                    summary_html = render_inline_markdown(m_sum.group(1))
+                else:
+                    inner.append(lines[j])
+                j += 1
+            inner_html, _ = render_markdown_blocks(inner, mermaid_iter, as_steps=False)
+            out.append(
+                f'<details class="tc-prep"><summary>{summary_html or "展開"}</summary>'
+                f'<div class="tc-prep-body">{inner_html}</div></details>'
+            )
+            i = j + 1
             continue
 
         # 1. Fenced code block (```mermaid 或一般 ```)
@@ -343,6 +377,7 @@ def render_markdown_blocks(lines, mermaid_iter, as_steps=False, start_step_num=1
         # 5. 有序清單 (1. ...)
         if re.match(r"^\d+\.\s+", s):
             items = []
+            first_num = int(re.match(r"^(\d+)\.", s).group(1))  # 被程式碼區塊打斷的清單從原編號續接
             while i < n:
                 cur_line = lines[i]
                 cur_s = cur_line.strip()
@@ -369,7 +404,8 @@ def render_markdown_blocks(lines, mermaid_iter, as_steps=False, start_step_num=1
                 out.append('<ol class="tc-steps">' + "".join(li_html) + "</ol>")
             else:
                 li_html = ["<li>" + "<br>".join(parts) + "</li>" for parts in items]
-                out.append("<ol>" + "".join(li_html) + "</ol>")
+                start_attr = f' start="{first_num}"' if first_num != 1 else ""
+                out.append(f"<ol{start_attr}>" + "".join(li_html) + "</ol>")
             continue
 
         # 6. 無序清單 (- ... 或 * ...)
@@ -502,6 +538,11 @@ def parse_tc_card(tc_id, raw_title, body_lines, mermaid_iter):
         if cur_kind == "general" and not cur_buf and s.startswith("|") and ("適用條件" in s or "項目" in s):
             cur_kind = "pre"
 
+        # <details> 摺疊區塊不屬於 Pass／Fail 判定文字：結束判定區段，交由一般區段渲染
+        if s.startswith("<details") and cur_kind in ("pass", "fail", "verdict_group"):
+            _flush()
+            cur_kind = "general"
+
         cur_buf.append(ln)
         i += 1
 
@@ -603,7 +644,7 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
         md_text = f.read()
 
     with open(template_html_path, "r", encoding="utf-8") as f:
-        html_tpl = f.read()
+        html_tpl = expand_dark_theme(f.read())
 
     # 1. 預先抽取整份文件中所有 ```mermaid 區塊並一次性透過 Playwright 批次預渲染為 SVG
     raw_mermaid_blocks = re.findall(r"```mermaid\s*\n(.*?)```", md_text, re.DOTALL)
@@ -654,7 +695,7 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
     if not ui_state.startswith(("full", "partial", "browser", "source")):
         print(f"⚠️ 實機核對狀態為「{ui_state or '未填'}」：按鈕位置、欄位標籤與提示文字尚未實機核對。請在 metadata 表加 `ui-verified` 列（full／partial／none＋日期與環境）。")
         meta_html = (
-            '<div style="background:#cf222e;color:#fff;padding:10px 14px;border-radius:8px;font-weight:bold;margin-bottom:12px;">'
+            '<div class="ui-unverified-banner" role="note">'
             "⚠️ 本手冊尚未實機核對（ui-verified 未填或為 none）：步驟、按鈕位置與標籤可能與實際畫面不同，執行時請以畫面為準並回報差異。"
             "</div>" + meta_html
         )
@@ -755,7 +796,7 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
             body_rendered, _ = render_markdown_blocks(h2_lines, mermaid_iter, as_steps=False)
             section_block = (
                 f'<section class="card" id="{sec_id}">'
-                f'<div class="callout bad" style="margin:0">'
+                f'<div class="callout bad callout-flush">'
                 f'<div class="callout-title">🚫 {render_inline_markdown(h2_title)}</div>'
                 f"{body_rendered}</div></section>"
             )
@@ -817,6 +858,7 @@ def compile_markdown_to_html(md_path, html_path, template_html_path):
 
     for k, v in replacements.items():
         html_tpl = html_tpl.replace(k, v)
+    html_tpl = strip_trailing_whitespace(html_tpl)
 
     os.makedirs(os.path.dirname(os.path.abspath(html_path)), exist_ok=True)
     with open(html_path, "w", encoding="utf-8") as f:

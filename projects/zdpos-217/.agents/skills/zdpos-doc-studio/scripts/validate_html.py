@@ -139,7 +139,7 @@ def validate_single_file(html_path):
         if re.search(r'<input[^>]+type=[\'"]radio[\'"][^>]*\bchecked\b', content, re.IGNORECASE):
             errors.append("檢測到預設勾選 (checked) 的 radio！初始狀態必須為 0% 未檢核。")
 
-        for req_id in ("export-modal", "clear-modal", "mermaid-lightbox-modal", "progress-bar-fill", "sec-verify-checklist", "sec-4"):
+        for req_id in ("export-modal", "clear-modal", "mermaid-lightbox-modal", "progress-bar-fill", "sec-verify-checklist", "sec-signoff"):
             if f'id="{req_id}"' not in content:
                 errors.append(f"缺少必要互動結構或視窗元素: #{req_id}")
 

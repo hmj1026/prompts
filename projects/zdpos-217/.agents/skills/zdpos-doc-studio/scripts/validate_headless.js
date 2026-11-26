@@ -33,6 +33,96 @@ try {
 
 const { chromium } = playwright;
 
+const DIALOG_CASES = [
+  { name: '匯出視窗', opener: '#btn-open-export, #export-btn, #exportBtn', dialog: '#export-modal, #exportModal' },
+  { name: '清空確認視窗', opener: '#btn-open-clear, #reset-all-btn, #resetBtn', dialog: '#clear-modal, #reset-modal, #resetModal', safeFocus: true },
+  { name: 'Mermaid 全螢幕燈箱', opener: 'button[data-m-act="fullscreen"]', dialog: '#mermaid-lightbox-modal' },
+];
+
+async function isDialogOpen(page, selector) {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return false;
+    if (el.tagName.toLowerCase() === 'dialog') return el.open;
+    return getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+  }, selector);
+}
+
+async function auditDialogEscape(page) {
+  const issues = [];
+  for (const c of DIALOG_CASES) {
+    const opener = page.locator(c.opener).first();
+    if ((await opener.count()) === 0 || (await page.locator(c.dialog).count()) === 0) continue;
+    try {
+      await opener.click({ timeout: 3000 });
+    } catch (e) {
+      issues.push(`${c.name}：開啟按鈕無法點擊（可能被其他未關閉的視窗遮住）`);
+      continue;
+    }
+    await page.waitForTimeout(40);
+    if (!(await isDialogOpen(page, c.dialog))) {
+      issues.push(`${c.name}：點擊開啟按鈕後未開啟`);
+      continue;
+    }
+    if (c.safeFocus) {
+      const focusOk = await page.evaluate((sel) => {
+        const a = document.activeElement;
+        const dlg = document.querySelector(sel);
+        return !!(a && dlg && dlg.contains(a) && a.hasAttribute('autofocus') && !a.matches('#btn-confirm-clear, #confirm-reset-btn, #confirmResetBtn'));
+      }, c.dialog);
+      if (!focusOk) issues.push(`${c.name}：開啟後焦點未落在安全動作（取消）上`);
+    }
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(40);
+    if (await isDialogOpen(page, c.dialog)) {
+      issues.push(`${c.name}：按 Esc 後未關閉`);
+      await page.evaluate((sel) => { const el = document.querySelector(sel); if (el && el.close) el.close(); }, c.dialog);
+    }
+  }
+  return issues;
+}
+
+async function auditTableHeaders(page) {
+  const missing = await page.evaluate(() => document.querySelectorAll('thead th:not([scope])').length);
+  return missing > 0 ? [`有 ${missing} 個表頭 <th> 缺少 scope 屬性`] : [];
+}
+
+async function auditThemeFollowsSystem(page) {
+  const issues = [];
+  const read = () => page.evaluate(() => ({
+    attr: document.documentElement.getAttribute('data-theme'),
+    bg: getComputedStyle(document.body).backgroundColor,
+  }));
+  await page.evaluate(() => { try { localStorage.clear(); } catch (e) {} });
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const light = await read();
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  const dark = await read();
+  if (light.attr || dark.attr) {
+    issues.push(`未儲存主題偏好時 <html> 不應帶 data-theme（實際: light=${light.attr}, dark=${dark.attr}）`);
+  }
+  if (light.bg === dark.bg) {
+    issues.push(`未儲存主題偏好時頁面未跟隨系統深淺色（背景皆為 ${light.bg}）`);
+  }
+  const toggle = page.locator('#btn-theme-toggle, #theme-toggle-btn').first();
+  if ((await toggle.count()) > 0) {
+    await toggle.click({ timeout: 3000 });
+    const flipped = await read();
+    await toggle.click({ timeout: 3000 });
+    const back = await read();
+    if (flipped.attr !== 'light' || flipped.bg === dark.bg) {
+      issues.push(`系統深色時按切換鈕應覆寫為淺色（實際 data-theme=${flipped.attr}）`);
+    }
+    if (back.attr || back.bg !== dark.bg) {
+      issues.push(`再按一次切換鈕應回到跟隨系統並清除覆寫（實際 data-theme=${back.attr}）`);
+    }
+  }
+  await page.emulateMedia({ colorScheme: 'light' });
+  return issues;
+}
+
 async function verifyHtmlFile(filePath, browserInstance) {
   const absPath = path.resolve(filePath);
   if (!fs.existsSync(absPath)) {
@@ -159,6 +249,10 @@ async function verifyHtmlFile(filePath, browserInstance) {
     if (initAudit.cardCount > 0) {
       const interactionIssues = await page.evaluate(async () => {
         const issues = [];
+        // 原生 <dialog> 以 open 判定；舊版 div 視窗以實際是否顯示判定
+        const isOpen = (el) => (el.tagName.toLowerCase() === 'dialog'
+          ? el.open
+          : getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden');
         const firstCard = document.querySelector('.tc-card[data-tc-id], details.tc, details.case');
         if (firstCard.tagName.toLowerCase() === 'details') {
           firstCard.open = true;
@@ -244,7 +338,7 @@ async function verifyHtmlFile(filePath, browserInstance) {
         } else {
           exportBtn.click();
           await new Promise(r => setTimeout(r, 30));
-          if (!exportModal.classList.contains('open') && (exportModal.classList.contains('hidden') || exportModal.classList.contains('hide'))) {
+          if (!isOpen(exportModal)) {
             issues.push('點擊匯出按鈕後，匯出視窗未開啟');
           }
           if (!exportTextarea.value.includes('Pass') || !exportTextarea.value.includes('Playwright 自動化驗收備註')) {
@@ -263,6 +357,9 @@ async function verifyHtmlFile(filePath, browserInstance) {
           } else if (window.DOC_APP && window.DOC_APP.closeExportModal) {
             window.DOC_APP.closeExportModal();
           }
+          if (isOpen(exportModal)) {
+            issues.push('點擊匯出視窗 [關閉] 後未正常關閉');
+          }
         }
 
         // (f) 測試清空全部紀錄按鈕與確認視窗
@@ -275,6 +372,9 @@ async function verifyHtmlFile(filePath, browserInstance) {
         } else {
           resetBtn.click();
           await new Promise(r => setTimeout(r, 30));
+          if (!isOpen(resetModal)) {
+            issues.push('點擊清空按鈕後，確認視窗未開啟');
+          }
           confirmResetBtn.click();
           await new Promise(r => setTimeout(r, 30));
           const remainingChecked = document.querySelectorAll('.tc-card input[type="radio"]:checked, details.tc input[type="radio"]:checked, details.case input[type="radio"]:checked').length;
@@ -283,6 +383,9 @@ async function verifyHtmlFile(filePath, browserInstance) {
           }
           if (noteArea && noteArea.value !== '') {
             issues.push('執行確定清空後，備註文字框未被清空');
+          }
+          if (isOpen(resetModal)) {
+            issues.push('執行確定清空後，確認視窗未關閉');
           }
         }
 
@@ -298,7 +401,7 @@ async function verifyHtmlFile(filePath, browserInstance) {
           } else {
             fsBtn.click();
             await new Promise(r => setTimeout(r, 30));
-            if (!lbModal.classList.contains('open')) {
+            if (!isOpen(lbModal)) {
               issues.push('點擊 Mermaid [⛶ 全螢幕檢視] 按鈕後，燈箱未開啟');
             }
             const lbSvg = lbModal.querySelector('#mermaid-lightbox-stage svg');
@@ -318,7 +421,7 @@ async function verifyHtmlFile(filePath, browserInstance) {
             }
             lbClose.click();
             await new Promise(r => setTimeout(r, 30));
-            if (lbModal.classList.contains('open')) {
+            if (isOpen(lbModal)) {
               issues.push('點擊 Mermaid 全螢幕燈箱 [✕ 關閉] 後未正常關閉');
             }
           }
@@ -330,7 +433,14 @@ async function verifyHtmlFile(filePath, browserInstance) {
       if (interactionIssues.length > 0) {
         errors.push(...interactionIssues);
       }
+
+      // 3. 以真實鍵盤驗證每個視窗都能按 Esc 關閉（合成 keydown 不會觸發原生 dialog 的取消行為）
+      errors.push(...(await auditDialogEscape(page)));
     }
+
+    // 4. 表頭 scope 與主題跟隨系統
+    errors.push(...(await auditTableHeaders(page)));
+    errors.push(...(await auditThemeFollowsSystem(page)));
   } catch (err) {
     errors.push(`頁面載入或互動驗證失敗: ${err.message}`);
   } finally {

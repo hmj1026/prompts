@@ -22,7 +22,7 @@ try {
     const resolved = require.resolve('playwright', { paths: [projectRoot, process.cwd()] });
     playwright = require(resolved);
   } catch (err) {
-    console.error('❌ 未找到 playwright 套件。');
+    console.error('❌ 未找到 playwright 套件：請在含 node_modules/playwright 的專案根目錄（如 zdpos-217）執行，或設定 NODE_PATH 指向該 node_modules。');
     process.exit(2);
   }
 }
@@ -189,14 +189,10 @@ async function renderBatchToSvg(codes) {
               if (natHeight > 0) {
                 svgEl.setAttribute('data-natural-height', String(natHeight));
               }
-              svgEl.style.maxWidth = Math.max(natWidth, 320) + 'px';
-              svgEl.style.width = '100%';
-              svgEl.style.height = 'auto';
-              if (natWidth > 860) {
-                svgEl.style.minWidth = Math.round(natWidth * 0.82) + 'px';
-              } else {
-                svgEl.style.minWidth = '0';
-              }
+              // 以 width 屬性表達原始寬度（樣板 CSS 以 max-width:100%; height:auto 約束），
+              // 不輸出 root style 屬性；縮放比例由樣板執行期 JS 設定
+              svgEl.removeAttribute('style');
+              svgEl.setAttribute('width', String(Math.max(natWidth, 320)));
             }
           }
           out.push({ success: true, svg: liveContainer.innerHTML });

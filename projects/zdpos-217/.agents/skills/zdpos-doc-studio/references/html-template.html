@@ -3,12 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem('zdpos_doc_theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>{{TITLE}} — 協作者技術手冊</title>
 <style>
 /* ==========================================================================
    1. WCAG AA/AAA 高對比色彩系統 (Light & Dark Mode)
    ========================================================================== */
 :root {
+  color-scheme: light dark;
   --bg: #f8fafc;
   --panel: #ffffff;
   --panel-alt: #f1f5f9;
@@ -68,7 +71,11 @@
   --code-inline-ink: #0f172a;
 }
 
-[data-theme="dark"] {
+/* @dark-theme：深色規則只寫一次；編譯器把 __DARK__ 展開為
+   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) ... } 與 :root[data-theme="dark"] ...，
+   未覆寫時跟隨系統（不靠 JS），使用者切換時以 data-theme 覆寫。 */
+__DARK__ {
+  color-scheme: dark;
   --bg: #0b1120;
   --panel: #111827;
   --panel-alt: #1e293b;
@@ -127,12 +134,28 @@
   --code-inline-bg: #1e293b;
   --code-inline-ink: #7dd3fc;
 }
+__DARK__ .callout code {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+__DARK__ .mermaid {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 2px solid #64748b !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+/* @end-dark-theme */
+:root[data-theme="light"] { color-scheme: light; }
 
 /* ==========================================================================
    2. 基礎版面與雙欄導覽 (Layout & Sticky Sidebar)
    ========================================================================== */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -530,10 +553,6 @@ a { color: var(--accent); font-weight: 600; text-decoration: underline; }
   padding: 2px 6px;
   border-radius: 4px;
 }
-[data-theme="dark"] .callout code {
-  background: rgba(255, 255, 255, 0.16) !important;
-  color: #ffffff !important;
-}
 .callout table {
   background: var(--panel) !important;
   color: var(--ink) !important;
@@ -645,12 +664,6 @@ details[open] summary {
   text-align: center;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05) !important;
 }
-[data-theme="dark"] .mermaid {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 2px solid #64748b !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
-}
 .mermaid-toolbar {
   display: flex;
   align-items: center;
@@ -746,6 +759,7 @@ details[open] summary {
 .mermaid svg {
   display: block;
   margin: 0 auto;
+  max-width: 100%;
   height: auto;
   line-height: 1.35 !important;
   font-size: 14px !important;
@@ -772,26 +786,23 @@ details[open] summary {
 }
 
 /* 全螢幕圖表互動燈箱 (Mermaid Fullscreen Lightbox Modal) */
-.lightbox-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.82);
-  z-index: 200;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+dialog.lightbox-dialog {
+  width: 96vw;
+  height: 92vh;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
-.lightbox-backdrop.open {
-  display: flex;
-}
+dialog.lightbox-dialog[open] { display: flex; }
 .lightbox-box {
   background: #ffffff !important;
   color: #0f172a !important;
   border: 2px solid #64748b;
   border-radius: 12px;
-  width: 96vw;
-  height: 92vh;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1052,19 +1063,23 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
 /* ==========================================================================
    8. 匯出與清空 Modal 視窗 (Modals)
    ========================================================================== */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
+/* 原生 <dialog>：showModal() 提供焦點圈限、Esc 關閉與焦點歸還；dialog 本身即外框，點外側（::backdrop）可關閉 */
+dialog.modal-dialog {
+  width: calc(100% - 40px);
+  max-width: 720px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+}
+dialog.modal-dialog.modal-sm { max-width: 460px; }
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop {
   background: rgba(15, 23, 42, 0.65);
-  z-index: 100;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
-.modal-backdrop.open {
-  display: flex;
-}
+dialog.lightbox-dialog::backdrop { background: rgba(15, 23, 42, 0.82); }
 .modal-box {
   background: var(--panel);
   color: var(--ink);
@@ -1124,6 +1139,37 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
   gap: 10px;
   margin-top: 14px;
 }
+.modal-desc {
+  color: var(--ink-secondary);
+  font-size: 14px;
+}
+.copy-status {
+  color: var(--pass);
+  font-size: 13px;
+  font-weight: 700;
+  align-self: center;
+}
+.copy-status.is-failed { color: var(--fail); }
+.section-hint {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 0;
+}
+.col-id { width: 95px; }
+.col-status { width: 110px; }
+.col-verdict { width: 280px; }
+.summary-cat {
+  color: var(--muted);
+  font-size: 12px;
+}
+.radio-pill.radio-pill-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+.tc-note-input.tc-note-inline {
+  width: 100%;
+  min-width: 140px;
+}
 
 @media (max-width: 960px) {
   .layout { grid-template-columns: 1fr; }
@@ -1137,7 +1183,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
 
 <div class="layout">
   <!-- 側邊導覽列 -->
-  <nav class="side">
+  <nav class="side" aria-label="手冊章節導覽">
     <a href="../index.html" class="hub-back">← 返回協作者手冊總覽</a>
     <div class="brand">🚀 ZDPOS {{SLUG}}</div>
     <div class="sub-brand">{{TITLE}}</div>
@@ -1148,7 +1194,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
     <div class="nav-group-label">導入與驗收檢核</div>
     <a href="#sec-overview" class="nav-item">⚡ 快速導覽 Chips</a>
     <a href="#sec-verify-checklist" class="nav-item">✅ 互動式 SOP 驗收卡</a>
-    <a href="#sec-4" class="nav-item">📋 驗收簽核總表</a>
+    <a href="#sec-signoff" class="nav-item">📋 驗收簽核總表</a>
   </nav>
 
   <!-- 主內容區 -->
@@ -1163,9 +1209,9 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
         <span class="progress-stats" id="progress-counts">Pass: 0 · Fail: 0 · Blocked: 0 · N/A: 0</span>
       </div>
       <div class="top-actions">
-        <button type="button" class="btn" id="btn-theme-toggle" onclick="window.DOC_APP.toggleTheme()">🌓 切換深淺模式</button>
-        <button type="button" class="btn btn-primary" id="btn-open-export" onclick="window.DOC_APP.openExportModal()">📤 匯出檢核紀錄</button>
-        <button type="button" class="btn btn-danger" id="btn-open-clear" onclick="window.DOC_APP.openClearModal()">🗑️ 清空重填</button>
+        <button type="button" class="btn" id="btn-theme-toggle">🌓 切換深淺模式</button>
+        <button type="button" class="btn btn-primary" id="btn-open-export">📤 匯出檢核紀錄</button>
+        <button type="button" class="btn btn-danger" id="btn-open-clear">🗑️ 清空重填</button>
       </div>
     </div>
 
@@ -1190,7 +1236,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
     <!-- 快速檢核導覽 Chips -->
     <section id="sec-overview" class="section-card">
       <h2>⚡ 協作者導入與測試檢核快速導覽 (Quick Verification Chips)</h2>
-      <p style="color: var(--muted); font-size: 13.5px; margin-top: 0;">點擊下方編號可快速跳轉至對應之導入 SOP 或測試驗收檢核卡；圈選狀態將即時同步更新並儲存於瀏覽器本地。</p>
+      <p class="section-hint">點擊下方編號可快速跳轉至對應之導入 SOP 或測試驗收檢核卡；圈選狀態將即時同步更新並儲存於瀏覽器本地。</p>
       <div class="overview-chips" id="overview-chips-container">
         {{OVERVIEW_CHIPS}}
       </div>
@@ -1201,7 +1247,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
 
     <!-- 互動式 SOP 與測試驗收檢核卡 -->
     <section id="sec-verify-checklist" class="section-card">
-      <h2>✅ 協作者導入與測試驗收檢核表 (Interactive Onboarding & Verification Checklist)</h2>
+      <h2>✅ 協作者導入與測試驗收檢核表 (Interactive Onboarding &amp; Verification Checklist)</h2>
       <div class="callout info">
         <div class="callout-title">💡 互動式檢核操作說明</div>
         每個檢核項皆採用四態單選（<strong>Pass</strong> / <strong>Fail</strong> / <strong>Blocked</strong> / <strong>N/A</strong>），支援<strong>再次點擊已選項目取消勾選</strong>，或點擊右側「↺ 重置」清空單題狀態。完成後可點擊頂部「📤 匯出檢核紀錄」輸出 TSV 或 Markdown 簽核報告。
@@ -1212,17 +1258,17 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
     </section>
 
     <!-- 即時同步簽核總表 -->
-    <section id="sec-4" class="section-card">
+    <section id="sec-signoff" class="section-card">
       <h2>📋 導入與測試簽核總表 (Live Signoff Summary Table)</h2>
       <div class="table-responsive">
         <table id="signoff-summary-table">
           <thead>
             <tr>
-              <th style="width: 95px;">檢核編號</th>
-              <th>檢核階段 / 項目名稱</th>
-              <th style="width: 110px;">當前狀態</th>
-              <th style="width: 280px;">快速判定 (Pass / Fail / Blocked / N/A)</th>
-              <th>實測單號 / 執行備註</th>
+              <th scope="col" class="col-id">檢核編號</th>
+              <th scope="col">檢核階段 / 項目名稱</th>
+              <th scope="col" class="col-status">當前狀態</th>
+              <th scope="col" class="col-verdict">快速判定 (Pass / Fail / Blocked / N/A)</th>
+              <th scope="col">實測單號 / 執行備註</th>
             </tr>
           </thead>
           <tbody>
@@ -1235,44 +1281,44 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
 </div>
 
 <!-- 匯出檢核紀錄 Modal -->
-<div class="modal-backdrop" id="export-modal" role="dialog" aria-modal="true">
+<dialog class="modal-dialog" id="export-modal" aria-labelledby="export-modal-title" closedby="any">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 class="modal-title">📤 匯出協作者導入與測試檢核紀錄</h3>
-      <button type="button" class="btn" onclick="window.DOC_APP.closeExportModal()">✕ 關閉</button>
+      <h3 class="modal-title" id="export-modal-title">📤 匯出協作者導入與測試檢核紀錄</h3>
+      <button type="button" class="btn" id="export-modal-close" data-close-dialog>✕ 關閉</button>
     </div>
     <div class="modal-tabs">
-      <button type="button" class="modal-tab active" id="tab-btn-tsv" onclick="window.DOC_APP.switchExportTab('tsv')">TSV 格式 (Excel / Google Sheets 貼上)</button>
-      <button type="button" class="modal-tab" id="tab-btn-md" onclick="window.DOC_APP.switchExportTab('md')">Markdown 格式 (PR / Issue 簽核貼上)</button>
+      <button type="button" class="modal-tab active" id="tab-btn-tsv" data-export-tab="tsv">TSV 格式 (Excel / Google Sheets 貼上)</button>
+      <button type="button" class="modal-tab" id="tab-btn-md" data-export-tab="md">Markdown 格式 (PR / Issue 簽核貼上)</button>
     </div>
-    <textarea class="export-textarea" id="export-output" readonly></textarea>
+    <textarea class="export-textarea" id="export-output" aria-label="匯出內容" readonly></textarea>
     <div class="modal-footer">
-      <span id="copy-toast" style="color: var(--pass); font-size: 13px; font-weight: 700; align-self: center; display: none;">✓ 已複製到剪貼簿！</span>
-      <button type="button" class="btn btn-primary" id="btn-copy-export" onclick="window.DOC_APP.copyExportText()">📋 複製內容</button>
-      <button type="button" class="btn" onclick="window.DOC_APP.closeExportModal()">完成</button>
+      <span id="copy-toast" class="copy-status" role="status"></span>
+      <button type="button" class="btn btn-primary" id="btn-copy-export">📋 複製內容</button>
+      <button type="button" class="btn" data-close-dialog>完成</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- 清空重填確認 Modal -->
-<div class="modal-backdrop" id="clear-modal" role="dialog" aria-modal="true">
-  <div class="modal-box" style="max-width: 460px;">
+<dialog class="modal-dialog modal-sm" id="clear-modal" aria-labelledby="clear-modal-title" closedby="any">
+  <div class="modal-box">
     <div class="modal-header">
-      <h3 class="modal-title">🗑️ 確定清空所有檢核紀錄？</h3>
-      <button type="button" class="btn" onclick="window.DOC_APP.closeClearModal()">✕</button>
+      <h3 class="modal-title" id="clear-modal-title">🗑️ 確定清空所有檢核紀錄？</h3>
+      <button type="button" class="btn" data-close-dialog aria-label="關閉">✕</button>
     </div>
-    <p style="color: var(--ink-secondary); font-size: 14px;">
+    <p class="modal-desc">
       此操作將清除本頁所有已勾選的判定狀態（Pass / Fail / Blocked / N/A）與備註文字，並將進度重置回 <strong>0%</strong>。
     </p>
     <div class="modal-footer">
-      <button type="button" class="btn" onclick="window.DOC_APP.closeClearModal()">取消</button>
-      <button type="button" class="btn btn-danger" id="btn-confirm-clear" onclick="window.DOC_APP.confirmClearAll()">確定清空重置</button>
+      <button type="button" class="btn" data-close-dialog autofocus>取消</button>
+      <button type="button" class="btn btn-danger" id="btn-confirm-clear">確定清空重置</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- 全螢幕圖表互動檢視燈箱 Modal -->
-<div class="lightbox-backdrop" id="mermaid-lightbox-modal" role="dialog" aria-modal="true">
+<dialog class="lightbox-dialog" id="mermaid-lightbox-modal" aria-labelledby="lightbox-title" closedby="any">
   <div class="lightbox-box">
     <div class="lightbox-header">
       <div class="mermaid-toolbar-left">
@@ -1281,19 +1327,19 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
         <span class="mermaid-pan-hint">💡 滾輪無段縮放 (Wheel Zoom) · 按住左鍵拖曳平移 · 按 ESC 關閉</span>
       </div>
       <div class="mermaid-toolbar-actions">
-        <button type="button" class="m-tool-btn" id="lightbox-zoom-out" onclick="window.DOC_APP.zoomLightbox(-0.2)">➖ 縮小</button>
-        <button type="button" class="m-tool-btn" id="lightbox-zoom-in" onclick="window.DOC_APP.zoomLightbox(0.2)">➕ 放大</button>
-        <button type="button" class="m-tool-btn" id="lightbox-fit-width" onclick="window.DOC_APP.fitLightboxWidth()">↔ 適應寬度</button>
-        <button type="button" class="m-tool-btn" id="lightbox-fit-height" onclick="window.DOC_APP.fitLightboxHeight()">↕ 適應高度</button>
-        <button type="button" class="m-tool-btn" id="lightbox-zoom-reset" onclick="window.DOC_APP.resetLightboxZoom()">1:1 原始尺寸</button>
-        <button type="button" class="m-tool-btn m-tool-btn-primary" id="lightbox-close" onclick="window.DOC_APP.closeLightbox()">✕ 關閉 (ESC)</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-out">➖ 縮小</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-in">➕ 放大</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-width">↔ 適應寬度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-fit-height">↕ 適應高度</button>
+        <button type="button" class="m-tool-btn" id="lightbox-zoom-reset">1:1 原始尺寸</button>
+        <button type="button" class="m-tool-btn m-tool-btn-primary" id="lightbox-close" data-close-dialog>✕ 關閉 (ESC)</button>
       </div>
     </div>
     <div class="lightbox-viewport" id="mermaid-lightbox-viewport">
       <div class="lightbox-stage" id="mermaid-lightbox-stage"></div>
     </div>
   </div>
-</div>
+</dialog>
 
 <script>
 (function () {
@@ -1502,22 +1548,81 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
     return lines.join('\n');
   }
 
+  /* 主題：未覆寫時由 CSS 跟隨系統；data-theme 只在使用者明確覆寫時出現（<head> 內腳本已先套用） */
+  var sysDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
   function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
+    if (theme === 'dark' || theme === 'light') {
+      document.documentElement.setAttribute('data-theme', theme);
     } else {
-      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.removeAttribute('data-theme');
     }
   }
 
-  var savedTheme = null;
-  try { savedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
-  if (savedTheme) {
-    applyTheme(savedTheme);
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    applyTheme('dark');
-  } else {
-    applyTheme('light');
+  window.addEventListener('storage', function (e) {
+    if (e.key === THEME_KEY) applyTheme(e.newValue);
+  });
+
+  /* 原生 <dialog>：showModal() 處理焦點圈限、Esc 與焦點歸還；不支援 closedby 的瀏覽器以指標位置判斷點擊外側 */
+  var supportsClosedBy = typeof HTMLDialogElement !== 'undefined' && 'closedBy' in HTMLDialogElement.prototype;
+
+  function bindDialog(dlg) {
+    if (!dlg) return;
+    var closers = dlg.querySelectorAll('[data-close-dialog]');
+    for (var i = 0; i < closers.length; i++) {
+      closers[i].addEventListener('click', function () { dlg.close(); });
+    }
+    if (supportsClosedBy) return;
+    var downOutside = false;
+    var isOutside = function (e) {
+      var r = dlg.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    dlg.addEventListener('pointerdown', function (e) { downOutside = e.target === dlg && isOutside(e); });
+    dlg.addEventListener('click', function (e) {
+      if (downOutside && e.target === dlg && isOutside(e)) dlg.close();
+      downOutside = false;
+    });
+  }
+
+  function openDialog(id) {
+    var dlg = document.getElementById(id);
+    if (dlg && !dlg.open) dlg.showModal();
+    return dlg;
+  }
+
+  function closeDialog(id) {
+    var dlg = document.getElementById(id);
+    if (dlg && dlg.open) dlg.close();
+  }
+
+  /* 複製結果：訊息放在按鈕外的 role=status，同一訊息重複時補 U+00A0 讓螢幕閱讀器重唸 */
+  var copyTimer = null;
+  var lastCopyMsg = '';
+
+  function reportCopy(ok) {
+    var status = document.getElementById('copy-toast');
+    if (!status) return;
+    var msg = ok ? '✓ 已複製到剪貼簿！' : '複製失敗，已選取文字，請按 Ctrl+C 複製';
+    if (msg === lastCopyMsg) msg += '\u00a0';
+    lastCopyMsg = msg;
+    clearTimeout(copyTimer);
+    status.classList.toggle('is-failed', !ok);
+    status.textContent = '';
+    requestAnimationFrame(function () { status.textContent = msg; });
+    copyTimer = setTimeout(function () { status.textContent = ''; lastCopyMsg = ''; }, 2500);
+  }
+
+  /* 只有實際可水平捲動的表格外框才成為可聚焦的捲動區 */
+  function markScrollableTables() {
+    var wraps = document.querySelectorAll('.table-responsive');
+    for (var i = 0; i < wraps.length; i++) {
+      var w = wraps[i];
+      if (w.scrollWidth <= w.clientWidth + 1) continue;
+      w.tabIndex = 0;
+      w.setAttribute('role', 'region');
+      w.setAttribute('aria-label', '表格（可水平捲動）');
+    }
   }
 
   /* ==========================================================================
@@ -1700,23 +1805,19 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
         applyLightboxScale(lightboxState.scale + delta);
       }, { passive: false });
     }
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var lb = document.getElementById('mermaid-lightbox-modal');
-        if (lb && lb.classList.contains('open')) {
-          api.closeLightbox();
-        }
-      }
-    });
   }
 
   var api = {
     toggleTheme: function () {
-      var cur = document.documentElement.getAttribute('data-theme');
-      var next = cur === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+      /* 兩態：切到目前畫面的相反；與系統相同就清除覆寫，回到跟隨系統 */
+      var sys = sysDark && sysDark.matches ? 'dark' : 'light';
+      var cur = document.documentElement.getAttribute('data-theme') || sys;
+      var target = cur === 'dark' ? 'light' : 'dark';
+      try {
+        if (target === sys) localStorage.removeItem(THEME_KEY);
+        else localStorage.setItem(THEME_KEY, target);
+      } catch (e) {}
+      applyTheme(target === sys ? null : target);
     },
     openLightbox: function (sourceSvg, title) {
       var modal = document.getElementById('mermaid-lightbox-modal');
@@ -1748,7 +1849,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
         titleEl.textContent = '🔍 ' + (title || '架構與流程圖全螢幕檢視');
       }
 
-      modal.classList.add('open');
+      if (!modal.open) modal.showModal();
       var availW = Math.max(800, (viewport ? viewport.clientWidth : window.innerWidth) - 72);
       var initScale = dims.width <= availW ? 1.0 : Math.max(0.88, availW / dims.width);
       applyLightboxScale(initScale);
@@ -1758,11 +1859,7 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
       }
     },
     closeLightbox: function () {
-      var modal = document.getElementById('mermaid-lightbox-modal');
-      var stage = document.getElementById('mermaid-lightbox-stage');
-      if (modal) modal.classList.remove('open');
-      if (stage) stage.innerHTML = '';
-      lightboxState.svg = null;
+      closeDialog('mermaid-lightbox-modal');
     },
     zoomLightbox: function (delta) {
       applyLightboxScale(lightboxState.scale + delta);
@@ -1783,13 +1880,11 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
       applyLightboxScale(1.0);
     },
     openExportModal: function () {
-      var modal = document.getElementById('export-modal');
-      if (modal) modal.classList.add('open');
       api.switchExportTab(currentExportTab);
+      openDialog('export-modal');
     },
     closeExportModal: function () {
-      var modal = document.getElementById('export-modal');
-      if (modal) modal.classList.remove('open');
+      closeDialog('export-modal');
     },
     switchExportTab: function (tab) {
       currentExportTab = (tab === 'md') ? 'md' : 'tsv';
@@ -1800,30 +1895,25 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
       var out = document.getElementById('export-output');
       if (out) out.value = generateExportString(currentExportTab);
     },
-    copyExportText: function () {
+    copyExportText: async function () {
       var out = document.getElementById('export-output');
       if (!out) return;
-      out.select();
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(out.value);
-        } else {
-          document.execCommand('copy');
-        }
-      } catch (e) {}
-      var toast = document.getElementById('copy-toast');
-      if (toast) {
-        toast.style.display = 'inline';
-        setTimeout(function () { toast.style.display = 'none'; }, 2000);
+        await navigator.clipboard.writeText(out.value);
+        reportCopy(true);
+      } catch (e) {
+        out.focus();
+        out.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e2) {}
+        reportCopy(ok);
       }
     },
     openClearModal: function () {
-      var modal = document.getElementById('clear-modal');
-      if (modal) modal.classList.add('open');
+      openDialog('clear-modal');
     },
     closeClearModal: function () {
-      var modal = document.getElementById('clear-modal');
-      if (modal) modal.classList.remove('open');
+      closeDialog('clear-modal');
     },
     confirmClearAll: function () {
       appState = { items: {} };
@@ -1836,16 +1926,54 @@ label.radio-pill[data-val="N/A"] input:checked { border-color: var(--na); color:
   window.DOC_APP = api;
   window.QA_APP = api;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      bindRadioEvents();
-      syncAllUI();
-      initMermaidViewers();
-    });
-  } else {
+  function bindClick(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+
+  function bindControls() {
+    bindClick('btn-theme-toggle', api.toggleTheme);
+    bindClick('btn-open-export', api.openExportModal);
+    bindClick('btn-open-clear', api.openClearModal);
+    bindClick('btn-copy-export', api.copyExportText);
+    bindClick('btn-confirm-clear', api.confirmClearAll);
+    bindClick('lightbox-zoom-out', function () { api.zoomLightbox(-0.2); });
+    bindClick('lightbox-zoom-in', function () { api.zoomLightbox(0.2); });
+    bindClick('lightbox-fit-width', api.fitLightboxWidth);
+    bindClick('lightbox-fit-height', api.fitLightboxHeight);
+    bindClick('lightbox-zoom-reset', api.resetLightboxZoom);
+    var tabs = document.querySelectorAll('[data-export-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      (function (btn) {
+        btn.addEventListener('click', function () { api.switchExportTab(btn.getAttribute('data-export-tab')); });
+      })(tabs[i]);
+    }
+    bindDialog(document.getElementById('export-modal'));
+    bindDialog(document.getElementById('clear-modal'));
+    var lb = document.getElementById('mermaid-lightbox-modal');
+    bindDialog(lb);
+    if (lb) {
+      /* 任何關閉途徑（按鈕、Esc、點外側）都清空燈箱內容 */
+      lb.addEventListener('close', function () {
+        var stage = document.getElementById('mermaid-lightbox-stage');
+        if (stage) stage.innerHTML = '';
+        lightboxState.svg = null;
+      });
+    }
+  }
+
+  function initApp() {
+    bindControls();
     bindRadioEvents();
     syncAllUI();
     initMermaidViewers();
+    markScrollableTables();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
   }
 })();
 </script>

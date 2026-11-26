@@ -92,17 +92,18 @@ python3 .agent/skills/zdpos-doc-studio/scripts/doc_studio.py validate <path_to_h
    - **防止 `flowchart TD` 水平暴衝**：下層 `subgraph` 內嚴禁出現「零入度（0 in-degree）孤立節點」（純列舉項目請合併於同一節點，介面實作寫為 `Interface -.->|"實作介面"| Impl`），避免 Dagre 將下層 Subgraph 拉到頂層水平並排。
    - **防止方框內文字被裁切**：`render_mermaid_cli.js` 於渲染前統一設定 `line-height: 1.4` 與節點標籤 `padding: 3px 8px`，渲染後於真實 DOM 為所有 `<foreignObject>` 設定 `overflow="visible"` 並自動擴充不足之 `<foreignObject>` 與 `.label-container` 外框；HTML 樣板亦強制隔離 SVG 內部 `line-height: 1.35 !important; overflow: visible !important;`，防止繼承 `body` 行高導致多行文字下半部被切半。
 4. **三層互動式圖表檢視與全螢幕燈箱 ID 保護鐵律 (3-Layer Viewer & Lightbox ID Scoping)**：
-   - 每張圖表自動掛載控制列（`➖ 縮小`、`➕ 放大`、`↔ 適應寬度`、`1:1 原始尺寸`、`⛶ 全螢幕檢視`）、原位滑鼠拖曳平移（Grab-to-Pan）與全螢幕滾輪縮放燈箱（`#mermaid-lightbox-modal`，預設保底比例 `>= 82%`）。
+   - 每張圖表自動掛載控制列（`➖ 縮小`、`➕ 放大`、`↔ 適應寬度`、`1:1 原始尺寸`、`⛶ 全螢幕檢視`）、原位滑鼠拖曳平移（Grab-to-Pan）與全螢幕滾輪縮放燈箱（`#mermaid-lightbox-modal`，原生 `<dialog>` 以 `showModal()` 開啟，Esc／點外側／關閉鈕皆可關閉並清空內容；預設保底比例 `>= 82%`）。
    - **全螢幕燈箱防全黑保護**：`openLightbox()` 複製 SVG 時必須將 `origId` 同步重寫為 `origId + '_lb'`（含內部 `<style>` 與 `<marker>` 引用），**嚴禁直接 `removeAttribute('id')`**（否則內部 `#mermaid_svg_...` 樣式失效，導致燈箱內節點落回瀏覽器預設全黑填色 `#000000`）。
 5. **WCAG AA/AAA 高對比與純白畫布鐵律 (High-Contrast Theme & White Canvas)**：
+   - 未儲存偏好時跟隨系統深淺色（`color-scheme` meta＋`prefers-color-scheme`，不靠 JS）；切換鈕為兩態，切回與系統相同時清除覆寫。樣板深色規則寫在 `@dark-theme` 區段一次，由編譯器展開。
    - 深淺色模式皆採用高對比純色變數（對比度 > 7:1），`.callout` 內嵌表格強制使用 `background: var(--panel) !important`，且所有 Mermaid 容器強制固定為純白底色 `#ffffff !important`。
 6. **四態單選 Radio、Toggle 取消與初始零狀態鐵律 (4-State Radio & Zero-State Default)**：
    - 檢核卡與測試案例卡一律使用四態互斥 `<input type="radio">`（`Pass` / `Fail` / `Blocked` / `N/A`），嚴禁使用 `checkbox` 或渲染第 5 顆 `NOT_RUN` radio。
    - 靜態 HTML 嚴禁帶有預設 `checked` 屬性（初始進度必為 `0%`）；支援**再次點擊已選中 Radio 取消勾選 (Toggle Uncheck)** 與單題重置按鈕，並與頂部進度條、快速導覽 Chips 及簽核總表即時雙向同步。
 7. **即時匯出與清空重填鐵律 (Live TSV/Markdown Export & Reset All Modals)**：
-   - 「📤 匯出」視窗即時由記憶體與 DOM 生成最新 TSV 與 Markdown 簽核表；「🗑️ 清空」必須彈出確認視窗，確認後一鍵將所有 Radio、備註欄、Chips、簽核表與進度條完整歸零。
+   - 「📤 匯出」視窗即時由記憶體與 DOM 生成最新 TSV 與 Markdown 簽核表，複製結果顯示於 `role="status"` 提示；「🗑️ 清空」必須彈出確認視窗（預設焦點在「取消」），確認後一鍵將所有 Radio、備註欄、Chips、簽核表與進度條完整歸零。兩者皆為原生 `<dialog>`，不手寫 focus trap 或 Esc 處理。
 8. **Playwright Headless 實機驗收門禁鐵律 (Headless Browser Gate)**：
-   - 每次編譯必須通過 `scripts/validate_headless.js` 實機驗證（零 Console/Page Error、初始零狀態、`<foreignObject>` 零文字裁切、全螢幕燈箱非全黑填色、Radio 點擊／切換／Toggle 取消／單題重置／匯出／全部清空 100% 正常）。
+   - 每次編譯必須通過 `scripts/validate_headless.js` 實機驗證（零 Console/Page Error、初始零狀態、`<foreignObject>` 零文字裁切、全螢幕燈箱非全黑填色、Radio 點擊／切換／Toggle 取消／單題重置／匯出／全部清空 100% 正常、每個視窗按 Esc 可關閉、表頭 `<th scope>`、未儲存偏好時跟隨系統深淺色）。需能解析 `playwright`：在含 `node_modules/playwright` 的專案根目錄執行，或設定 `NODE_PATH`。
 
 ---
 

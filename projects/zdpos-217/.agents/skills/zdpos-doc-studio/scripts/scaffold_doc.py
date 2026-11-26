@@ -24,6 +24,36 @@ import sys
 import tempfile
 
 
+DARK_THEME_RE = re.compile(r"/\* @dark-theme.*?\*/\n(.*?)/\* @end-dark-theme \*/\n", re.S)
+
+
+def expand_dark_theme(tpl):
+    """樣板的深色規則只寫一次（選擇器以 __DARK__ 開頭），編譯時展開為兩份：
+    跟隨系統（無 data-theme 覆寫時）與使用者明確切到深色（data-theme="dark"）。"""
+    m = DARK_THEME_RE.search(tpl)
+    if not m:
+        return tpl
+    rules = m.group(1)
+    system = rules.replace("__DARK__", ':root:not([data-theme="light"])')
+    forced = rules.replace("__DARK__", ':root[data-theme="dark"]')
+    expanded = "@media (prefers-color-scheme: dark) {\n" + system + "}\n" + forced
+    return tpl[: m.start()] + expanded + tpl[m.end():]
+
+
+def strip_trailing_whitespace(text):
+    return re.sub(r"[ \t]+$", "", text, flags=re.M)
+
+
+def unique_id(base, used):
+    candidate = base
+    n = 2
+    while candidate in used:
+        candidate = f"{base}-{n}"
+        n += 1
+    used.add(candidate)
+    return candidate
+
+
 def slugify_heading(text):
     clean = re.sub(r"<[^>]+>", "", text)
     clean = re.sub(r"[`*_~]", "", clean).strip().lower()
@@ -155,7 +185,7 @@ def batch_render_mermaid_svgs(mermaid_blocks, script_dir):
     out_path = in_path + ".out.json"
 
     try:
-        subprocess.run(
+        proc = subprocess.run(
             ["node", cli_js, "--batch", in_path, out_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -163,6 +193,9 @@ def batch_render_mermaid_svgs(mermaid_blocks, script_dir):
             timeout=60,
             check=False,
         )
+        if proc.returncode != 0:
+            # 渲染器失敗（例如找不到 playwright）時把原因印出，否則只會看到「未預渲染為內嵌 <svg>」
+            print(f"⚠️ Mermaid 預渲染器結束碼 {proc.returncode}: {proc.stderr.strip()}", file=sys.stderr)
         if os.path.exists(out_path):
             with open(out_path, "r", encoding="utf-8") as f_out:
                 results = json.load(f_out)
@@ -268,7 +301,7 @@ def format_inline_md(text):
     for idx, val in enumerate(link_tokens):
         text = text.replace(f"\x00LINK{idx}\x00", val)
     for idx, val in enumerate(html_tokens):
-        text = text.replace(f"\x00HTML{idx}\x00", val)
+        text = text.replace(f"\x00HTML{idx}\x00", re.sub(r"(?i)^<br\s*/>$", "<br>", val))
     for idx, val in enumerate(code_tokens):
         text = text.replace(f"\x00CODE{idx}\x00", val)
 
@@ -308,7 +341,7 @@ def render_table(table_lines):
         return ""
     headers = split_md_table_row(table_lines[0])
     body_rows = table_lines[2:]
-    th_html = "".join(f"<th>{format_inline_md(h)}</th>" for h in headers)
+    th_html = "".join(f'<th scope="col">{format_inline_md(h)}</th>' for h in headers)
     trs_html = []
     for r_line in body_rows:
         if not r_line.strip():
@@ -428,6 +461,7 @@ def render_markdown_blocks(md_text, mermaid_collector):
             inner_div = re.sub(r"^<div[^>]*>", "", raw_div.strip(), count=1, flags=re.IGNORECASE)
             inner_div = re.sub(r"</div>\s*$", "", inner_div.strip(), flags=re.IGNORECASE)
             inner_div = normalize_inline_spans(inner_div)
+            inner_div = re.sub(r"(?i)<br\s*/>", "<br>", inner_div)
             out.append(f'<div class="callout {tone}">\n{inner_div}\n</div>')
             continue
 
@@ -464,7 +498,7 @@ def render_markdown_blocks(md_text, mermaid_collector):
             if first_line_lower in title_map:
                 callout_title = title_map[first_line_lower]
                 bq_lines = bq_lines[1:]
-            body_html = "<br/>".join(format_inline_md(l) for l in bq_lines if l.strip())
+            body_html = "<br>".join(format_inline_md(l) for l in bq_lines if l.strip())
             if callout_title:
                 out.append(f'<div class="callout {tone}"><div class="callout-title">{callout_title}</div>{body_html}</div>')
             else:
@@ -519,7 +553,9 @@ def render_markdown_blocks(md_text, mermaid_collector):
                         items_html.append(f"<li>{format_inline_md(item_txt)}</li>")
                 else:
                     break
-            out.append(f"<{list_tag}>{''.join(items_html)}</{list_tag}>")
+            ol_num = int(m_ol.group(2)[:-1]) if m_ol else 1  # 被程式碼區塊打斷的清單從原編號續接
+            start_attr = f' start="{ol_num}"' if list_tag == "ol" and ol_num != 1 else ""
+            out.append(f"<{list_tag}{start_attr}>{''.join(items_html)}</{list_tag}>")
             continue
 
         # 9. Paragraph
@@ -623,7 +659,7 @@ def build_verification_html(checkpoints):
                 f"</label>"
             )
             radios_row.append(
-                f'<label class="radio-pill" data-val="{val}" style="padding: 3px 8px; font-size: 12px;">'
+                f'<label class="radio-pill radio-pill-sm" data-val="{val}">'
                 f'<input type="radio" name="tc_row_{cid}" value="{val}" data-tc-id="{cid}">'
                 f"<span>{val}</span>"
                 f"</label>"
@@ -642,7 +678,7 @@ def build_verification_html(checkpoints):
             f'  <div class="tc-body">{desc}</div>'
             f'  <div class="tc-controls">'
             f'    <div class="radio-group">{"".join(radios_card)}</div>'
-            f'    <input type="text" class="tc-note-input" data-note-tc="{cid}" placeholder="填寫驗證紀錄、測試單號或備註...">'
+            f'    <input type="text" class="tc-note-input" data-note-tc="{cid}" aria-label="{cid} 驗證紀錄" placeholder="填寫驗證紀錄、測試單號或備註...">'
             f'    <button type="button" class="tc-reset-btn" data-reset-tc="{cid}">↺ 重置</button>'
             f"  </div>"
             f"</div>"
@@ -651,10 +687,10 @@ def build_verification_html(checkpoints):
         rows_html.append(
             f'<tr data-summary-tc="{cid}" data-status="">'
             f'  <td><a href="#card-{cid}"><strong>{cid}</strong></a></td>'
-            f"  <td><strong>{title}</strong><br/><span style=\"color: var(--muted); font-size: 12px;\">{cat}</span></td>"
+            f'  <td><strong>{title}</strong><br><span class="summary-cat">{cat}</span></td>'
             f'  <td><span class="tc-status-badge summary-status-badge">未檢核</span></td>'
             f'  <td><div class="radio-group">{"".join(radios_row)}</div></td>'
-            f'  <td><input type="text" class="tc-note-input" data-note-tc="{cid}" style="width: 100%; min-width: 140px;" placeholder="備註..."></td>'
+            f'  <td><input type="text" class="tc-note-input tc-note-inline" data-note-tc="{cid}" aria-label="{cid} 備註" placeholder="備註..."></td>'
             f"</tr>"
         )
 
@@ -675,7 +711,7 @@ def compile_markdown_to_html(md_path, validate=True):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     tpl_path = os.path.join(script_dir, "..", "references", "html-template.html")
     with open(tpl_path, "r", encoding="utf-8") as f:
-        tpl = f.read()
+        tpl = expand_dark_theme(f.read())
 
     with open(md_path, "r", encoding="utf-8") as f:
         md_raw = f.read()
@@ -767,14 +803,16 @@ def compile_markdown_to_html(md_path, validate=True):
         "8": "testing",
     }
 
+    # 樣板固定區塊的 id 先保留，避免與章節 id 重複
+    used_ids = {"sec-overview", "sec-verify-checklist", "sec-signoff"}
     for idx, sec in enumerate(content_sections, 1):
         stitle = sec["title"]
         sbody = sec["body"]
         m_num = re.match(r"^(\d+)\.", stitle)
         num_key = m_num.group(1) if m_num else str(idx)
-        sec_id = f"sec-{num_key}"
-        legacy_id = legacy_id_map.get(num_key, f"section-{idx}")
-        md_slug_id = slugify_heading(stitle)
+        sec_id = unique_id(f"sec-{num_key}", used_ids)
+        legacy_id = unique_id(legacy_id_map.get(num_key, f"section-{idx}"), used_ids)
+        md_slug_id = unique_id(slugify_heading(stitle), used_ids)
 
         short_nav = re.sub(r"\s*\([^)]*\)\s*$", "", stitle).strip()
         nav_links.append(f'<a href="#{sec_id}" class="nav-item">{html.escape(short_nav)}</a>')
@@ -816,6 +854,8 @@ def compile_markdown_to_html(md_path, validate=True):
     final_html = final_html.replace("{{TC_CARDS_HTML}}", tc_cards_html)
     final_html = final_html.replace("{{SIGNOFF_ROWS_HTML}}", signoff_rows_html)
 
+    final_html = strip_trailing_whitespace(final_html)
+
     # 寫入 README.html 並同步複製為實體 index.html
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(final_html)
@@ -837,6 +877,28 @@ def compile_markdown_to_html(md_path, validate=True):
                 return False
 
     return True
+
+
+def extract_markdown_block(raw_tpl):
+    """抽取樣板中 ```markdown ... ``` 外層區塊的內容。
+    內層的 ```mermaid / ```sql 等圍欄成對略過，只有不在內層圍欄中的裸 ``` 才是外層結尾。"""
+    lines = raw_tpl.splitlines(keepends=True)
+    start = next((i for i, ln in enumerate(lines) if re.match(r"^```markdown\s*$", ln)), None)
+    if start is None:
+        return raw_tpl
+    body = []
+    in_inner = False
+    for ln in lines[start + 1:]:
+        stripped = ln.strip()
+        if stripped.startswith("```"):
+            if in_inner:
+                in_inner = stripped != "```"
+            elif stripped == "```":
+                return "".join(body)
+            else:
+                in_inner = True
+        body.append(ln)
+    return "".join(body)
 
 
 def register_in_hub_index(repo_root, slug, title, anchor, desc=""):
@@ -917,9 +979,7 @@ def main():
     if not os.path.exists(md_path) and os.path.exists(md_tpl_path):
         with open(md_tpl_path, "r", encoding="utf-8") as f:
             raw_tpl = f.read()
-        # 抽取 ```markdown ... ``` 區塊內的範本
-        m_block = re.search(r"```markdown\n(.*?)```", raw_tpl, re.S)
-        md_content = m_block.group(1) if m_block else raw_tpl
+        md_content = extract_markdown_block(raw_tpl)
         md_content = md_content.replace("[功能名稱]", args.title)
         md_content = md_content.replace("[Author Name]", "Paul")
         md_content = md_content.replace("YYYY-MM-DD", "2026-10-19")
