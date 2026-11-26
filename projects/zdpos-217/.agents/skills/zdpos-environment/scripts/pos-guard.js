@@ -51,7 +51,8 @@
   const READ_PREFIX = /^get/;
   // 隔離站：發票 XML 寫隔離目錄（/var/glob-storage/invoices-sb84/）且字軌為 OO，見 docs repo release-26.11.8-php84-canary.md §2。
   // 新增站前須讀回該站 Glob.php 的 INVOICE_BASE_PATH 與字軌，確認不寫正式上傳佇列。
-  const ISOLATED_SITES = new Set(['sb84']);
+  // sb56：碼基 zdpos_218_sb，INVOICE_BASE_PATH=/var/glob-storage/invoices-sb218/（2026-11-26 讀回），DB 與 sb84 同為 zdpos_sb84（OO 字軌）。
+  const ISOLATED_SITES = new Set(['sb84', 'sb56']);
   const ISOLATED_ACTION = /^splitbill(?!writeoff$)[a-z]+$/i;
   // 隔離站額外放行：清帳（含補清）與折讓處理。折讓事件仍經 delReceipt，須單號核准（void-ok）。
   const ISOLATED_EXTRA = new Set(['cleardebt', 'cleardebt_complement', 'handleallowance']);
