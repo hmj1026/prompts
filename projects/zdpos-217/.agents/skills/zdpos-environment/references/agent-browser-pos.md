@@ -87,6 +87,32 @@ POS_GUARD_ISOLATED=<核准清單檔> bash $G $S isolated-ok sb84         # 隔�
 | 匯出沒有下載 | 匯出是 `window.open`，headless 抓不到 | 在頁面內用同一網址 `fetch` 下載後計算列數 |
 | 獨立開 `tableSeats/index`，`POS` 未定義 | 該頁要透過 `pos/index` 的 iframe 才有 `POS` | 從 `pos/index` 進入 |
 | Console 出現紅字 | 可能是既有雜訊，見 [`pos-operations.md`](pos-operations.md)「已知 Console 雜訊」；`errors` 緩衝區會包含先前頁面的錯誤 | 開測前先記一次 `--json errors` 當基準，判定時只算新增的 |
+| 關掉確認框後，下一步沒發生（例如取消接管後拆帳視窗沒收起） | `dismiss` 對 jQuery UI dialog 呼叫 `dialog('close')`，不會執行 `z_confirm` 的取消／確定回呼 | 確認框（`#sys_confirm_dialog`）用 `snapshot` 找框內按鈕的 ref 再 `click`；`dismiss` 只用來清掉不需回應的提示 |
+| 數字鍵只登錄部分位數，或「確定」點到主畫面 | 文字比對命中多個同名元素 | 數字鍵與對話框內的「確定」用 `click <文字> last` |
+| reload 後購物車品項不見、懷疑有殘單 | 只按「小計」未「收單」的品項只在瀏覽器，不寫 `sales_temp`；表頭單號只是該機號的下一張號碼 | 以 DB 讀回判定（見下節），不要因表頭單號相同而停下 |
+
+## sb84／sb56 隔離站：DB 讀回與鍵位
+
+`/sb84/`（8.4）與 `/sb56/`（5.6）共用 DB `zdpos_sb84`。QA 代理沒有 DB 工具時，用 vm1 上的唯讀讀回（腳本原檔為 `<skill>/scripts/sb84-gate.php`，部署在 vm1 `~deploy/sb84-gate/`）：
+
+```bash
+ssh vm1 'php8.4 ~/sb84-gate/sb84-gate.php order 0100001576'   # 暫存、normalized 列數、單據鎖、收據、作廢、折讓、發票、拆帳 session 與子單
+ssh vm1 'php8.4 ~/sb84-gate/sb84-gate.php tables'             # 有單號或鎖的桌位、未結拆帳 session 數
+ssh vm1 'php8.4 ~/sb84-gate/sb84-gate.php state'              # 模組、拆帳鍵、splitBillItemNos
+```
+
+QA 代理只執行 `state`、`order`、`tables`；`module`、`buttons`、`param` 會寫入設定，由主控執行（寫入前先 `backup`，有未結拆帳 session 時腳本拒絕寫入）。
+
+機號 01、02 的功能鍵頁：
+
+| 頁 | 鍵 |
+| --- | --- |
+| `fn_p1` | 統一編號、作廢、清帳 |
+| `fn_p2` | 折讓、手開發票、收據補印、多元支付 |
+| `fn_p3` | 折讓單、ocard 商品兌換 |
+| `fn_p4` | 收單、續單、母單補印、拆帳結帳 |
+
+做作廢、折讓、統編類案例前：migration 是否套用以 `state` 或主控讀回為準；統編測試值用 `12345671`（`12345678` 會被檢查碼拒絕）。
 
 ## 判 FAIL 前
 
